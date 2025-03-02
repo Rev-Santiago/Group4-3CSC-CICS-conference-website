@@ -5,7 +5,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import cicsLogo from '../../../assets/cics-logo.png';
-import cicsLogoSmall from '../../../assets/Institute-of-Information-and-Computing-Sciences.png';
+import cicsLogoSmall from '../../../assets/cics-seal.png'
 
 function a11yProps(index) {
   return {
@@ -147,6 +147,7 @@ export default function Navbar() {
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
           >
+            
             <Tab label="Home" {...a11yProps(0)} />
             <Tab label="Call For Papers" {...a11yProps(1)} />
             <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
@@ -161,8 +162,8 @@ export default function Navbar() {
       </Box>
 
       {/* Mobile Navigation */}
-      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F'}}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
           <Tab label="Home" {...a11yProps(0)} />
           <Tab label="Call For Papers" {...a11yProps(1)} />
           <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
