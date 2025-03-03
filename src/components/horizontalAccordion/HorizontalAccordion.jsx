@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -14,8 +15,11 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 
 export default function HorizontalAccordion() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-4 mx-20">
+        
       {/* Accordion 1 - Registration and Tracks */}
       <Accordion className="!bg-customRed border border-gray-400">
         <AccordionSummary
@@ -68,7 +72,10 @@ export default function HorizontalAccordion() {
           <Button className="!bg-customRed hover:customRed mt-2 !text-white">
             Edas Submission Link for CICS
           </Button>
-          <Typography className="text-customRed mt-2 cursor-pointer pt-3">
+          <Typography 
+            className="text-customRed mt-2 cursor-pointer pt-3" 
+            onClick={() => navigate("/call-for-papers")}
+          >
             Go to Call For Papers Page ➤
           </Typography>
         </AccordionDetails>
@@ -130,11 +137,13 @@ export default function HorizontalAccordion() {
                 </TableRow>
                 </TableBody>
             </Table>
-            </TableContainer>
-
+        </TableContainer>
 
           {/* Link to Publications Page */}
-          <Typography className="text-customRed mt-4 cursor-pointer pt-3">
+          <Typography 
+            className="text-customRed mt-4 cursor-pointer pt-3"
+            onClick={() => navigate("/publications")}
+          >
             Go to Publication Page ➤
           </Typography>
         </AccordionDetails>
