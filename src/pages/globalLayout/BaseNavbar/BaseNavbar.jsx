@@ -28,7 +28,7 @@ export default function Navbar() {
   useEffect(() => {
     const updateScreenSize = () => {
       setIsSmallScreen(window.innerWidth <= 860);
-      setIsMediumScreen(window.innerWidth <= 1150);
+      setIsMediumScreen(window.innerWidth <= 1200);
       if (window.innerWidth > 860) setOpenNav(false); // Close mobile menu on resize to desktop
     };
     window.addEventListener('resize', updateScreenSize);
@@ -183,8 +183,12 @@ export default function Navbar() {
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         {menuType === 'about' && (
           <>
-            <MenuItem onClick={handleMenuClose}>Contacts</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Partners</MenuItem>
+            <MenuItem component={Link} to="/contact" onClick={handleMenuClose}>
+              Contacts
+            </MenuItem>
+            <MenuItem component={Link} to="/partners" onClick={handleMenuClose}>
+              Partners
+            </MenuItem>
             <MenuItem onClick={handleMenuClose}>Committee</MenuItem>
             <MenuItem onClick={handleMenuClose}>Event History</MenuItem>
           </>
