@@ -4,6 +4,7 @@ import Home from "../pages/Home/Home";
 import CallForPapersPage from "../pages/CallForPapersPage/CallForPapersPage"; 
 import ContactPage from "../pages/ContactPage/ContactPage";
 import PartnersPage from "../pages/PartnersPage/PartnersPage";
+import CommitteePage from "../pages/CommitteePage/CommitteePage";
 
 const Routes = createBrowserRouter([
     {
@@ -25,6 +26,10 @@ const Routes = createBrowserRouter([
             {
                 path: '/partners',
                 element: <PartnersPage />
+            },
+            {
+                path: '/committee',
+                element: <CommitteePage />
             },
         ]
     }

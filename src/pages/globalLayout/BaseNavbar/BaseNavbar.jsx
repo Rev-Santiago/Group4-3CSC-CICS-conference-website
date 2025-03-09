@@ -189,7 +189,9 @@ export default function Navbar() {
             <MenuItem component={Link} to="/partners" onClick={handleMenuClose}>
               Partners
             </MenuItem>
-            <MenuItem onClick={handleMenuClose}>Committee</MenuItem>
+            <MenuItem component={Link} to="/committee" onClick={handleMenuClose}>
+              Committee
+            </MenuItem>
             <MenuItem onClick={handleMenuClose}>Event History</MenuItem>
           </>
         )}
