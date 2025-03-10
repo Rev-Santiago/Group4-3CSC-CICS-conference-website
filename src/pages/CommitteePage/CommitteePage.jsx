@@ -1,17 +1,11 @@
 import React from "react";
-import { Container, Grid, Typography, Avatar } from "@mui/material";
-
-const partners = [
-  { name: "Partner 1" },
-  { name: "Partner 2" },
-  { name: "Partner 3" },
-];
+import { Container } from "@mui/material";
 
 const CommitteePage = () => {
   return (
     <section className="committee">
         <Container>
-            <div className="container mx-auto">
+            <div className="container mx-auto pb-10">
                 <h1 className="text-3xl">Organizing Committee</h1>
                 <section className="mt-8">
 

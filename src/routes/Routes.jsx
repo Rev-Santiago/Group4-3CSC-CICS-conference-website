@@ -5,6 +5,14 @@ import CallForPapersPage from "../pages/CallForPapersPage/CallForPapersPage";
 import ContactPage from "../pages/ContactPage/ContactPage";
 import PartnersPage from "../pages/PartnersPage/PartnersPage";
 import CommitteePage from "../pages/CommitteePage/CommitteePage";
+import EventsHistoryPage from "../pages/EventsHistoryPage/EventsHistoryPage";
+import RegistrationAndFeesPage from "../pages/RegistrationAndFees/RegistrationAndFeesPage";
+import PublicationPage from "../pages/PublicationPage/PublicationPage";
+import SchedulePage from "../pages/SchedulePage/SchedulePage";
+import VenuePage from "../pages/VenuePage/VenuePage";
+import KeynoteSpeakersPage from "../pages/KeynoteSpeakersPage/KeynoteSpeakersPage";
+import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPage";
+import LoginPage from "../pages/LoginPage/LoginPage";
 
 const Routes = createBrowserRouter([
     {
@@ -30,6 +38,38 @@ const Routes = createBrowserRouter([
             {
                 path: '/committee',
                 element: <CommitteePage />
+            },
+            {
+                path: '/event-history',
+                element: <EventsHistoryPage />
+            },    
+            {
+                path: '/registration-and-fees',
+                element: <RegistrationAndFeesPage />
+            },          
+            {
+                path: '/publication',
+                element: <PublicationPage />
+            },   
+            {
+                path: '/schedule',
+                element: <SchedulePage />
+            }, 
+            {
+                path: '/venue',
+                element: <VenuePage />
+            }, 
+            {
+                path: '/keynote-speakers',
+                element: <KeynoteSpeakersPage />
+            },
+            {
+                path: '/invited-speakers',
+                element: <InvitedSpeakersPage />
+            },
+            {
+                path: '/login',
+                element: <LoginPage />
             },
         ]
     }

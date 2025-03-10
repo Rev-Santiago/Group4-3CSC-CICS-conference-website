@@ -2,7 +2,7 @@ import { Outlet, useNavigation } from "react-router-dom";
 import { Box } from '@mui/material';
 import BaseNavbar from "./pages/globalLayout/BaseNavbar/BaseNavbar.jsx";
 import BaseFooter from "./pages/globalLayout/BaseFooter/BaseFooter.jsx";
-import LoaderPage from "./pages/LoaderPage/LoaderPage"; // Import LoaderPage
+import LoaderPage from "./pages/LoaderPage/LoaderPage.jsx"; 
 
 function App() {
   const { state } = useNavigation(); // Get loading state
