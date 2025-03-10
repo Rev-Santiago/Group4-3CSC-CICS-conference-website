@@ -4,15 +4,15 @@ import cicsLogoSmall from '../../assets/cics-seal.png'
 const speakers = [
     {
         name: "Speaker 1",
-        logo: cicsLogoSmall, // Replace with actual logo URL
+        image: cicsLogoSmall, 
     },
     {
         name: "Speaker 2",
-        logo: cicsLogoSmall, // Replace with actual logo URL
+        image: cicsLogoSmall, 
     },
     {
         name: "Speaker 3",
-        logo: cicsLogoSmall, // Replace with actual logo URL
+        image: cicsLogoSmall, 
     },
 ];
 
@@ -29,11 +29,11 @@ const InvitedSpeakersPage = () => {
                     key={index}
                     className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 pb-6 border-b"
                 >
-                    {/* Logo */}
+                    {/* Image */}
                     <div className="w-24 h-24 flex-shrink-0">
                         <img
-                            src={speaker.logo} // Dynamic logo from the array
-                            alt={`${speaker.name} Logo`}
+                            src={speaker.image} // Dynamic image from the array
+                            alt={`${speaker.name} Image`}
                             className="w-full h-full object-cover rounded-full"
                         />
                     </div>
