@@ -17,13 +17,13 @@ export default function LoginPage() {
 
   return (
     <div className="flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-md w-96">
+      <div className="bg-white p-6 border border-black w-96 mb-5">
         <h2 className="text-xl text-customRed mb-4">Admin Login</h2>
         <form onSubmit={handleSubmit}>
           <label className="block text-sm font-medium">Email</label>
           <input
             type="email"
-            className="w-full p-2 border rounded mb-3"
+            className="w-full p-2 border border-black flex mb-3"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -32,7 +32,7 @@ export default function LoginPage() {
           <label className="block text-sm font-medium">Password</label>
           <input
             type="password"
-            className="w-full p-2 border rounded mb-3"
+            className="w-full p-2 border border-black mb-3"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -47,6 +47,7 @@ export default function LoginPage() {
           </div>
           
           <ReCAPTCHA
+            className="flex justify-center"
             sitekey="your-recaptcha-site-key"
             onChange={() => setCaptchaVerified(true)}
           />
