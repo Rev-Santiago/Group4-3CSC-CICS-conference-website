@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Tabs, Tab, Box, Menu, MenuItem, IconButton, Collapse, InputBase, Grid } from '@mui/material';
+import { Tabs, Tab, Box, Menu, MenuItem, IconButton, Collapse, InputBase, Grid, Fab } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import cicsLogo from '../../../assets/cics-logo.png';
 import cicsLogoSmall from '../../../assets/cics-seal.png'
+import Breadcrumbs from "../../../components/breadcrumbComponent/Breadcrumbs.jsx";
 
 function a11yProps(index) {
   return {
@@ -138,7 +139,7 @@ export default function Navbar() {
               <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Login" {...a11yProps(8)} />
+              <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
             </Grid>
           </Grid>
         ) : (
@@ -159,7 +160,7 @@ export default function Navbar() {
             <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
             <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
             <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
-            <Tab label="Login" {...a11yProps(8)} />
+            <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
           </Tabs>
         )}
       </Box>
@@ -175,7 +176,7 @@ export default function Navbar() {
           <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
           <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
           <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
-          <Tab label="Login" {...a11yProps(8)} />
+          <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
         </Box>
       </Collapse>
 
@@ -199,11 +200,25 @@ export default function Navbar() {
         )}
         {menuType === 'speakers' && (
           <>
-            <MenuItem onClick={handleMenuClose}>Keynote Speakers</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Invited Speakers</MenuItem>
+            <MenuItem component={Link} to="/keynote-speakers" onClick={handleMenuClose}>
+              Keynote Speakers
+            </MenuItem>
+            <MenuItem component={Link} to="/invited-speakers" onClick={handleMenuClose}>
+              Invited Speakers
+            </MenuItem>
           </>
         )}
       </Menu>
+      <Box
+        sx={{
+          marginTop: {
+            xs: "-20px", // Applies when screen size is small (mobile)
+            md: "-50px", // Applies for small screens and larger (default)
+          },
+        }}
+      >
+        <Breadcrumbs />
+      </Box>
     </Box>
   );
 }

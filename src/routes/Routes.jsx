@@ -10,6 +10,9 @@ import RegistrationAndFeesPage from "../pages/RegistrationAndFees/RegistrationAn
 import PublicationPage from "../pages/PublicationPage/PublicationPage";
 import SchedulePage from "../pages/SchedulePage/SchedulePage";
 import VenuePage from "../pages/VenuePage/VenuePage";
+import KeynoteSpeakersPage from "../pages/KeynoteSpeakersPage/KeynoteSpeakersPage";
+import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPage";
+import LoginPage from "../pages/LoginPage/LoginPage";
 
 const Routes = createBrowserRouter([
     {
@@ -56,6 +59,18 @@ const Routes = createBrowserRouter([
                 path: '/venue',
                 element: <VenuePage />
             }, 
+            {
+                path: '/keynote-speakers',
+                element: <KeynoteSpeakersPage />
+            },
+            {
+                path: '/invited-speakers',
+                element: <InvitedSpeakersPage />
+            },
+            {
+                path: '/login',
+                element: <LoginPage />
+            },
         ]
     }
 ]);
