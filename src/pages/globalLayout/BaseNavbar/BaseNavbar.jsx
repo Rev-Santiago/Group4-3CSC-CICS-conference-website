@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tabs, Tab, Box, Menu, MenuItem, IconButton, Collapse, InputBase, Grid } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import cicsLogo from '../../../assets/cics-logo.png';
-import cicsLogoSmall from '../../../assets/Institute-of-Information-and-Computing-Sciences.png';
+import cicsLogoSmall from '../../../assets/cics-seal.png'
 
 function a11yProps(index) {
   return {
@@ -15,6 +16,7 @@ function a11yProps(index) {
 }
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [value, setValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuType, setMenuType] = useState('');
@@ -26,7 +28,7 @@ export default function Navbar() {
   useEffect(() => {
     const updateScreenSize = () => {
       setIsSmallScreen(window.innerWidth <= 860);
-      setIsMediumScreen(window.innerWidth <= 1150);
+      setIsMediumScreen(window.innerWidth <= 1200);
       if (window.innerWidth > 860) setOpenNav(false); // Close mobile menu on resize to desktop
     };
     window.addEventListener('resize', updateScreenSize);
@@ -72,7 +74,8 @@ export default function Navbar() {
               backgroundColor: 'white',
               border: '1px solid #ccc',
               borderRadius: '4px',
-              width: 250,
+              width: 200,
+              height: 35,
             }}
           >
             <InputBase
@@ -83,7 +86,7 @@ export default function Navbar() {
               onKeyDown={handleSearch}
               sx={{ paddingLeft: 1 }}
             />
-            <Box sx={{ backgroundColor: '#B7152F', padding: '8px', cursor: 'pointer' }}>
+            <Box sx={{ backgroundColor: '#B7152F', padding: '8px', cursor: 'pointer', height: 35, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <SearchIcon sx={{ color: 'white' }} />
             </Box>
           </Box>
@@ -111,10 +114,10 @@ export default function Navbar() {
         {isMediumScreen ? (
           <Grid container spacing={2} sx={{ padding: 2 }}>
             <Grid item xs={3}>
-              <Tab label="Home" {...a11yProps(0)} />
+              <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Call For Papers" {...a11yProps(1)} />
+              <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
             </Grid>
             <Grid item xs={3}>
               <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
@@ -147,8 +150,9 @@ export default function Navbar() {
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
           >
-            <Tab label="Home" {...a11yProps(0)} />
-            <Tab label="Call For Papers" {...a11yProps(1)} />
+            
+            <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
+            <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
             <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
             <Tab label="Registration & Fees" {...a11yProps(3)} />
             <Tab label="Publication" {...a11yProps(4)} />
@@ -161,10 +165,10 @@ export default function Navbar() {
       </Box>
 
       {/* Mobile Navigation */}
-      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Tab label="Home" {...a11yProps(0)} />
-          <Tab label="Call For Papers" {...a11yProps(1)} />
+      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F'}}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+          <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
+          <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
           <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
           <Tab label="Registration & Fees" {...a11yProps(3)} />
           <Tab label="Publication" {...a11yProps(4)} />
@@ -179,9 +183,15 @@ export default function Navbar() {
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         {menuType === 'about' && (
           <>
-            <MenuItem onClick={handleMenuClose}>Contacts</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Partners</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Committee</MenuItem>
+            <MenuItem component={Link} to="/contact" onClick={handleMenuClose}>
+              Contacts
+            </MenuItem>
+            <MenuItem component={Link} to="/partners" onClick={handleMenuClose}>
+              Partners
+            </MenuItem>
+            <MenuItem component={Link} to="/committee" onClick={handleMenuClose}>
+              Committee
+            </MenuItem>
             <MenuItem onClick={handleMenuClose}>Event History</MenuItem>
           </>
         )}
