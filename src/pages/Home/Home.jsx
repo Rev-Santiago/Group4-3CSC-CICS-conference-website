@@ -12,8 +12,7 @@ function Home() {
           <div>
             <h1 className="text-3xl text-customRed text-center pb-5 -md:mt-3">Welcome to UST CICS Conference Website</h1>
           </div>
-        
-          {/* Image Carousel */}  
+          {/* Image Carousel */}
           <div className="carousel pb-5">
             <CarouselImage />
           </div>

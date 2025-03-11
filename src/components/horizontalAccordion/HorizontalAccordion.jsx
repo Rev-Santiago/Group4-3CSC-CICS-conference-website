@@ -17,10 +17,33 @@ import Paper from "@mui/material/Paper";
 
 export default function HorizontalAccordion() {
     const navigate = useNavigate();
+    const [publications, setPublications] = React.useState([]);
+
+    // Function to format the date (only Year, Month, Day)
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }).format(date);
+    };
+
+    // Fetch publications on component mount
+    React.useEffect(() => {
+        fetch("http://localhost:5000/api/publications?page=1&limit=4")
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.data) {
+                    setPublications(data.data);
+                }
+            })
+            .catch((error) => console.error("Error fetching publications:", error));
+    }, []);
 
     return (
         <div className="space-y-4 mx-20">
-
+            
             {/* Accordion 1 - Registration and Tracks */}
             <Box sx={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
                 <Accordion className="!bg-customRed border border-gray-400">
@@ -119,26 +142,24 @@ export default function HorizontalAccordion() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    <TableRow>
-                                        <TableCell sx={{ borderRight: "1px solid black", textAlign: "center" }}>
-                                            15 August 2024 (Initial); 15 September 2024 (Final); 30 September 2024 (Hard Extension)
-                                        </TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>Paper Submission</TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell sx={{ borderRight: "1px solid black", textAlign: "center" }}>
-                                            30 September 2024 (First Batch); 15 October 2024 (Final); 31 October 2024 (Hard Extension)
-                                        </TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>Full-Paper Acceptance</TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell sx={{ borderRight: "1px solid black", textAlign: "center" }}>15 November 2024</TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>Camera-Ready Submission</TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell sx={{ borderRight: "1px solid black", textAlign: "center" }}>1 October 2024 – 31 October 2024</TableCell>
-                                        <TableCell sx={{ textAlign: "center" }}>Early Bird Registration</TableCell>
-                                    </TableRow>
+                                    {publications.length > 0 ? (
+                                        publications.map((pub, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell sx={{ textAlign: "center" }}>
+                                                    {formatDate(pub.publication_date)}
+                                                </TableCell>
+                                                <TableCell sx={{ textAlign: "center" }}>
+                                                    {pub.publication_description}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={2} sx={{ textAlign: "center" }}>
+                                                No publications available
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
                         </TableContainer>
