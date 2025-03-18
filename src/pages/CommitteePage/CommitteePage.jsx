@@ -19,7 +19,6 @@ const CommitteePage = () => {
                             Name
                         </p>
                     </div>
-                    
                     {/* Person 2 */}
                     <div className="mt-4">
                         <h3 className="text-xl text-customRed">Position</h3>
@@ -41,7 +40,6 @@ const CommitteePage = () => {
                             Name
                         </p>
                     </div>
-                    
                 </section>
             </div>
         </Container>

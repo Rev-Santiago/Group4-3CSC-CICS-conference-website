@@ -4,7 +4,6 @@ dotenv.config();
 import mysql from "mysql2";
 import process from "process";
 
-
 // Create MySQL Connection Pool (Recommended for scalability)
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
