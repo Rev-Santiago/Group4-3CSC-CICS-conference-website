@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "src/backend/server.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node src/backend/server.js",
+    "devStart": "nodemon src/backend/server.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -18,9 +21,24 @@
     "@mui/icons-material": "^6.4.4",
     "@mui/material": "^6.4.7",
     "@tailwindcss/vite": "^4.0.6",
+    "axios": "^1.8.2",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
     "flowbite": "^3.1.2",
+    "helmet": "^8.1.0",
+    "ics": "^3.8.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.13.0",
     "react": "^18.3.1",
+    "react-datepicker": "^8.2.1",
     "react-dom": "^18.3.1",
+    "react-google-recaptcha": "^3.1.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.1.5"
   },
   "devDependencies": {
@@ -34,6 +52,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
+    "nodemon": "^3.1.9",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
     "vite": "^6.0.5"

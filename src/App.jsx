@@ -1,21 +1,31 @@
-import { Outlet, useNavigation } from "react-router-dom";
-import { Box } from '@mui/material';
+import { Outlet } from "react-router-dom";
+import { Box } from "@mui/material";
 import BaseNavbar from "./pages/globalLayout/BaseNavbar/BaseNavbar.jsx";
 import BaseFooter from "./pages/globalLayout/BaseFooter/BaseFooter.jsx";
-import LoaderPage from "./pages/LoaderPage/LoaderPage"; // Import LoaderPage
+import LoaderPage from "./pages/LoaderPage/LoaderPage.jsx";
+import { useState, createContext, useEffect } from "react";
+
+export const AuthContext = createContext(null); // ✅ Create Auth Context
 
 function App() {
-  const { state } = useNavigation(); // Get loading state
+    const [auth, setAuth] = useState(null); 
 
-  return (
-    <>
-      <Box sx={{ maxWidth: '1300px', width: '100%', margin: '0 auto', padding: '0 20px' }}>
-        <BaseNavbar />
-        {state === "loading" ? <LoaderPage /> : <Outlet />} {/* Show LoaderPage when loading */}
-      </Box>
-      <BaseFooter />
-    </>
-  );
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+            setAuth(token);
+        }
+    }, []);
+
+    return (
+        <AuthContext.Provider value={{ auth, setAuth }}>
+            <Box sx={{ maxWidth: "1300px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
+                <BaseNavbar />
+                <Outlet /> {/* Renders the current page */}
+            </Box>
+            <BaseFooter />
+        </AuthContext.Provider>
+    );
 }
 
 export default App;

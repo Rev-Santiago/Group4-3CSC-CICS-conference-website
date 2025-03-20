@@ -1,55 +1,55 @@
 import React from "react";
-import { Container, Grid, Typography, Avatar } from "@mui/material";
+import cicsLogoSmall from '../../assets/cics-seal.png'
 
 const partners = [
-  { name: "Partner 1" },
-  { name: "Partner 2" },
-  { name: "Partner 3" },
+  {
+    name: "Partner 1",
+    logo: cicsLogoSmall, // Replace with actual logo URL
+  },
+  {
+    name: "Partner 2",
+    logo: cicsLogoSmall, // Replace with actual logo URL
+  },
+  {
+    name: "Partner 3",
+    logo: cicsLogoSmall, // Replace with actual logo URL
+  },
 ];
 
 const PartnersPage = () => {
   return (
-    <section className="partners">
-        <Container className="">
-            <Typography variant="h4" color="error" gutterBottom>
-                Partners
-            </Typography>
+    <section className="mx-auto px-10 py-10">
+      {/* Title */}
+      <h2 className="text-3xl text-customRed mb-6 text-center sm:text-left">
+        Partners
+      </h2>
 
-            {partners.map((partner, index) => (
-                <Grid container spacing={2} key={index} alignItems="center" sx={{ mb: 4 }}>
-                    {/* Logo Section */}
-                    <Grid item xs={12} sm={3} display="flex" justifyContent="center">
-                        <Avatar
-                        sx={{
-                            width: 100,
-                            height: 100,
-                            bgcolor: "grey.300",
-                            fontSize: 20,
-                        }}
-                        >
-                        LOGO
-                        </Avatar>
-                    </Grid>
+      {partners.map((partner, index) => (
+        <div
+          key={index}
+          className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 pb-6 border-b"
+        >
+          {/* Logo */}
+          <div className="w-24 h-24 flex-shrink-0">
+            <img
+              src={partner.logo} // Dynamic logo from the array
+              alt={`${partner.name} Logo`}
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
 
-                    {/* Text Section */}
-                    <Grid item xs={12} sm={9}>
-                        <Typography variant="h6" fontWeight="bold">
-                        {partner.name}
-                        </Typography>
-                        <Typography variant="body1">Lorem ipsum dolor sit amet</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                        consectetur adipiscing elit
-                        </Typography>
-                        <Typography variant="body2" mt={1}>
-                        Vivamus molestie elit id lobortis vestibulum. In facilisis ex nec ligula egestas, 
-                        eget viverra odio feugiat. Donec est lectus, posuere eget elit at, sodales semper turpis. 
-                        Sed volutpat erat ac venenatis pellentesque. Sed tincidunt sit amet felis eget euismod. 
-                        Quisque faucibus vulputate lacus, eget auctor risus interdum a. Fusce finibus vitae est sed luctus.
-                        </Typography>
-                    </Grid>
-                </Grid>
-            ))}
-        </Container>
+          {/* Partner Info */}
+          <div className="flex-grow text-center sm:text-left">
+            <h3 className="text-xl">{partner.name}</h3>
+            <p className="text-gray-700">Lorem ipsum dolor sit amet</p>
+            <p className="text-gray-500">consectetur adipiscing elit</p>
+            <p className="mt-2 text-gray-700">
+              Vivamus molestie elit id lobortis vestibulum. In facilisis ex nec ligula egestas, eget viverra odio feugiat. 
+              Donec est lectus, posuere eget elit at, sodales semper turpis. Sed volutpat erat ac venenatis pellentesque.
+            </p>
+          </div>
+        </div>
+      ))}
     </section>
   );
 };

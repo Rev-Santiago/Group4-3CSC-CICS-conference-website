@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Tabs, Tab, Box, Menu, MenuItem, IconButton, Collapse, InputBase, Grid } from '@mui/material';
+import { Tabs, Tab, Box, Menu, MenuItem, IconButton, Collapse, InputBase, Grid, Fab } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import cicsLogo from '../../../assets/cics-logo.png';
 import cicsLogoSmall from '../../../assets/cics-seal.png'
+import Breadcrumbs from "../../../components/breadcrumbComponent/Breadcrumbs.jsx";
 
 function a11yProps(index) {
   return {
@@ -59,12 +60,12 @@ export default function Navbar() {
     <Box sx={{ width: '95%', margin: '0 auto', position: 'relative' }}>
       {/* Logo and Mobile Menu Toggle */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2, ml: 3, gap: 2 }}>
-        <img 
-          src={isSmallScreen ? cicsLogoSmall : cicsLogo} 
-          alt="CICS Logo" 
-          style={{ width: isSmallScreen ? '100px' : '500px', height: 'auto' }} 
+        <img
+          src={isSmallScreen ? cicsLogoSmall : cicsLogo}
+          alt="CICS Logo"
+          style={{ width: isSmallScreen ? '100px' : '500px', height: 'auto' }}
         />
-        
+
         {/* Desktop Search Bar */}
         {!isSmallScreen && (
           <Box
@@ -123,22 +124,22 @@ export default function Navbar() {
               <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Registration & Fees" {...a11yProps(3)} />
+              <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Publication" {...a11yProps(4)} />
+              <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Schedule" {...a11yProps(5)} />
+              <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Venue" {...a11yProps(6)} />
+              <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
             </Grid>
             <Grid item xs={3}>
               <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Login" {...a11yProps(8)} />
+              <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
             </Grid>
           </Grid>
         ) : (
@@ -150,32 +151,32 @@ export default function Navbar() {
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
           >
-            
+
             <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
             <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
             <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
-            <Tab label="Registration & Fees" {...a11yProps(3)} />
-            <Tab label="Publication" {...a11yProps(4)} />
-            <Tab label="Schedule" {...a11yProps(5)} />
-            <Tab label="Venue" {...a11yProps(6)} />
+            <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)} />
+            <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)} />
+            <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
+            <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
             <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
-            <Tab label="Login" {...a11yProps(8)} />
+            <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
           </Tabs>
         )}
       </Box>
 
       {/* Mobile Navigation */}
-      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F'}}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
           <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
           <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
-          <Tab label="Registration & Fees" {...a11yProps(3)} />
-          <Tab label="Publication" {...a11yProps(4)} />
-          <Tab label="Schedule" {...a11yProps(5)} />
-          <Tab label="Venue" {...a11yProps(6)} />
+          <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)} />
+          <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)} />
+          <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
+          <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
           <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
-          <Tab label="Login" {...a11yProps(8)} />
+          <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
         </Box>
       </Collapse>
 
@@ -192,16 +193,32 @@ export default function Navbar() {
             <MenuItem component={Link} to="/committee" onClick={handleMenuClose}>
               Committee
             </MenuItem>
-            <MenuItem onClick={handleMenuClose}>Event History</MenuItem>
+            <MenuItem component={Link} to="/event-history" onClick={handleMenuClose}>
+              Event History
+            </MenuItem>
           </>
         )}
-          {menuType === 'speakers' && (
+        {menuType === 'speakers' && (
           <>
-            <MenuItem onClick={handleMenuClose}>Keynote Speakers</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Invited Speakers</MenuItem>
+            <MenuItem component={Link} to="/keynote-speakers" onClick={handleMenuClose}>
+              Keynote Speakers
+            </MenuItem>
+            <MenuItem component={Link} to="/invited-speakers" onClick={handleMenuClose}>
+              Invited Speakers
+            </MenuItem>
           </>
         )}
       </Menu>
+      <Box
+        sx={{
+          marginTop: {
+            xs: "-20px", // Applies when screen size is small (mobile)
+            md: "-50px", // Applies for small screens and larger (default)
+          },
+        }}
+      >
+        <Breadcrumbs />
+      </Box>
     </Box>
   );
 }
