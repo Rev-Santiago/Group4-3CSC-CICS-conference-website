@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import process from "process";
+import icsRoute from "./routes/icsRoute.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,8 @@ app.use(
         credentials: true,
     })
 );
+
+app.use("/api", icsRoute);
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({
@@ -95,26 +98,31 @@ app.get("/api/publications/latest", async (req, res) => {
     }
 });
 
-// 📅 Fetch Event History
+// 📅 Fetch Event History (with optional date filtering)
+// 📅 Fetch Event History (with pagination and past events only)
 app.get("/api/events-history", async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 5;
         const offset = (page - 1) * limit;
 
-        const [dateRows] = await db.query(
-            `SELECT DISTINCT event_date FROM events_history 
+        // Fetch past event dates with pagination (event_date < today's date)
+        const [rows] = await db.query(
+            `SELECT DISTINCT event_date 
+             FROM events_history 
+             WHERE event_date < CURDATE()  -- Only past events
              ORDER BY event_date DESC 
              LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const eventDates = dateRows.map(row => row.event_date);
-
-        if (eventDates.length === 0) {
+        if (rows.length === 0) {
             return res.json({ data: [], totalPages: 0, currentPage: page });
         }
 
+        const eventDates = rows.map(row => row.event_date);
+
+        // Fetch schedules for the event dates
         const [scheduleRows] = await db.query(
             `SELECT event_date, time_slot, program 
              FROM events_history 
@@ -133,7 +141,10 @@ app.get("/api/events-history", async (req, res) => {
                 }))
         }));
 
-        const [totalResult] = await db.execute("SELECT COUNT(DISTINCT event_date) AS total FROM events_history");
+        // Count total records for pagination (for past events only)
+        const [totalResult] = await db.execute(
+            "SELECT COUNT(DISTINCT event_date) AS total FROM events_history WHERE event_date < CURDATE()"
+        );
         const totalRecords = totalResult[0].total;
         const totalPages = Math.ceil(totalRecords / limit);
 
@@ -144,6 +155,8 @@ app.get("/api/events-history", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+
 
 // 🔐 Register a New User
 app.post("/api/register", async (req, res) => {
@@ -202,6 +215,78 @@ app.post("/api/login", loginLimiter, async (req, res) => {
 app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
     res.json({ message: "Welcome to the Admin Dashboard", user: req.user.email });
 });
+
+// 📅 Fetch Event Schedule Dynamically
+app.get("/api/schedule", async (req, res) => {
+    try {
+        const query = `
+            SELECT event_date, time_slot, program 
+            FROM events_history 
+            WHERE event_date >= CURDATE()  -- Only fetch current and future events
+            ORDER BY event_date, time_slot;
+        `;
+        const [rows] = await db.execute(query);
+
+        // Group events by date
+        const groupedData = rows.reduce((acc, event) => {
+            const { event_date, time_slot, program } = event;
+            const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
+            
+            if (!acc[dateKey]) {
+                acc[dateKey] = { date: dateKey, events: [] };
+            }
+            acc[dateKey].events.push({ time: time_slot, program });
+
+            return acc;
+        }, {});
+
+        res.json({ data: Object.values(groupedData) });
+    } catch (error) {
+        console.error("Error fetching schedule:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+app.get("/api/events", async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT event_date, program, venue, online_room_link, time_slot 
+             FROM events_history
+             WHERE event_date >= CURDATE()  -- Only fetch events for today or future dates
+             ORDER BY event_date ASC`
+        );
+
+        const formattedData = rows.reduce((acc, event) => {
+            const date = event.event_date.toISOString().split("T")[0];
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push({
+                time: event.time_slot,
+                program: event.program,
+                venue: event.venue,
+                online_room_link: event.online_room_link,
+            });
+            return acc;
+        }, {});
+
+        const responseData = Object.keys(formattedData).map((date) => ({
+            date,
+            events: formattedData[date],
+        }));
+
+        res.json(responseData);
+    } catch (error) {
+        console.error("Error fetching events:", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+
+
+
+
 
 // 🚀 Start Server
 app.listen(PORT, () => {
