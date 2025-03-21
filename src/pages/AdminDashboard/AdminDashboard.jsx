@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import MiniDrawer from "../../components/miniDrawer/MiniDrawer";
+
 
 export default function AdminDashboard() {
   const [adminData, setAdminData] = useState(null);
@@ -46,17 +48,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto mt-10">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      {/* <h1 className="text-2xl font-bold">Admin Dashboard</h1>
       {adminData ? (
-        <>
-          <p className="mt-4">Welcome, {adminData.user}!</p>
+        <> */}
+          <MiniDrawer onLogout={handleLogout} />
+          {/* <p className="mt-4">Welcome, {adminData.user}!</p>
           <button onClick={handleLogout} className="bg-red-500 text-white p-2 mt-4">
             Logout
           </button>
         </>
       ) : (
         <p>Loading...</p>
-      )}
+      )} */}
     </div>
   );
 }

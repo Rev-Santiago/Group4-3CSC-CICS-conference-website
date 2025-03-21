@@ -15,6 +15,11 @@ import KeynoteSpeakersPage from "../pages/KeynoteSpeakersPage/KeynoteSpeakersPag
 import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard/AdminDashboard";
+import AdminHome from "../pages/AdminHome/AdminHome";
+import AdminCallForPapers from "../pages/AdminCallForPapers/AdminCallForPapers";
+import MiniDrawer from "../components/miniDrawer/MiniDrawer";
+import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
+import AdminContactsPage from "../pages/AdminContactsPage/AdminContactsPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -22,12 +27,21 @@ function ProtectedRoute() {
     return auth ? <Outlet /> : <Navigate to="/login" />;
 }
 
+const AdminLayout = () => {
+    return (
+      <MiniDrawer>  {/* ✅ MiniDrawer wraps all admin pages */}
+        <Outlet />
+      </MiniDrawer>
+    );
+  };
+
 const Routes = createBrowserRouter([
     {
         path: "/",
         element: <App />,
         children: [
             { index: true, element: <Home /> },
+            { path: "/search", element: <SearchResultPage /> },
             { path: "/call-for-papers", element: <CallForPapersPage /> },
             { path: "/contact", element: <ContactPage /> },
             { path: "/partners", element: <PartnersPage /> },
@@ -44,8 +58,24 @@ const Routes = createBrowserRouter([
             // ✅ Fix: Route for Admin Dashboard
             {
                 path: "/admin-dashboard",
-                element: <ProtectedRoute />, // Protect this route
-                children: [{ index: true, element: <AdminDashboard /> }],
+                element: <ProtectedRoute />,  // ✅ Protect Admin Routes
+                children: [
+                    { element: <AdminLayout />, children: [  // ✅ Wraps all admin pages with MiniDrawer
+                        { index: true, element: <AdminHome /> },
+                        { path: "home", element: <AdminHome /> },
+                        { path: "call-for-papers", element: <AdminCallForPapers /> },
+                        { path: "contact", element: <AdminContactsPage /> },
+                        { path: "partners", element: <PartnersPage /> },
+                        { path: "committee", element: <CommitteePage /> },
+                        { path: "event-history", element: <EventsHistoryPage /> },
+                        { path: "registration-and-fees", element: <RegistrationAndFeesPage /> },
+                        { path: "publication", element: <PublicationPage /> },
+                        { path: "schedule", element: <SchedulePage /> },
+                        { path: "venue", element: <VenuePage /> },
+                        { path: "keynote-speakers", element: <KeynoteSpeakersPage /> },
+                        { path: "invited-speakers", element: <InvitedSpeakersPage /> },
+                    ]}
+                ],
             },
         ],
     },

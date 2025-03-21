@@ -51,8 +51,8 @@ export default function Navbar() {
   };
 
   const handleSearch = (event) => {
-    if (event.key === 'Enter') {
-      console.log('Searching for:', searchQuery);
+    if ((event.key === 'Enter' || event.type === 'click') && searchQuery.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -87,7 +87,10 @@ export default function Navbar() {
               onKeyDown={handleSearch}
               sx={{ paddingLeft: 1 }}
             />
-            <Box sx={{ backgroundColor: '#B7152F', padding: '8px', cursor: 'pointer', height: 35, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              sx={{ backgroundColor: '#B7152F', padding: '8px', cursor: 'pointer', height: 35, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={handleSearch}
+            >
               <SearchIcon sx={{ color: 'white' }} />
             </Box>
           </Box>
@@ -150,6 +153,7 @@ export default function Navbar() {
             centered
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
+            sx={{ "& .MuiTab-root": { textTransform: "none" } }}
           >
 
             <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
