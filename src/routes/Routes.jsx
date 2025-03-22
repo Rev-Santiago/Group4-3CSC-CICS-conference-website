@@ -20,6 +20,7 @@ import AdminCallForPapers from "../pages/AdminCallForPapers/AdminCallForPapers";
 import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
 import AdminContactsPage from "../pages/AdminContactsPage/AdminContactsPage";
+import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -35,7 +36,7 @@ const AdminLayout = () => {
     );
   };
 
-const Routes = createBrowserRouter([
+  const Routes = createBrowserRouter([
     {
         path: "/",
         element: <App />,
@@ -55,12 +56,11 @@ const Routes = createBrowserRouter([
             { path: "/invited-speakers", element: <InvitedSpeakersPage /> },
             { path: "/login", element: <LoginPage /> },
 
-            // ✅ Fix: Route for Admin Dashboard
             {
                 path: "/admin-dashboard",
-                element: <ProtectedRoute />,  // ✅ Protect Admin Routes
+                element: <ProtectedRoute />,
                 children: [
-                    { element: <AdminLayout />, children: [  // ✅ Wraps all admin pages with MiniDrawer
+                    { element: <AdminLayout />, children: [
                         { index: true, element: <AdminHome /> },
                         { path: "home", element: <AdminHome /> },
                         { path: "call-for-papers", element: <AdminCallForPapers /> },
@@ -77,6 +77,9 @@ const Routes = createBrowserRouter([
                     ]}
                 ],
             },
+
+            // ✅ Add this wildcard route for handling 404 pages
+            { path: "*", element: <NotFoundPage /> },
         ],
     },
 ]);

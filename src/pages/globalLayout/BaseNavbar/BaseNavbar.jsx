@@ -29,7 +29,7 @@ export default function Navbar() {
   useEffect(() => {
     const updateScreenSize = () => {
       setIsSmallScreen(window.innerWidth <= 860);
-      setIsMediumScreen(window.innerWidth <= 1200);
+      setIsMediumScreen(window.innerWidth <= 1050);
       if (window.innerWidth > 860) setOpenNav(false); // Close mobile menu on resize to desktop
     };
     window.addEventListener('resize', updateScreenSize);
@@ -153,7 +153,7 @@ export default function Navbar() {
             centered
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
-            sx={{ "& .MuiTab-root": { textTransform: "none" } }}
+            sx={{ "& .MuiTab-root": { textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } } }}
           >
 
             <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
