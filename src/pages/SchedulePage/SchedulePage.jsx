@@ -10,19 +10,9 @@ const SchedulePage = () => {
                 const response = await fetch("http://localhost:5000/api/schedule");
                 const result = await response.json();
 
-                console.log("Fetched Schedule Data:", result); // Debugging
-
                 if (result.data) {
-                    const today = new Date();
-                    const todayInMS = today.setHours(0, 0, 0, 0); // Strip time part for comparison
-                    console.log("Today's date in MS:", todayInMS); // Debugging
-
-                    const filteredData = result.data.filter(day => {
-                        const eventDate = new Date(day.date).setHours(0, 0, 0, 0); // Set to midnight for clean comparison
-                        console.log(`Comparing ${eventDate} with ${todayInMS}`); // Debugging
-                        return eventDate >= todayInMS;
-                    });
-
+                    const today = new Date().toISOString().split("T")[0];
+                    const filteredData = result.data.filter(day => day.date >= today);
                     setScheduleData(filteredData);
                 } else {
                     setScheduleData([]);
@@ -48,65 +38,48 @@ const SchedulePage = () => {
             console.error("Invalid event data:", event);
             return;
         }
-    
+
         const eventDate = new Date(event.date);
-        if (isNaN(eventDate)) {
-            console.error("Invalid date format:", event.date);
-            return;
-        }
-    
-        // Extract start and end times
         const timeParts = event.time.split(" - ");
-        if (timeParts.length !== 2) {
-            console.error("Invalid time format:", event.time);
-            return;
-        }
-    
-        const startTime = timeParts[0]; // e.g., "02:00 PM"
-        const endTime = timeParts[1]; // e.g., "04:00 PM"
-    
+
         const convertTo24Hour = (timeString) => {
             let [time, modifier] = timeString.split(" ");
             let [hours, minutes] = time.split(":").map(Number);
-    
-            if (modifier === "PM" && hours !== 12) {
-                hours += 12;
-            } else if (modifier === "AM" && hours === 12) {
-                hours = 0;
-            }
-    
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
             return { hours, minutes };
         };
-    
-        // Convert start time
-        const start = convertTo24Hour(startTime);
+
+        const start = convertTo24Hour(timeParts[0]);
         eventDate.setHours(start.hours, start.minutes, 0);
-    
-        // Convert end time
-        const end = convertTo24Hour(endTime);
+
+        const end = convertTo24Hour(timeParts[1]);
         const endDate = new Date(eventDate);
         endDate.setHours(end.hours, end.minutes, 0);
-    
+
         const uid = `${event.program.replace(/\s+/g, "-")}-${eventDate.getTime()}@conference.com`;
-    
-        // Generate .ics file content
+
+        const formatICSTime = (date) => date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
         const icsData = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
+            "PRODID:-//Conference Schedule//EN",
+            "METHOD:PUBLISH",
             "BEGIN:VEVENT",
             `SUMMARY:${event.program}`,
-            `DTSTART:${eventDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
-            `DTEND:${endDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
+            `DTSTART:${formatICSTime(eventDate)}`,
+            `DTEND:${formatICSTime(endDate)}`,
             `UID:${uid}`,
-            `LOCATION:${event.location || "Not specified"}`, 
-            `DESCRIPTION:Speaker - ${event.speaker || "N/A"}`, 
+            `LOCATION:${event.venue || "Not specified"}`,
+            `DESCRIPTION:Venue - ${event.venue || "TBA"} | Online Room - ${event.online_room_link || "N/A"}`,
             "END:VEVENT",
             "END:VCALENDAR"
         ].join("\n");
-    
+
         const blob = new Blob([icsData], { type: "text/calendar" });
         const url = URL.createObjectURL(blob);
-    
+
         const a = document.createElement("a");
         a.href = url;
         a.download = `${event.program}.ics`;
@@ -115,6 +88,50 @@ const SchedulePage = () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
+
+    const handleAddToGoogleCalendar = (event) => {
+        if (!event || !event.program || !event.time) {
+            console.error("Invalid event data:", event);
+            return;
+        }
+    
+        const { program, time, venue, online_room_link, date } = event;
+    
+        console.log("Event Data:", event); // Debugging
+    
+        const [startTime, endTime] = time.split(" - ");
+    
+        const formatTime = (timeStr) => {
+            const [time, modifier] = timeStr.split(" ");
+            let [hours, minutes] = time.split(":").map(Number);
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            return `${hours.toString().padStart(2, "0")}${minutes.toString().padStart(2, "0")}00`;
+        };
+    
+        const eventDate = new Date(date);
+        const formattedDate = eventDate.toISOString().split("T")[0].replace(/-/g, "");
+    
+        const formattedStartTime = `${formattedDate}T${formatTime(startTime)}`;
+        const formattedEndTime = `${formattedDate}T${formatTime(endTime)}`;
+
+    
+        const details = `Venue: ${venue || "TBA"}\nOnline Room: ${online_room_link || "N/A"}`;
+        
+        const googleCalendarURL = new URL("https://calendar.google.com/calendar/render");
+        googleCalendarURL.searchParams.append("action", "TEMPLATE");
+        googleCalendarURL.searchParams.append("text", program);
+        googleCalendarURL.searchParams.append("dates", `${formattedStartTime}/${formattedEndTime}`);
+        googleCalendarURL.searchParams.append("details", details.split("\n").join("\n"));
+ // Correct line break encoding
+        googleCalendarURL.searchParams.append("location", venue || "");
+        googleCalendarURL.searchParams.append("ctz", "Asia/Manila");
+    
+        window.open(googleCalendarURL.toString(), "_blank");
+    };
+    
+    
+    
     
 
     return (
@@ -125,7 +142,7 @@ const SchedulePage = () => {
             </p>
 
             <h2 className="text-2xl mb-6 text-center">Schedule Details</h2>
-            <p className="text-center text-gray-600">*Works only with iCalendar and Outlook</p>
+            <p className="text-center text-gray-600">*Works with Google Calendar, iCalendar, and Outlook</p>
 
             {loading ? (
                 <p className="text-center">Loading schedule...</p>
@@ -139,32 +156,26 @@ const SchedulePage = () => {
                                     <tr className="bg-customRed text-white">
                                         <th className="border border-black p-2 w-1/4">Time</th>
                                         <th className="border border-black p-2 w-1/2">Programme</th>
-                                        <th className="border border-black p-2 w-1/4">Actions</th>
+                                        <th className="border border-black p-2 w-1/4">Add to Calendar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {day.events.map((event, i) => (
                                         <tr key={i} className="border border-black text-center">
                                             <td className="border border-black p-2">{event.time}</td>
-                                            <td className="border border-black p-2 whitespace-pre-line">{event.program}</td>
-                                            <td className="border border-black p-2">
+                                            <td className="border border-black p-2">{event.program}</td>
+                                            <td className="border border-black p-2 flex justify-center gap-2">
                                                 <button
                                                     onClick={() => handleAddToCalendar({ ...event, date: day.date })}
-                                                    className="bg-customRed text-white px-4 py-2 rounded-lg transition duration-300 ease-in-out hover:bg-red-700 shadow-md flex items-center justify-center gap-2 w-full"
+                                                    className="bg-customRed text-white px-4 py-2 rounded-lg"
                                                 >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 24 24"
-                                                        fill="currentColor"
-                                                        className="w-5 h-5 text-white"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M12 4a1 1 0 011 1v6h6a1 1 0 110 2h-6v6a1 1 0 11-2 0v-6H5a1 1 0 110-2h6V5a1 1 0 011-1z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                    Add to Calendar
+                                                    iCalendar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAddToGoogleCalendar({ ...event, date: day.date })}
+                                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                                                >
+                                                    Google Calendar
                                                 </button>
                                             </td>
                                         </tr>

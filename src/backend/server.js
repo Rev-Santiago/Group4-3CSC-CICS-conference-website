@@ -220,7 +220,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
-            SELECT event_date, time_slot, program 
+            SELECT event_date, time_slot, program, venue, online_room_link  
             FROM events_history 
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
@@ -229,13 +229,18 @@ app.get("/api/schedule", async (req, res) => {
 
         // Group events by date
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program } = event;
+            const { event_date, time_slot, program, venue, online_room_link } = event;
             const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
             
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
-            acc[dateKey].events.push({ time: time_slot, program });
+            acc[dateKey].events.push({ 
+                time: time_slot, 
+                program, 
+                venue, 
+                online_room_link 
+            });
 
             return acc;
         }, {});
@@ -246,6 +251,7 @@ app.get("/api/schedule", async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 
 app.get("/api/events", async (req, res) => {
