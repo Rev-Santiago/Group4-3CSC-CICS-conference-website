@@ -6,11 +6,11 @@ import LoaderPage from "./pages/LoaderPage/LoaderPage.jsx";
 import { useState, createContext, useEffect } from "react";
 
 export const AuthContext = createContext(null);
-export const LayoutContext = createContext(null); // ✅ New Context
+export const LayoutContext = createContext(null); // ✅ Context for layout control
 
 function App() {
   const [auth, setAuth] = useState(null);
-  const [hideLayout, setHideLayout] = useState(false); // ✅ State for hiding layout
+  const [hideLayout, setHideLayout] = useState(false); // ✅ Track layout visibility
   const { state } = useNavigation();
   const location = useLocation();
 
@@ -21,15 +21,19 @@ function App() {
     }
   }, []);
 
+  // ✅ Hide layout for 404 pages or admin routes
+  const isAdminRoute = location.pathname.startsWith("/admin-dashboard");
+  const shouldHideLayout = hideLayout || isAdminRoute;
+
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
       <LayoutContext.Provider value={{ hideLayout, setHideLayout }}>
         <div>
           <Box sx={{ maxWidth: "1100px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
-            {!hideLayout && <BaseNavbar />}  {/* ✅ Hide dynamically */}
+            {!shouldHideLayout && <BaseNavbar />} {/* ✅ Hide for admin & 404 */}
             {state === "loading" ? <LoaderPage /> : <Outlet />}
           </Box>
-          {!hideLayout && <BaseFooter />}  {/* ✅ Hide dynamically */}
+          {!shouldHideLayout && <BaseFooter />} {/* ✅ Hide for admin & 404 */}
         </div>
       </LayoutContext.Provider>
     </AuthContext.Provider>
