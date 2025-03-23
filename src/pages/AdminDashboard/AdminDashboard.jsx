@@ -48,10 +48,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto mt-10">
-      {/* <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      {/* <h1 className="text-2xl font-bold">Admin Dashboar</h1>
       {adminData ? (
         <> */}
-          <MiniDrawer onLogout={handleLogout} />
+          {/* <MiniDrawer onLogout={handleLogout} /> */}
           {/* <p className="mt-4">Welcome, {adminData.user}!</p>
           <button onClick={handleLogout} className="bg-red-500 text-white p-2 mt-4">
             Logout
