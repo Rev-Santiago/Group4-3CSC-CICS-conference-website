@@ -223,38 +223,37 @@ app.get("/api/schedule", async (req, res) => {
         const query = `
             SELECT event_date, time_slot, program, venue, online_room_link  
             FROM events_history 
-            WHERE event_date >= CURDATE()  -- Only fetch current and future events
+            WHERE event_date >= CURDATE()  
             ORDER BY event_date, time_slot;
         `;
 
-        const [rows] = await db.query(query); // Changed `execute()` to `query()`
+        const [rows] = await db.query(query); // Use `.query()` instead of `.execute()`
 
         if (!rows || rows.length === 0) {
             return res.json([]); // Return an empty array if no data is found
         }
 
-        // Group events by date
+        // Ensure event_date is a Date object
         const groupedData = rows.reduce((acc, event) => {
             let { event_date, time_slot, program, venue, online_room_link } = event;
 
-            // Ensure event_date is a Date object before using toISOString()
             const dateKey = new Date(event_date).toISOString().split("T")[0];
 
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
 
-            acc[dateKey].events.push({ 
-                time: time_slot, 
-                program, 
-                venue, 
-                online_room_link 
+            acc[dateKey].events.push({
+                time: time_slot,
+                program,
+                venue,
+                online_room_link
             });
 
             return acc;
         }, {});
 
-        res.json(Object.values(groupedData)); // Send array instead of `{ data: array }`
+        res.json(Object.values(groupedData));
     } catch (error) {
         console.error("Error fetching schedule:", error);
         res.status(500).json({ error: "Internal Server Error" });

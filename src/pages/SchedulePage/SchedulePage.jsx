@@ -9,7 +9,7 @@ const SchedulePage = () => {
         const fetchSchedule = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/schedule`);
-                const result = await response.json();
+                const result = response.data;
 
                 if (result.data) {
                     const today = new Date().toISOString().split("T")[0];
