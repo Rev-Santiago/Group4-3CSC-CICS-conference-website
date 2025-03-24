@@ -3,14 +3,28 @@ dotenv.config();
 
 import mysql from "mysql2";
 import process from "process";
+import { parse } from "url"; // To parse DATABASE_URL
 
-// Create MySQL Connection Pool (Recommended for scalability)
+// Check if DATABASE_URL is set (Railway provides this)
+const dbUrl = process.env.DATABASE_URL;
+
+if (!dbUrl) {
+    console.error("❌ DATABASE_URL is not defined in environment variables.");
+    process.exit(1);
+}
+
+// Parse DATABASE_URL
+const { hostname, port, auth, pathname } = new URL(dbUrl);
+const [user, password] = auth.split(":");
+const database = pathname.substring(1); // Remove leading "/"
+
+// Create MySQL Connection Pool
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    host: hostname,
+    user,
+    password,
+    database,
+    port: Number(port),
     waitForConnections: true,
     connectionLimit: 10, // Limits the number of connections to 10
     queueLimit: 0
@@ -20,10 +34,10 @@ const pool = mysql.createPool({
 pool.getConnection((err, connection) => {
     if (err) {
         console.error("❌ Database Connection Failed:", err);
-        process.exit(1); // Exit the process if the database fails to connect
+        process.exit(1); // Exit if connection fails
     }
     console.log("✅ MySQL Database Connected");
-    connection.release(); // Release the connection back to the pool
+    connection.release();
 });
 
 // Exporting promise-based pool for async/await support
