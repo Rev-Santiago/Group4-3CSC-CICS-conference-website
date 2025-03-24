@@ -8,7 +8,10 @@ const PublicationPage = () => {
 
     const fetchPublications = async (page = 1) => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/publications?page=${page}&limit=5`);
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+            const response = await axios.get(`${API_BASE_URL}/api/publications?page=${page}&limit=5`);
+
             setPublications(response.data.data);
             setTotalPages(response.data.totalPages);
             setCurrentPage(response.data.currentPage);

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const VenuePage = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -7,7 +9,7 @@ const VenuePage = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/events");
+                const response = await axios.get(`${API_BASE_URL}/api/events`);
                 const data = await response.json();
 
                 // Get today's date in YYYY-MM-DD format

@@ -4,7 +4,7 @@ import { useState, createContext, useEffect } from "react";
 import BaseNavbar from "./pages/globalLayout/BaseNavbar/BaseNavbar.jsx";
 import BaseFooter from "./pages/globalLayout/BaseFooter/BaseFooter.jsx";
 import LoaderPage from "./pages/LoaderPage/LoaderPage.jsx";
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const AuthContext = createContext(null);
 export const LayoutContext = createContext(null);
 
@@ -24,7 +24,7 @@ function App() {
 
   const handleLogout = async () => {
     localStorage.removeItem("authToken"); // ✅ Remove token
-    await fetch("http://localhost:5000/api/logout", {
+    await fetch(`${API_BASE_URL}/api/logout`, {
       method: "POST",
       credentials: "include",
     });

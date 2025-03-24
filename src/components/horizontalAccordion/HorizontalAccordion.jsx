@@ -15,6 +15,10 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function HorizontalAccordion() {
     const navigate = useNavigate();
     const [publications, setPublications] = React.useState([]);
@@ -31,7 +35,7 @@ export default function HorizontalAccordion() {
 
     // Fetch publications on component mount
     React.useEffect(() => {
-        fetch("http://localhost:5000/api/publications?page=1&limit=4")
+        axios.get(`${API_BASE_URL}/api/publications?page=1&limit=4`)
             .then((res) => res.json())
             .then((data) => {
                 if (data.data) {

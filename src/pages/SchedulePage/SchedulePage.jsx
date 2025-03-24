@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-
+import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SchedulePage = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -7,7 +8,7 @@ const SchedulePage = () => {
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/schedule");
+                const response = await axios.get(`${API_BASE_URL}/api/schedule`);
                 const result = await response.json();
 
                 if (result.data) {
