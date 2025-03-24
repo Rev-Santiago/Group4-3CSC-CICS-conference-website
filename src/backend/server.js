@@ -241,7 +241,7 @@ app.get("/api/schedule", async (req, res) => {
             return acc;
         }, {});
 
-        res.json(Object.values(groupedData));
+        res.json({ data: Object.values(groupedData) });
     } catch (error) {
         console.error("Error fetching schedule:", error);
         res.status(500).json({ error: "Internal server error" });
