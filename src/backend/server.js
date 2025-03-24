@@ -226,15 +226,24 @@ app.get("/api/schedule", async (req, res) => {
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
         `;
-        const [rows] = await db.execute(query);
+
+        const [rows] = await db.query(query); // Changed `execute()` to `query()`
+
+        if (!rows || rows.length === 0) {
+            return res.json([]); // Return an empty array if no data is found
+        }
 
         // Group events by date
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program, venue, online_room_link } = event;
-            const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
+            let { event_date, time_slot, program, venue, online_room_link } = event;
+
+            // Ensure event_date is a Date object before using toISOString()
+            const dateKey = new Date(event_date).toISOString().split("T")[0];
+
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
+
             acc[dateKey].events.push({ 
                 time: time_slot, 
                 program, 
@@ -245,12 +254,13 @@ app.get("/api/schedule", async (req, res) => {
             return acc;
         }, {});
 
-        res.json({ data: Object.values(groupedData) });
+        res.json(Object.values(groupedData)); // Send array instead of `{ data: array }`
     } catch (error) {
         console.error("Error fetching schedule:", error);
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
 
 
 
@@ -288,11 +298,6 @@ app.get("/api/events", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
-
-
-
-
 
 // 🚀 Start Server
 app.listen(PORT, () => {
