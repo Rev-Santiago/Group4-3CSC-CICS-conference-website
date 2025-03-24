@@ -11,7 +11,7 @@ const Breadcrumbs = () => {
     <MUIBreadcrumbs
       separator={<NavigateNextIcon fontSize="small" />}
       aria-label="breadcrumb"
-      sx={{ my: 2 }}
+      sx={{ my: 2, fontSize: "0.8rem" }}
     >
       <Link component={RouterLink} to="/" underline="hover" sx={{ color: "#B7152F" }}>
         Home
@@ -24,7 +24,7 @@ const Breadcrumbs = () => {
             component={RouterLink}
             to={routeTo}
             underline="hover"
-            sx={{ color: "#B7152F" }}
+            sx={{ color: "#B7152F", fontSize: "0.8rem" }}
           >
             {value}
           </Link>

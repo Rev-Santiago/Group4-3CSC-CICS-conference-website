@@ -17,7 +17,7 @@ function Home() {
             <CarouselImage />
           </div>
 
-          <div className="mx-20 space-y-4 pb-5">
+          <div className="mx-10 space-y-4 pb-5">
             <p className="text-justify ">
               The University of Santo Tomas College of Information and Computing Sciences (UST CICS) 
               stands at the forefront of technology-driven innovation and academic excellence. As a leading 

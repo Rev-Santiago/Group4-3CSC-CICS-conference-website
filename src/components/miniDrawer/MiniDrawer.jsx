@@ -32,6 +32,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import cicsSeal from "../../assets/cics-seal.png";
+import { useContext } from "react";
+import { AuthContext } from "../../App"; 
 
 const drawerWidth = 240;
 
@@ -123,9 +125,10 @@ const menuItems = [
   { text: "Invited Speakers", icon: <PersonIcon />, path: "/admin-dashboard/invited-speakers" },
 ];
 
-export default function MiniDrawer({ children, onLogout }) {
+export default function MiniDrawer({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const { handleLogout } = useContext(AuthContext);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -196,7 +199,7 @@ export default function MiniDrawer({ children, onLogout }) {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}>
-          <ListItemButton onClick={onLogout}>
+          <ListItemButton onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon color="error" />
             </ListItemIcon>

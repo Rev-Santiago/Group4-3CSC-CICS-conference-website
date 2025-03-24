@@ -61,7 +61,7 @@ const AdminLayout = () => {
                 element: <ProtectedRoute />,
                 children: [
                     { element: <AdminLayout />, children: [
-                        { index: true, element: <AdminHome /> },
+                        { index: true, element: <AdminDashboard /> },
                         { path: "home", element: <AdminHome /> },
                         { path: "call-for-papers", element: <AdminCallForPapers /> },
                         { path: "contact", element: <AdminContactsPage /> },

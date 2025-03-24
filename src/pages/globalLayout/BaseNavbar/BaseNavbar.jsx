@@ -118,31 +118,40 @@ export default function Navbar() {
         {isMediumScreen ? (
           <Grid container spacing={2} sx={{ padding: 2 }}>
             <Grid item xs={3}>
-              <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
+              <Tab label="Home" component={Link} to="/" {...a11yProps(0)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
+              <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
+              <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)} />
+              <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)} />
+              <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
+              <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
+              <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
+              <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
             <Grid item xs={3}>
-              <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
+              <Tab label="Login" component={Link} to="/login" {...a11yProps(8)}
+                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
           </Grid>
         ) : (
@@ -170,17 +179,37 @@ export default function Navbar() {
       </Box>
 
       {/* Mobile Navigation */}
-      <Collapse in={openNav} sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F' }}>
+      <Collapse in={openNav}
+        sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F' }}
+      >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
-          <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)} />
-          <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)} />
-          <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)} />
-          <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)} />
-          <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)} />
-          <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)} />
-          <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)} />
-          <Tab label="Login" component={Link} to="/login" {...a11yProps(8)} />
+          <Tab label="Home" component={Link} to="/" {...a11yProps(0)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
+          <Tab label="Login" component={Link} to="/login" {...a11yProps(8)}
+            sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }}
+          />
         </Box>
       </Collapse>
 
