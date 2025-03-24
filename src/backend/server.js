@@ -23,7 +23,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: 'https://group4-3-csc-cics-conference-website-mmxwmlun9.vercel.app', // Vercel frontend URL
+        origin: 'https://group4-3-csc-cics-conference-website-czpco26gq.vercel.app', // Vercel frontend URL
         credentials: true, // Allow cookies to be sent across origins
     })
 );
