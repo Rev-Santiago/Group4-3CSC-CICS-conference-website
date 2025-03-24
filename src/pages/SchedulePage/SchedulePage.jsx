@@ -9,14 +9,14 @@ const SchedulePage = () => {
         const fetchSchedule = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/schedule`);
-                const result = response.data;  // ✅ Fix applied
-    
-                if (result.data) {
+                const result = response.data;  // ✅ Axios already parses JSON
+
+                if (Array.isArray(result)) {  // ✅ Fix: Check if response is an array
                     const today = new Date().toISOString().split("T")[0];
-                    const filteredData = result.data.filter(day => day.date >= today);
+                    const filteredData = result.filter(day => day.date >= today);
                     setScheduleData(filteredData);
                 } else {
-                    setScheduleData([]);
+                    setScheduleData([]); // Fallback for unexpected data
                 }
             } catch (error) {
                 console.error("Error fetching schedule:", error);
