@@ -15,7 +15,6 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-const allowedOrigins = ["https://your-vercel-https://group4-3-csc-cics-conference-website-lt9oalun6.vercel.app.vercel.app"];
 
 // ✅ Security Middleware
 app.use(helmet()); // Security headers
@@ -24,7 +23,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: allowedOrigins,
+        origin: 'https://group4-3-csc-cics-conference-website-rk2l66uvc.vercel.app',
         credentials: true,
     })
 );
