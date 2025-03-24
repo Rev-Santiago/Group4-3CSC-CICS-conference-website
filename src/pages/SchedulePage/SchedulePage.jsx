@@ -9,12 +9,8 @@ const SchedulePage = () => {
         const fetchSchedule = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/schedule`);
-                const result = response.data;
-
-                if (result.data) {
-                    const today = new Date().toISOString().split("T")[0];
-                    const filteredData = result.data.filter(day => day.date >= today);
-                    setScheduleData(filteredData);
+                if (response.data && response.data.data) {
+                    setScheduleData(response.data.data);
                 } else {
                     setScheduleData([]);
                 }
@@ -25,9 +21,10 @@ const SchedulePage = () => {
                 setLoading(false);
             }
         };
-
+    
         fetchSchedule();
     }, []);
+    
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };

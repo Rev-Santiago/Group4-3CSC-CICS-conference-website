@@ -227,16 +227,14 @@ app.get("/api/schedule", async (req, res) => {
             ORDER BY event_date, time_slot;
         `;
 
-        const [rows] = await db.query(query); // Use `.query()` instead of `.execute()`
+        const [rows] = await db.query(query);
 
         if (!rows || rows.length === 0) {
-            return res.json([]); // Return an empty array if no data is found
+            return res.json({ data: [] });
         }
 
-        // Ensure event_date is a Date object
         const groupedData = rows.reduce((acc, event) => {
-            let { event_date, time_slot, program, venue, online_room_link } = event;
-
+            const { event_date, time_slot, program, venue, online_room_link } = event;
             const dateKey = new Date(event_date).toISOString().split("T")[0];
 
             if (!acc[dateKey]) {
@@ -253,12 +251,13 @@ app.get("/api/schedule", async (req, res) => {
             return acc;
         }, {});
 
-        res.json(Object.values(groupedData));
+        res.json({ data: Object.values(groupedData) });
     } catch (error) {
         console.error("Error fetching schedule:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
 
 
 
