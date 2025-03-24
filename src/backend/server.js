@@ -23,7 +23,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: 'https://group4-3-csc-cics-conference-website-3026mtcke.vercel.app', // Vercel frontend URL
+        origin: 'https://group4-3-csc-cics-conference-website-rk2l66uvc.vercel.app', // Vercel frontend URL
         credentials: true, // Allow cookies to be sent across origins
     })
 );
@@ -218,6 +218,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 });
 
 // 📅 Fetch Event Schedule Dynamically
+// Backend (server.js)
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
@@ -226,32 +227,16 @@ app.get("/api/schedule", async (req, res) => {
             WHERE event_date >= CURDATE()  
             ORDER BY event_date, time_slot;
         `;
+        const [rows] = await db.query(query); // Use .query() instead of .execute()
 
-        const [rows] = await db.query(query); // Use `.query()` instead of `.execute()`
-
-        if (!rows || rows.length === 0) {
-            return res.json([]); // Return an empty array if no data is found
-        }
-
-        // Ensure event_date is a Date object
+        // Ensure event_date is properly formatted
         const groupedData = rows.reduce((acc, event) => {
-            let { event_date, time_slot, program, venue, online_room_link } = event;
-
-            const dateKey = event_date instanceof Date ? 
-            event_date.toISOString().split("T")[0] : 
-            new Date(event_date).toISOString().split("T")[0];
-
-
+            const { event_date, time_slot, program, venue, online_room_link } = event;
+            const dateKey = new Date(event_date).toISOString().split("T")[0];
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
-
-            acc[dateKey].events.push({
-                time: time_slot,
-                program,
-                venue,
-                online_room_link
-            });
+            acc[dateKey].events.push({ time: time_slot, program, venue, online_room_link });
 
             return acc;
         }, {});
@@ -259,10 +244,9 @@ app.get("/api/schedule", async (req, res) => {
         res.json(Object.values(groupedData));
     } catch (error) {
         console.error("Error fetching schedule:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 
 
@@ -300,6 +284,7 @@ app.get("/api/events", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
 
 // 🚀 Start Server
 app.listen(PORT, () => {
