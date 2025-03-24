@@ -1,7 +1,5 @@
 import { Carousel } from "@material-tailwind/react";
 import { useState, useEffect } from "react";
-import cics1 from "../../assets/frassati-image.png";
-import cics2 from "../../assets/frassati-image.png";
 
 const CarouselImage = () => {
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
@@ -22,16 +20,16 @@ const CarouselImage = () => {
         transition={{ duration: 3 }}
         autoplay={true}
         loop={true}
-        prevArrow=""
-        nextArrow=""
+        prevArrow={null} // Fixed: Use null instead of ""
+        nextArrow={null} // Fixed: Use null instead of ""
         className="w-11/12 h-96">
         <img
-          src={cics1}
+          src="/assets/frassati-image.png" // Fixed: Use public folder path
           alt="CICS Image 1"
           className="h-full w-full object-cover"
         />
         <img
-          src={cics2}
+          src="/assets/frassati-image.png" // Fixed: Use public folder path
           alt="CICS Image 2"
           className="h-full w-full object-cover"
         />
