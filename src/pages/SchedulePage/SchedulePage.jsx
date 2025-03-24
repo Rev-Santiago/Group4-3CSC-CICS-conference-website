@@ -8,8 +8,10 @@ const SchedulePage = () => {
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/schedule`);
-                const result = response.data;  // ✅ Axios already parses JSON
+                const response = await fetch(`${API_BASE_URL}/api/schedule`);
+                const result = await response.json();
+                console.log("Fetched Data:", result);
+
 
                 if (Array.isArray(result)) {  // ✅ Fix: Check if response is an array
                     const today = new Date().toISOString().split("T")[0];
