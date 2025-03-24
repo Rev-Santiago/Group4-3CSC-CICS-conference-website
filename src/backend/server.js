@@ -15,6 +15,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
+const allowedOrigins = ["https://your-vercel-https://group4-3-csc-cics-conference-website-lt9oalun6.vercel.app.vercel.app"];
+
 // ✅ Security Middleware
 app.use(helmet()); // Security headers
 app.use(express.json());
@@ -22,7 +24,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: allowedOrigins,
         credentials: true,
     })
 );
@@ -231,7 +233,6 @@ app.get("/api/schedule", async (req, res) => {
         const groupedData = rows.reduce((acc, event) => {
             const { event_date, time_slot, program, venue, online_room_link } = event;
             const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
-            
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
