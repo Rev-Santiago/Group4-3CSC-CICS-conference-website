@@ -23,7 +23,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: 'https://group4-3-csc-cics-conference-website-ahnoljreu.vercel.app', // Vercel frontend URL
+        origin: 'https://group4-3-csc-cics-conference-website-6qa5h9jir.vercel.app', // Vercel frontend URL
         credentials: true, // Allow cookies to be sent across origins
     })
 );
@@ -227,15 +227,20 @@ app.get("/api/schedule", async (req, res) => {
             ORDER BY event_date, time_slot;
         `;
 
-        const [rows] = await db.query(query);
+        const [rows] = await db.query(query); // Use `.query()` instead of `.execute()`
 
         if (!rows || rows.length === 0) {
-            return res.json({ data: [] });
+            return res.json([]); // Return an empty array if no data is found
         }
 
+        // Ensure event_date is a Date object
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program, venue, online_room_link } = event;
-            const dateKey = new Date(event_date).toISOString().split("T")[0];
+            let { event_date, time_slot, program, venue, online_room_link } = event;
+
+            const dateKey = event_date instanceof Date ? 
+            event_date.toISOString().split("T")[0] : 
+            new Date(event_date).toISOString().split("T")[0];
+
 
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
@@ -251,13 +256,12 @@ app.get("/api/schedule", async (req, res) => {
             return acc;
         }, {});
 
-        res.json({ data: Object.values(groupedData) });
+        res.json(Object.values(groupedData));
     } catch (error) {
         console.error("Error fetching schedule:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
 
 
 

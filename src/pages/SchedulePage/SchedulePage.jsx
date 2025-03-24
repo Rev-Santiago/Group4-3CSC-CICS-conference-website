@@ -9,8 +9,10 @@ const SchedulePage = () => {
         const fetchSchedule = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/schedule`);
-                if (response.data && response.data.data) {
-                    setScheduleData(response.data.data);
+                const result = response.data;  // No `.data` inside
+        
+                if (Array.isArray(result)) {
+                    setScheduleData(result); // Directly set it
                 } else {
                     setScheduleData([]);
                 }
@@ -21,10 +23,10 @@ const SchedulePage = () => {
                 setLoading(false);
             }
         };
-    
+        
+
         fetchSchedule();
     }, []);
-    
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };
