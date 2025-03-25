@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MiniDrawer from "../../components/miniDrawer/MiniDrawer";
-
+import PageCardComponent from "../../components/pageCardsComponent/PageCardsComponent";
 
 export default function AdminDashboard() {
   const [adminData, setAdminData] = useState(null);
@@ -37,29 +37,23 @@ export default function AdminDashboard() {
     fetchAdminData();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    localStorage.removeItem("authToken"); // ✅ Remove token on logout
-    await fetch("http://localhost:5000/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    navigate("/login");
+  const handleSeeMore = () => {
+    console.log("See more clicked");
   };
 
   return (
     <div className="container mx-auto mt-10">
-      {/* <h1 className="text-2xl font-bold">Admin Dashboar</h1>
-      {adminData ? (
-        <> */}
-          {/* <MiniDrawer onLogout={handleLogout} /> */}
-          {/* <p className="mt-4">Welcome, {adminData.user}!</p>
-          <button onClick={handleLogout} className="bg-red-500 text-white p-2 mt-4">
-            Logout
-          </button>
-        </>
-      ) : (
-        <p>Loading...</p>
-      )} */}
+      <h1 className="text-4xl font-bold text-center mb-5 border-b-2 border-black pb-2">Page Preview</h1>
+      <div className="grid grid-cols-3 gap-4 pt-5">
+        {["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History"].map((title, index) => (
+          <PageCardComponent key={index} title={title} lastEdited="1:05 PM" />
+        ))}
+      </div>
+      <div className="flex justify-center mt-5">
+        <button onClick={handleSeeMore} className="bg-customRed text-white px-4 py-2 rounded-full flex items-center">
+          See More <span className="ml-2">▼</span>
+        </button>
+      </div>
     </div>
   );
 }

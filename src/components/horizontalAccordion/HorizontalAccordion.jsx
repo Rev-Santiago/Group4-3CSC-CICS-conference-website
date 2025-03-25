@@ -131,7 +131,7 @@ export default function HorizontalAccordion() {
                                             sx={{
                                                 color: "white",
                                                 fontWeight: "bold",
-                                                borderRight: "2px solid black",
+                                                borderRight: "1px solid black",
                                                 textAlign: "center"
                                             }}>
                                             Date
@@ -145,7 +145,7 @@ export default function HorizontalAccordion() {
                                     {publications.length > 0 ? (
                                         publications.map((pub, index) => (
                                             <TableRow key={index}>
-                                                <TableCell sx={{ textAlign: "center" }}>
+                                                <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", }}>
                                                     {formatDate(pub.publication_date)}
                                                 </TableCell>
                                                 <TableCell sx={{ textAlign: "center" }}>
