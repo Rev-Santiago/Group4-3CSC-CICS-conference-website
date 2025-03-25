@@ -111,18 +111,18 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" 
 );
 
 const menuItems = [
-  { text: "Home", icon: <HomeIcon />, path: "/admin-dashboard/home" },
-  { text: "Call For Papers", icon: <ArticleIcon />, path: "/admin-dashboard/call-for-papers" },
-  { text: "Contacts", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
-  { text: "Partners", icon: <GroupIcon />, path: "/admin-dashboard/partners" },
-  { text: "Committee", icon: <PeopleAltIcon />, path: "/admin-dashboard/committee" },
-  { text: "Event History", icon: <HistoryIcon />, path: "/admin-dashboard/event-history" },
-  { text: "Registration & Fees", icon: <MonetizationOnIcon />, path: "/admin-dashboard/registration-and-fees" },
-  { text: "Publication", icon: <BookIcon />, path: "/admin-dashboard/publication" },
-  { text: "Schedule", icon: <EventIcon />, path: "/admin-dashboard/schedule" },
-  { text: "Venue", icon: <LocationOnIcon />, path: "/admin-dashboard/venue" },
-  { text: "Keynote Speakers", icon: <StarIcon />, path: "/admin-dashboard/keynote-speakers" },
-  { text: "Invited Speakers", icon: <PersonIcon />, path: "/admin-dashboard/invited-speakers" },
+  { text: "Dashboard", icon: <HomeIcon />, path: "/admin-dashboard" },
+  { text: "Event Manager", icon: <ArticleIcon />, path: "/admin-dashboard/call-for-papers" },
+  { text: "Page Manager", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
+  // { text: "Partners", icon: <GroupIcon />, path: "/admin-dashboard/partners" },
+  // { text: "Committee", icon: <PeopleAltIcon />, path: "/admin-dashboard/committee" },
+  // { text: "Event History", icon: <HistoryIcon />, path: "/admin-dashboard/event-history" },
+  // { text: "Registration & Fees", icon: <MonetizationOnIcon />, path: "/admin-dashboard/registration-and-fees" },
+  // { text: "Publication", icon: <BookIcon />, path: "/admin-dashboard/publication" },
+  // { text: "Schedule", icon: <EventIcon />, path: "/admin-dashboard/schedule" },
+  // { text: "Venue", icon: <LocationOnIcon />, path: "/admin-dashboard/venue" },
+  // { text: "Keynote Speakers", icon: <StarIcon />, path: "/admin-dashboard/keynote-speakers" },
+  // { text: "Invited Speakers", icon: <PersonIcon />, path: "/admin-dashboard/invited-speakers" },
 ];
 
 export default function MiniDrawer({ children }) {
