@@ -16,24 +16,23 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import Tooltip from "@mui/material/Tooltip";
+import Collapse from "@mui/material/Collapse";
 import HomeIcon from "@mui/icons-material/Home";
 import ArticleIcon from "@mui/icons-material/Article";
 import ContactsIcon from "@mui/icons-material/Contacts";
-import GroupIcon from "@mui/icons-material/Group";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import HistoryIcon from "@mui/icons-material/History";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import BookIcon from "@mui/icons-material/Book";
-import EventIcon from "@mui/icons-material/Event";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import StarIcon from "@mui/icons-material/Star";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import cicsSeal from "../../assets/cics-seal.png";
 import { useContext } from "react";
-import { AuthContext } from "../../App"; 
+import { AuthContext } from "../../App";
+import Popper from "@mui/material/Popper";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Paper from "@mui/material/Paper";
 
 const drawerWidth = 240;
 
@@ -61,7 +60,7 @@ const closedMixin = (theme) => ({
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-end",
+  justifyContent: "center",
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
 }));
@@ -84,66 +83,86 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" })(
-  ({ theme, open }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    whiteSpace: "nowrap",
-    boxSizing: "border-box",
-    color: "white", // ✅ Text color
-    "& .MuiDrawer-paper": {
-      backgroundColor: "black", // ✅ Ensures the drawer stays black
-      color: "white", // ✅ Ensures the text is white
-    },
-    "& .MuiListItemIcon-root": {
-      color: "white", // ✅ Icons white
-    },
-    ...(open
-      ? {
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== "open",
+})(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  color: "white",
+  "& .MuiDrawer-paper": {
+    backgroundColor: "black",
+    color: "white",
+  },
+  "& .MuiListItemIcon-root": {
+    color: "white",
+  },
+  ...(open
+    ? {
         ...openedMixin(theme),
-        "& .MuiDrawer-paper": { ...openedMixin(theme), backgroundColor: "black", color: "white" },
+        "& .MuiDrawer-paper": {
+          ...openedMixin(theme),
+          backgroundColor: "black",
+          color: "white",
+        },
       }
-      : {
+    : {
         ...closedMixin(theme),
-        "& .MuiDrawer-paper": { ...closedMixin(theme), backgroundColor: "black", color: "white" },
+        "& .MuiDrawer-paper": {
+          ...closedMixin(theme),
+          backgroundColor: "black",
+          color: "white",
+        },
       }),
-  })
-);
+}));
 
 const menuItems = [
   { text: "Dashboard", icon: <HomeIcon />, path: "/admin-dashboard" },
-  { text: "Event Manager", icon: <ArticleIcon />, path: "/admin-dashboard/call-for-papers" },
-  { text: "Page Manager", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
-  // { text: "Partners", icon: <GroupIcon />, path: "/admin-dashboard/partners" },
-  // { text: "Committee", icon: <PeopleAltIcon />, path: "/admin-dashboard/committee" },
-  // { text: "Event History", icon: <HistoryIcon />, path: "/admin-dashboard/event-history" },
-  // { text: "Registration & Fees", icon: <MonetizationOnIcon />, path: "/admin-dashboard/registration-and-fees" },
-  // { text: "Publication", icon: <BookIcon />, path: "/admin-dashboard/publication" },
-  // { text: "Schedule", icon: <EventIcon />, path: "/admin-dashboard/schedule" },
-  // { text: "Venue", icon: <LocationOnIcon />, path: "/admin-dashboard/venue" },
-  // { text: "Keynote Speakers", icon: <StarIcon />, path: "/admin-dashboard/keynote-speakers" },
-  // { text: "Invited Speakers", icon: <PersonIcon />, path: "/admin-dashboard/invited-speakers" },
+  { text: "Events", icon: <ArticleIcon />, isEvent: true },
+  { text: "Pages", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
 ];
 
 export default function MiniDrawer({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const [eventOpen, setEventOpen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
   const { handleLogout } = useContext(AuthContext);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);
+  const toggleEventSidebar = () => setEventOpen(!eventOpen);
+
+  const handleEventClick = (event, isEvent) => {
+    if (!open && isEvent) {
+      setAnchorEl(event.currentTarget);
+    } else {
+      toggleEventSidebar();
+    }
   };
 
-  const handleDrawerClose = () => {
-    setOpen(false);
+  const handleClose = () => {
+    setAnchorEl(null);
   };
+
+  const openPopper = Boolean(anchorEl);
 
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open} sx={{ backgroundColor: "black", borderBottom: "4px solid #B7152F" }}>
+      <AppBar
+        position="fixed"
+        open={open}
+        sx={{ backgroundColor: "black", borderBottom: "4px solid #B7152F" }}
+      >
         <Toolbar>
-          <IconButton color="inherit" aria-label="open drawer" onClick={handleDrawerOpen} edge="start">
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerOpen}
+            edge="start"
+          >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
@@ -152,54 +171,116 @@ export default function MiniDrawer({ children }) {
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
-
-        <DrawerHeader sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center", // Ensures logo stays centered
-          position: "relative", // Allows absolute positioning of the button
-          width: "100%"
-        }}>
-          <img src={cicsSeal} alt="Logo" style={{ width: "55px", height: "auto", marginTop: "12px" }} />
-
+        <DrawerHeader>
+          <img
+            src={cicsSeal}
+            alt="Logo"
+            style={{ width: "55px", height: "auto", marginTop: "12px" }}
+          />
           <IconButton
             onClick={handleDrawerClose}
-            sx={{
-              color: "white",
-              position: "absolute",
-              right: "10px" // Pushes the button to the right edge
-            }}>
-            {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            sx={{ color: "white", position: "absolute", right: "10px" }}
+          >
+            {theme.direction === "rtl" ? (
+              <ChevronRightIcon />
+            ) : (
+              <ChevronLeftIcon />
+            )}
           </IconButton>
         </DrawerHeader>
         <List>
-        {menuItems.map(({ text, icon, path }) => (
-  <ListItem key={text} disablePadding sx={{ display: "block" }}>
-    <Tooltip title={!open ? text : ""} placement="right">
-      <ListItemButton
-        component={path ? Link : "div"} // Prevents crash if path is undefined
-        to={path || "#"} // Uses "#" if no path is provided
-        sx={{ justifyContent: open ? "initial" : "center" }}
-      >
-        <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : "auto", justifyContent: "center" }}>
-          {icon}
-        </ListItemIcon>
-        {open && <ListItemText primary={text} />}
-      </ListItemButton>
-    </Tooltip>
-  </ListItem>
-))}
+          {menuItems.map(({ text, icon, path, isEvent }) => (
+            <React.Fragment key={text}>
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={(event) => handleEventClick(event, isEvent)}
+                  component={path ? Link : "div"}
+                  to={path || "#"}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "8px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>{icon}</ListItemIcon>
+                  {open && <ListItemText primary={text} />}
+                  {isEvent &&
+                    open &&
+                    (eventOpen ? <ExpandLess /> : <ExpandMore />)}
+                </ListItemButton>
+              </ListItem>
+              {isEvent && open && (
+                <Collapse in={eventOpen} timeout="auto" unmountOnExit>
+                  <List>
+                    {["Add Event", "Edit Event", "Delete Event"].map(
+                      (text, index) => (
+                        <ListItem key={text} disablePadding>
+                          <ListItemButton
+                            sx={{
+                              pl: 6,
+                              justifyContent: "flex-start",
+                              "&:hover": {
+                                backgroundColor: "#B7152F",
+                                color: "white",
+                                borderRadius: "8px",
+                              },
+                            }}
+                          >
+                            <ListItemIcon>
+                              {
+                                [
+                                  <CalendarTodayIcon
+                                    fontSize="small"
+                                    key="add"
+                                  />,
+                                  <EditIcon fontSize="small" key="edit" />,
+                                  <DeleteIcon fontSize="small" key="delete" />,
+                                ][index]
+                              }
+                            </ListItemIcon>
+                            <Typography variant="body2">{text}</Typography>
+                          </ListItemButton>
+                        </ListItem>
+                      )
+                    )}
+                  </List>
+                </Collapse>
+              )}
+            </React.Fragment>
+          ))}
         </List>
         <ListItem disablePadding sx={{ display: "block", mt: 2 }}>
-          <ListItemButton>
+          <ListItemButton
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "10px",
+              },
+            }}
+          >
             <ListItemIcon>
               <AccountCircleIcon />
             </ListItemIcon>
             {open && <ListItemText primary="Account" />}
           </ListItemButton>
         </ListItem>
-        <ListItem disablePadding sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}>
-          <ListItemButton onClick={handleLogout}>
+        <ListItem
+          disablePadding
+          sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}
+        >
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "8px",
+              },
+            }}
+          >
             <ListItemIcon>
               <LogoutIcon color="error" />
             </ListItemIcon>
@@ -211,6 +292,57 @@ export default function MiniDrawer({ children }) {
         <DrawerHeader />
         {children}
       </Box>
+
+      {/* Popper for Event Actions */}
+      <Popper open={openPopper} anchorEl={anchorEl} placement="right-start">
+        <ClickAwayListener onClickAway={handleClose}>
+          <Paper
+            sx={{ backgroundColor: "gray", color: "white", width: "160px" }}
+          >
+            <List>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/add-event">
+                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
+                    {" "}
+                    {/* Adjust spacing */}
+                    <CalendarTodayIcon sx={{ fontSize: "15px" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Add Event"
+                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
+                  />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/edit-event">
+                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
+                    {" "}
+                    {/* Adjust spacing */}
+                    <EditIcon sx={{ fontSize: "15px" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Edit Event"
+                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
+                  />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton component={Link} to="/delete-event">
+                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
+                    {" "}
+                    {/* Adjust spacing */}
+                    <DeleteIcon sx={{ fontSize: "15px" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Delete Event"
+                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </List>
+          </Paper>
+        </ClickAwayListener>
+      </Popper>
     </Box>
   );
 }
