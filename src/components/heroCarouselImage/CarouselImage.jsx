@@ -19,11 +19,9 @@ const CarouselImage = () => {
   return (
     <div className="relative flex justify-center items-center w-full">
       <Carousel 
-        transition={{ duration: 3 }}
+        transition={{ duration: 1 }}
         autoplay={true}
         loop={true}
-        prevArrow=""
-        nextArrow=""
         className="w-11/12 h-96">
         <img
           src={cics1}
