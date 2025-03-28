@@ -19,21 +19,29 @@ export default function PageCardsComponent({ title, lastEdited }) {
   };
 
   return (
-    <div className="border shadow-lg rounded-md p-4 relative">
-      <img src="/placeholder.jpg" alt={title} className="w-full h-40 object-cover rounded-md" />
-      <div className="flex justify-between items-center mt-2">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <IconButton aria-label="settings" onClick={handleMenuOpen}>
-          <MoreVertIcon />
-        </IconButton>
+    <div className="flex justify-center">
+      <div className="border shadow-lg rounded-md p-4 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
+        <img
+          src="/placeholder.jpg"
+          alt={title}
+          className="w-full h-40 object-cover rounded-md"
+        />
+        <div className="flex justify-between items-center mt-2">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <IconButton aria-label="settings" onClick={handleMenuOpen}>
+            <MoreVertIcon />
+          </IconButton>
+        </div>
+        <p className="text-sm text-gray-500">Last edited: {lastEdited}</p>
+        <button className="bg-customRed text-white p-2 w-full mt-2 rounded-md">
+          Publish
+        </button>
+
+        {/* Menu */}
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
+        </Menu>
       </div>
-      <p className="text-sm text-gray-500">Last edited: {lastEdited}</p>
-      <button className="bg-customRed text-white p-2 w-full mt-2 rounded-md">Publish</button>
-      
-      {/* Menu */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        <MenuItem onClick={handleEdit}>Edit</MenuItem>
-      </Menu>
     </div>
   );
 }

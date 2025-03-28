@@ -9,17 +9,17 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function fetchAdminData() {
-      const token = localStorage.getItem("authToken"); // ✅ Get stored token
+      const token = localStorage.getItem("authToken"); 
       if (!token) {
-        navigate("/login"); // ✅ Redirect if no token
+        navigate("/login"); 
         return;
       }
 
       try {
         const response = await fetch("http://localhost:5000/api/admin-dashboard", {
           method: "GET",
-          headers: { Authorization: `Bearer ${token}` }, // ✅ Include token in request
-          credentials: "include", // Required for session authentication
+          headers: { Authorization: `Bearer ${token}` }, 
+          credentials: "include", 
         });
 
         if (!response.ok) {
@@ -30,7 +30,7 @@ export default function AdminDashboard() {
         setAdminData(data);
       } catch (error) {
         console.error("Access denied:", error);
-        navigate("/login"); // Redirect to login if not authenticated
+        navigate("/login"); 
       }
     }
 
@@ -42,18 +42,18 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto mt-10">
-      <h1 className="text-4xl font-bold text-center mb-5 border-b-2 border-black pb-2">Page Preview</h1>
-      <div className="grid grid-cols-3 gap-4 pt-5">
+    <div className="bg-gray-200 rounded-3xl min-h-screen flex flex-col items-center px-4">
+      <h1 className="text-4xl font-bold text-center mt-10 mb-5 border-b-2 border-black pb-2">
+        Page Preview
+      </h1>
+
+      {/* Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-5">
         {["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History"].map((title, index) => (
           <PageCardComponent key={index} title={title} lastEdited="1:05 PM" />
         ))}
       </div>
-      <div className="flex justify-center mt-5">
-        <button onClick={handleSeeMore} className="bg-customRed text-white px-4 py-2 rounded-full flex items-center">
-          See More <span className="ml-2">▼</span>
-        </button>
-      </div>
     </div>
   );
 }
+

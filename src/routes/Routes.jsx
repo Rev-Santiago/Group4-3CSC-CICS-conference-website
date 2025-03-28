@@ -19,7 +19,7 @@ import AdminHome from "../pages/AdminHome/AdminHome";
 import AdminCallForPapers from "../pages/AdminCallForPapers/AdminCallForPapers";
 import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
-import AdminContactsPage from "../pages/AdminContactsPage/AdminContactsPage";
+import AdminEventsPage from "../pages/AdminEventsPage/AdminEventsPage";
 import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
@@ -62,9 +62,9 @@ const AdminLayout = () => {
                 children: [
                     { element: <AdminLayout />, children: [
                         { index: true, element: <AdminDashboard /> },
-                        { path: "home", element: <AdminHome /> },
+                        { path: "events", element: <AdminEventsPage /> },
                         { path: "call-for-papers", element: <AdminCallForPapers /> },
-                        { path: "contact", element: <AdminContactsPage /> },
+                        // { path: "contact", element: <AdminContactsPage /> },
                         { path: "partners", element: <PartnersPage /> },
                         { path: "committee", element: <CommitteePage /> },
                         { path: "event-history", element: <EventsHistoryPage /> },

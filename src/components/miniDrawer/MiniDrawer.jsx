@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { styled, useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar from "@mui/material/AppBar";
@@ -16,25 +17,18 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import Collapse from "@mui/material/Collapse";
-import HomeIcon from "@mui/icons-material/Home";
-import ArticleIcon from "@mui/icons-material/Article";
-import ContactsIcon from "@mui/icons-material/Contacts";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import EventsIcon from "@mui/icons-material/Event";
+import PagesIcon from "@mui/icons-material/Pages";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
 import cicsSeal from "../../assets/cics-seal.png";
 import { useContext } from "react";
 import { AuthContext } from "../../App";
-import Popper from "@mui/material/Popper";
-import ClickAwayListener from "@mui/material/ClickAwayListener";
-import Paper from "@mui/material/Paper";
+import Tooltip from "@mui/material/Tooltip";
+import Divider from "@mui/material/Divider";
 
-const drawerWidth = 240;
+const drawerWidth = 200;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -100,53 +94,37 @@ const Drawer = styled(MuiDrawer, {
   },
   ...(open
     ? {
+      ...openedMixin(theme),
+      "& .MuiDrawer-paper": {
         ...openedMixin(theme),
-        "& .MuiDrawer-paper": {
-          ...openedMixin(theme),
-          backgroundColor: "black",
-          color: "white",
-        },
-      }
+        backgroundColor: "black",
+        color: "white",
+      },
+    }
     : {
+      ...closedMixin(theme),
+      "& .MuiDrawer-paper": {
         ...closedMixin(theme),
-        "& .MuiDrawer-paper": {
-          ...closedMixin(theme),
-          backgroundColor: "black",
-          color: "white",
-        },
-      }),
+        backgroundColor: "black",
+        color: "white",
+      },
+    }),
 }));
 
 const menuItems = [
-  { text: "Dashboard", icon: <HomeIcon />, path: "/admin-dashboard" },
-  { text: "Events", icon: <ArticleIcon />, isEvent: true },
-  { text: "Pages", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
+  { text: "Dashboard", icon: <DashboardIcon />, path: "/admin-dashboard" },
+  { text: "Events", icon: <EventsIcon />, path: "events" },
+  { text: "Pages", icon: <PagesIcon />, isPage: true },
 ];
 
 export default function MiniDrawer({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
-  const [eventOpen, setEventOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const { handleLogout } = useContext(AuthContext);
 
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
-  const toggleEventSidebar = () => setEventOpen(!eventOpen);
-
-  const handleEventClick = (event, isEvent) => {
-    if (!open && isEvent) {
-      setAnchorEl(event.currentTarget);
-    } else {
-      toggleEventSidebar();
-    }
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const openPopper = Boolean(anchorEl);
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -181,168 +159,138 @@ export default function MiniDrawer({ children }) {
             onClick={handleDrawerClose}
             sx={{ color: "white", position: "absolute", right: "10px" }}
           >
-            {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
+            {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
+        {open && (
+          <>
+            <Typography variant="caption" sx={{ pl: 2, pt: 2, color: "gray" }}>
+              Main
+            </Typography>
+          </>
+        )}
         <List>
-          {menuItems.map(({ text, icon, path, isEvent }) => (
+          {menuItems.map(({ text, icon, path, isEvent, isPage }) => (
             <React.Fragment key={text}>
+              {/* Conditionally render Divider and Typography if open */}
+              {open && text === "Events" && (
+                <>
+                  <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+                  <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
+                    Content Management
+                  </Typography>
+                </>
+              )}
               <ListItem disablePadding>
+                <Tooltip title={!open ? text : ""} placement="right">
+                  <ListItemButton
+                    onClick={() => navigate(path)}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "8px",
+                      },
+                    }}
+                  >
+
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    {open && <ListItemText primary={text} />}
+                  </ListItemButton>
+                </Tooltip>
+              </ListItem>
+            </React.Fragment>
+          ))}
+
+          {/* Account Section (Moved outside the loop) */}
+          {open && (
+            <>
+              <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+              <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
+                User
+              </Typography>
+            </>
+          )}
+          <ListItem disablePadding sx={{ display: "block", mt: 2 }}>
+            {open ? (
+              <ListItemButton
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "10px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <AccountCircleIcon />
+                </ListItemIcon>
+                <ListItemText primary="Account" />
+              </ListItemButton>
+            ) : (
+              <Tooltip title="Account" placement="right">
                 <ListItemButton
-                  onClick={(event) => handleEventClick(event, isEvent)}
-                  component={path ? Link : "div"}
-                  to={path || "#"}
                   sx={{
                     "&:hover": {
                       backgroundColor: "#B7152F",
                       color: "white",
-                      borderRadius: "8px",
+                      borderRadius: "10px",
                     },
                   }}
                 >
-                  <ListItemIcon>{icon}</ListItemIcon>
-                  {open && <ListItemText primary={text} />}
-                  {isEvent &&
-                    open &&
-                    (eventOpen ? <ExpandLess /> : <ExpandMore />)}
+                  <ListItemIcon>
+                    <AccountCircleIcon />
+                  </ListItemIcon>
                 </ListItemButton>
-              </ListItem>
-              {isEvent && open && (
-                <Collapse in={eventOpen} timeout="auto" unmountOnExit>
-                  <List>
-                    {["Add Event", "Edit Event", "Delete Event"].map(
-                      (text, index) => (
-                        <ListItem key={text} disablePadding>
-                          <ListItemButton
-                            sx={{
-                              pl: 6,
-                              justifyContent: "flex-start",
-                              "&:hover": {
-                                backgroundColor: "#B7152F",
-                                color: "white",
-                                borderRadius: "8px",
-                              },
-                            }}
-                          >
-                            <ListItemIcon>
-                              {
-                                [
-                                  <CalendarTodayIcon
-                                    fontSize="small"
-                                    key="add"
-                                  />,
-                                  <EditIcon fontSize="small" key="edit" />,
-                                  <DeleteIcon fontSize="small" key="delete" />,
-                                ][index]
-                              }
-                            </ListItemIcon>
-                            <Typography variant="body2">{text}</Typography>
-                          </ListItemButton>
-                        </ListItem>
-                      )
-                    )}
-                  </List>
-                </Collapse>
-              )}
-            </React.Fragment>
-          ))}
+              </Tooltip>
+            )}
+          </ListItem>
         </List>
-        <ListItem disablePadding sx={{ display: "block", mt: 2 }}>
-          <ListItemButton
-            sx={{
-              "&:hover": {
-                backgroundColor: "#B7152F",
-                color: "white",
-                borderRadius: "10px",
-              },
-            }}
-          >
-            <ListItemIcon>
-              <AccountCircleIcon />
-            </ListItemIcon>
-            {open && <ListItemText primary="Account" />}
-          </ListItemButton>
-        </ListItem>
+
         <ListItem
           disablePadding
           sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}
         >
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{
-              "&:hover": {
-                backgroundColor: "#B7152F",
-                color: "white",
-                borderRadius: "8px",
-              },
-            }}
-          >
-            <ListItemIcon>
-              <LogoutIcon color="error" />
-            </ListItemIcon>
-            {open && <ListItemText primary="Log Out" sx={{ color: "red" }} />}
-          </ListItemButton>
+          {open ? (
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                "&:hover": {
+                  backgroundColor: "#B7152F",
+                  color: "white",
+                  borderRadius: "8px",
+                },
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon color="error" />
+              </ListItemIcon>
+              <ListItemText primary="Log Out" sx={{ color: "red" }} />
+            </ListItemButton>
+          ) : (
+            <Tooltip title="Log Out" placement="right">
+              <ListItemButton
+                onClick={handleLogout}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <LogoutIcon color="error" />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
+          )}
         </ListItem>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
         {children}
       </Box>
-
-      {/* Popper for Event Actions */}
-      <Popper open={openPopper} anchorEl={anchorEl} placement="right-start">
-        <ClickAwayListener onClickAway={handleClose}>
-          <Paper
-            sx={{ backgroundColor: "gray", color: "white", width: "160px" }}
-          >
-            <List>
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/add-event">
-                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
-                    {" "}
-                    {/* Adjust spacing */}
-                    <CalendarTodayIcon sx={{ fontSize: "15px" }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Add Event"
-                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
-                  />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/edit-event">
-                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
-                    {" "}
-                    {/* Adjust spacing */}
-                    <EditIcon sx={{ fontSize: "15px" }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Edit Event"
-                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
-                  />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton component={Link} to="/delete-event">
-                  <ListItemIcon sx={{ color: "white", minWidth: "35px" }}>
-                    {" "}
-                    {/* Adjust spacing */}
-                    <DeleteIcon sx={{ fontSize: "15px" }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Delete Event"
-                    primaryTypographyProps={{ sx: { fontSize: "15px" } }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            </List>
-          </Paper>
-        </ClickAwayListener>
-      </Popper>
     </Box>
   );
 }
