@@ -119,7 +119,7 @@ const menuItems = [
 
 export default function MiniDrawer({ children }) {
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
   const { handleLogout } = useContext(AuthContext);
 
   const handleDrawerOpen = () => setOpen(true);

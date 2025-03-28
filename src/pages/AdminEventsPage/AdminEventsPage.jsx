@@ -103,8 +103,13 @@ const AdminEventsPage = () => {
 
                             {/* Show event list only when "See all Events" is selected */}
                             {activeButton === "See all Events" ? (
-                                <TableContainer component={Paper} sx={{ mt: 3, overflowX: "auto" }}>
-                                    <Table sx={{ minWidth: 800 }}>
+                                <TableContainer component={Paper} sx={{ 
+                                    mt: 3, 
+                                    width: "100%", 
+                                    overflowX: "auto", 
+                                    maxWidth: "100vw" // Prevents full-page scrolling
+                                }}>
+                                    <Table sx={{ minWidth: 800}}>
                                         <TableHead>
                                             <TableRow sx={{ backgroundColor: "#B7152F" }}>
                                                 <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Title</TableCell>
