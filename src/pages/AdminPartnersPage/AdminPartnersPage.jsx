@@ -2,51 +2,76 @@ import React from "react";
 
 const AdminPartnersPage = () => {
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Partners</h1>
-
-            {/* Image Carousel Section */}
-            <div className="mb-6">
-                <h2 className="text-xl font-semibold">Image Carousel</h2>
-                <div className="flex items-center gap-2 my-2">
-                    <input type="file" className="border border-black p-2" />
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded">Add</button>
-                    <button className="bg-red-500 text-white px-4 py-2 rounded">Remove</button>
-                </div>
-                <div className="w-full border border-black p-4 h-40 flex items-center justify-center">
-                    <p className="text-gray-500">Uploaded images will appear here</p>
-                </div>
-            </div>
-
-            {/* Text Section */}
-            <div className="mb-6">
-                <h2 className="text-xl font-semibold">Text</h2>
-                <div>
-                    <label className="block font-semibold mt-3">Title:</label>
-                    <input type="text" className="border border-black w-full p-2 rounded" />
-                </div>
-                <div>
-                    <label className="block font-semibold">Body:</label>
-                    <textarea className="border border-black w-full p-2 rounded" />
-                </div>
-            </div>
-
-            {/* Accordion Section */}
-            <div>
-                <h2 className="text-xl font-semibold mb-3">Accordion</h2>
+        <section className="admin-contacts">
+            
+            {/* Contacts Section */}
+            <div className="p-6 max-w-4xl mx-auto">
+                <h1 className="text-2xl font-bold mb-4">Contacts</h1>
                 <div className="rounded">
-                    <div className="p-2  cursor-pointer">Track 1: </div>
-                    <input type="text" className="border border-black w-full p-2 rounded mb-1" />
-                    <textarea className="border border-black w-full p-2 rounded" />
-                    <div className="p-2 cursor-pointer">Track 2: </div>
-                    <input type="text" className="border border-black w-full p-2 rounded mb-1" />
-                    <textarea className="border border-black w-full p-2 rounded" />
-                    <div className="p-2 cursor-pointer">Track 3: </div>
-                    <input type="text" className="border border-black w-full p-2 rounded mb-1" />
-                    <textarea className="border border-black w-full p-2 rounded" />
+                    <div>
+                        <label className="block font-bold mt-3 mb-3">Main Contact:</label>
+                        <div className="flex-row flex mb-3">
+                            <label className="block mt-3 mr-5">Name:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex">
+                            <label className="block mt-3 mr-5">Email:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex mt-3">
+                            <label className="block mt-3 mr-5">Telephone:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block font-bold mt-3 mb-3">Person 1:</label>
+                        <div className="flex-row flex mb-3">
+                            <label className="block mt-3 mr-5">Name:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex ">
+                            <label className="block mt-3 mr-5">Email:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex mt-3">
+                            <label className="block mt-3 mr-5">Telephone:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block font-bold mt-3 mb-3">Person 2:</label>
+                        <div className="flex-row flex mb-3">
+                            <label className="block mt-3 mr-5">Name:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex ">
+                            <label className="block mt-3 mr-5">Email:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex mt-3">
+                            <label className="block mt-3 mr-5">Telephone:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block font-bold mt-3 mb-3">Person 3:</label>
+                        <div className="flex-row flex mb-3">
+                            <label className="block mt-3 mr-5">Name:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex ">
+                            <label className="block mt-3 mr-5">Email:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                        <div className="flex-row flex mt-3">
+                            <label className="block mt-3 mr-5">Telephone:</label>
+                            <input type="text" className="border border-black w-full p-2 rounded"/>
+                        </div>
+                    </div>
                 </div>
+                <button className="bg-blue-500 text-white px-4 py-2 mt-5 rounded">Add Contacts</button> 
             </div>
-        </div>
+        </section>
     );
 };
 
