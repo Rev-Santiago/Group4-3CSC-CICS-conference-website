@@ -125,7 +125,7 @@ export default function HorizontalAccordion() {
                             <Typography component="span" className="text-white">Publications</Typography>
                         </AccordionSummary>
                         <AccordionDetails className="bg-white">
-                            <Typography variant="h6" className="font-bold text-center pb-4">
+                            <Typography variant="h6" className="font-bold text-center pb-2">
                                 Previous Conference Publications
                             </Typography>
 

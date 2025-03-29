@@ -10,7 +10,7 @@ function Home() {
     <>
       <Container>
         <div className="landing-page">
-          <section className="hero relative">
+          <section className="hero relative mx-1">
             <div>
               <h1 className="text-3xl text-customRed text-center pb-5 -md:mt-3">Welcome to UST CICS Conference Website</h1>
             </div>
