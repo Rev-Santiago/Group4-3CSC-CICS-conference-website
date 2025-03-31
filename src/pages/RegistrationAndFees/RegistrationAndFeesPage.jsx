@@ -9,7 +9,7 @@ const RegistrationAndFeesPage = () => {
     ];
 
     return (
-        <div className="mx-auto px-10 pb-10">
+        <div className="mx-auto pb-10">
             {/* Conference Fees Section */}
             <h2 className="text-2xl mb-4">Conference Fees</h2>
             <div className="overflow-x-auto">

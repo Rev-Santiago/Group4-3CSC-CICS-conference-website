@@ -57,7 +57,7 @@ export default function Navbar() {
   };
 
   return (
-    <Box sx={{ width: '95%', margin: '0 auto', position: 'relative' }}>
+    <Box sx={{ width: '100%', margin: '0 auto', position: 'relative' }}>
       {/* Logo and Mobile Menu Toggle */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2, ml: 3, gap: 2 }}>
         <img

@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import HorizontalAccordion from "../../components/horizontalAccordion/HorizontalAccordion";
 import CarouselImage from "../../components/heroCarouselImage/CarouselImage";
-import { Container } from '@mui/material';
 
 function Home() {
   const [count, setCount] = useState(0);
 
   return (
     <>
-      <Container>
+      
         <div className="landing-page">
           <section className="hero relative mx-1">
             <div>
@@ -39,7 +38,7 @@ function Home() {
             </div>
           </section>
         </div>
-      </Container>
+      
     </>
   );
 }

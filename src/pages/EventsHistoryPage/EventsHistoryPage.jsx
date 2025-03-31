@@ -37,7 +37,7 @@ const EventsHistoryPage = () => {
   };
 
   return (
-    <div className="mx-auto px-10">
+    <div className="mx-auto">
       <h5 className="text-xl text-customRed mb-4">Announcements</h5>
       <p className="text-black mb-6">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus molestie elit id lobortis vestibulum.

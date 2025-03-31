@@ -1,10 +1,8 @@
 import React from "react";
-import { Container } from "@mui/material";
 
 const ContactPage = () => {
     return (
         <section className="contact">
-            <Container>
                 <div className="container mx-auto text-customRed pb-10">
                     <h1 className="text-3xl">Contact</h1>
 
@@ -51,7 +49,6 @@ const ContactPage = () => {
                         </div>
                     </section>
                 </div>
-            </Container>
         </section>
     );
 };
