@@ -30,7 +30,7 @@ const PublicationPage = () => {
     };
 
     return (
-        <section className="mx-auto pb-10">
+        <section className="container mx-auto pb-10">
             <h2 className="text-2xl mb-4">Publication</h2>
 
             <h3 className="text-xl text-customRed mb-2">Conference Proceedings</h3>

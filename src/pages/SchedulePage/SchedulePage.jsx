@@ -131,7 +131,7 @@ const SchedulePage = () => {
     };
     
     return (
-        <section className="mx-auto pb-10">
+        <section className="container mx-auto pb-10">
             <h5 className="text-xl text-customRed mb-4">Announcements</h5>
             <p className="text-black mb-6">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus molestie elit id lobortis vestibulum.

@@ -103,13 +103,13 @@ const AdminEventsPage = () => {
 
                             {/* Show event list only when "See all Events" is selected */}
                             {activeButton === "See all Events" ? (
-                                <TableContainer component={Paper} sx={{ 
-                                    mt: 3, 
-                                    width: "100%", 
-                                    overflowX: "auto", 
+                                <TableContainer component={Paper} sx={{
+                                    mt: 3,
+                                    width: "100%",
+                                    overflowX: "auto",
                                     maxWidth: "100vw" // Prevents full-page scrolling
                                 }}>
-                                    <Table sx={{ minWidth: 800}}>
+                                    <Table sx={{ minWidth: 800 }}>
                                         <TableHead>
                                             <TableRow sx={{ backgroundColor: "#B7152F" }}>
                                                 <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Title</TableCell>
@@ -229,14 +229,14 @@ const AdminEventsPage = () => {
                                             {/* Keynote Speaker */}
                                             <Grid item xs={12} className="flex items-center gap-2">
                                                 <TextField fullWidth size="small" label="Keynote Speaker" variant="outlined" />
-                                                <IconButton color="primary">
+                                                <IconButton color="black">
                                                     <Add />
                                                 </IconButton>
                                             </Grid>
 
                                             <Grid item xs={12} className="flex items-center gap-2">
                                                 <TextField fullWidth size="small" label="Upload Image" type="file" variant="outlined" InputLabelProps={{ shrink: true }} />
-                                                <IconButton color="primary">
+                                                <IconButton color="black">
                                                     <Add />
                                                 </IconButton>
                                             </Grid>
@@ -244,14 +244,14 @@ const AdminEventsPage = () => {
                                             {/* Invited Speaker */}
                                             <Grid item xs={12} className="flex items-center gap-2">
                                                 <TextField fullWidth size="small" label="Invited Speaker" variant="outlined" />
-                                                <IconButton color="primary">
+                                                <IconButton color="black">
                                                     <Add />
                                                 </IconButton>
                                             </Grid>
 
                                             <Grid item xs={12} className="flex items-center gap-2">
                                                 <TextField fullWidth size="small" label="Upload Image" type="file" variant="outlined" InputLabelProps={{ shrink: true }} />
-                                                <IconButton color="primary">
+                                                <IconButton color="black">
                                                     <Add />
                                                 </IconButton>
                                             </Grid>

@@ -18,7 +18,7 @@ const partners = [
 
 const PartnersPage = () => {
     return (
-        <section className="mx-auto">
+        <section className="container mx-auto">
             {/* Title */}
             <h2 className="text-3xl text-customRed mb-6 text-center sm:text-left">
                 Partners

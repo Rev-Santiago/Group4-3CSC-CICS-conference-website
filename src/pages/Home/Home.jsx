@@ -9,7 +9,7 @@ function Home() {
     <>
       
         <div className="landing-page">
-          <section className="hero relative mx-1">
+          <section className="hero relative container mx-auto">
             <div>
               <h1 className="text-3xl text-customRed text-center pb-5 -md:mt-3">Welcome to UST CICS Conference Website</h1>
             </div>

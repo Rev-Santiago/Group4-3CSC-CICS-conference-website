@@ -29,7 +29,7 @@ export default function Navbar() {
   useEffect(() => {
     const updateScreenSize = () => {
       setIsSmallScreen(window.innerWidth <= 860);
-      setIsMediumScreen(window.innerWidth <= 1050);
+      setIsMediumScreen(window.innerWidth <= 1150);
       if (window.innerWidth > 860) setOpenNav(false); // Close mobile menu on resize to desktop
     };
     window.addEventListener('resize', updateScreenSize);
@@ -57,7 +57,7 @@ export default function Navbar() {
   };
 
   return (
-    <Box sx={{ width: '100%', margin: '0 auto', position: 'relative' }}>
+    <Box className="container mx-auto" sx={{ width: '100%', margin: '0 auto', position: 'relative'}}>
       {/* Logo and Mobile Menu Toggle */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2, ml: 3, gap: 2 }}>
         <img

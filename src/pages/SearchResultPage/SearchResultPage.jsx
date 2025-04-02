@@ -35,7 +35,7 @@ function SearchResultPage() {
     const searchQuery = queryParams.get('query');
 
     return (
-        <div className="mx-auto ">
+        <div className="container mx-auto">
             <h1 className="text-2xl mb-4">Search results</h1>
             <div>
                 {searchResults.map((result, index) => (

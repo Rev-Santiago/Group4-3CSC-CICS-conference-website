@@ -114,7 +114,7 @@ const Drawer = styled(MuiDrawer, {
 const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin-dashboard" },
   { text: "Events", icon: <EventsIcon />, path: "events" },
-  { text: "Pages", icon: <PagesIcon />, isPage: true },
+  { text: "Pages", icon: <PagesIcon />, path: "pages" },
 ];
 
 export default function MiniDrawer({ children }) {
@@ -140,10 +140,17 @@ export default function MiniDrawer({ children }) {
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
+            }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" marginLeft={"3px"}>
             Admin Dashboard
           </Typography>
         </Toolbar>
@@ -157,7 +164,16 @@ export default function MiniDrawer({ children }) {
           />
           <IconButton
             onClick={handleDrawerClose}
-            sx={{ color: "white", position: "absolute", right: "10px" }}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
+              color: "white",
+              position: "absolute",
+              right: "10px"
+            }}
           >
             {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
@@ -170,13 +186,13 @@ export default function MiniDrawer({ children }) {
           </>
         )}
         <List>
-          {menuItems.map(({ text, icon, path, isEvent, isPage }) => (
-            <React.Fragment key={text}>
+          {menuItems.map(({ text, icon, path }) => (
+            <React.Fragment key={text} >
               {/* Conditionally render Divider and Typography if open */}
               {open && text === "Events" && (
                 <>
                   <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
-                  <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
+                  <Typography variant="caption" sx={{ mt: 2, mb: 1 , pl: 2, color: "gray", display: "block" }}>
                     Content Management
                   </Typography>
                 </>
@@ -211,7 +227,7 @@ export default function MiniDrawer({ children }) {
               </Typography>
             </>
           )}
-          <ListItem disablePadding sx={{ display: "block", mt: 2 }}>
+          <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
             {open ? (
               <ListItemButton
                 sx={{
