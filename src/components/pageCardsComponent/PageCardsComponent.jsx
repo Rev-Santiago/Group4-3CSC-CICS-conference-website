@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Menu, MenuItem, IconButton } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-export default function PageCardsComponent({ title, lastEdited }) {
+export default function PageCardComponent({ title, lastEdited, screenshotUrl }) {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenuOpen = (event) => {
@@ -22,7 +22,7 @@ export default function PageCardsComponent({ title, lastEdited }) {
     <div className="flex justify-center">
       <div className="border shadow-lg rounded-md p-4 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
         <img
-          src="/placeholder.jpg"
+          src={screenshotUrl}  // Dynamically set the screenshot URL
           alt={title}
           className="w-full h-40 object-cover rounded-md"
         />

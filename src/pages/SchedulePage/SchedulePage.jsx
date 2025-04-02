@@ -156,27 +156,40 @@ const SchedulePage = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {day.events.map((event, i) => (
-                                        <tr key={i} className="border border-black text-center">
-                                            <td className="border border-black p-2">{event.time}</td>
-                                            <td className="border border-black p-2">{event.program}</td>
-                                            <td className="border border-black p-2 flex justify-center gap-2">
-                                                <button
-                                                    onClick={() => handleAddToCalendar({ ...event, date: day.date })}
-                                                    className="bg-customRed text-white px-4 py-2 rounded-lg"
-                                                >
-                                                    iCalendar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAddToGoogleCalendar({ ...event, date: day.date })}
-                                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                                                >
-                                                    Google Calendar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {day.events
+                                        .slice() // Create a shallow copy to avoid mutating state
+                                        .sort((a, b) => {
+                                            const timeTo24Hour = (time) => {
+                                                const [hourMin, modifier] = time.split(" ");
+                                                let [hours, minutes] = hourMin.split(":").map(Number);
+                                                if (modifier === "PM" && hours !== 12) hours += 12;
+                                                if (modifier === "AM" && hours === 12) hours = 0;
+                                                return hours * 60 + minutes; // Convert to minutes for easy sorting
+                                            };
+                                            return timeTo24Hour(a.time.split(" - ")[0]) - timeTo24Hour(b.time.split(" - ")[0]);
+                                        })
+                                        .map((event, i) => (
+                                            <tr key={i} className="border border-black text-center">
+                                                <td className="border border-black p-2">{event.time}</td>
+                                                <td className="border border-black p-2">{event.program}</td>
+                                                <td className="border border-black p-2 flex justify-center gap-2">
+                                                    <button
+                                                        onClick={() => handleAddToCalendar({ ...event, date: day.date })}
+                                                        className="bg-customRed text-white px-4 py-2 rounded-lg"
+                                                    >
+                                                        iCalendar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAddToGoogleCalendar({ ...event, date: day.date })}
+                                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                                                    >
+                                                        Google Calendar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
+
                             </table>
                         </div>
                     </div>

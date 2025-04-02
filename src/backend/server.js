@@ -10,6 +10,8 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import process from "process";
 import icsRoute from "./routes/icsRoute.js";
+import screenshotRouter from "./routes/screenShot.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,17 +24,20 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: "http://localhost:5173",
-        credentials: true,
+        origin: "http://localhost:5173", // Ensure this matches the client-side URL
+        credentials: true,  // Allow cookies and authorization headers
     })
 );
 
+
+
 app.use("/api", icsRoute);
+app.use("/api", screenshotRouter);
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
+    max: 100,
     message: { error: "Too many login attempts. Please try again later." },
 });
 
@@ -231,7 +236,6 @@ app.get("/api/schedule", async (req, res) => {
         const groupedData = rows.reduce((acc, event) => {
             const { event_date, time_slot, program, venue, online_room_link } = event;
             const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
-            
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
