@@ -20,7 +20,7 @@ const CarouselImage = () => {
 
   return (
     <div className="relative flex justify-center items-center w-full">
-      <Carousel 
+      <Carousel
         transition={{ duration: 1 }}
         autoplay={true}
         loop={true}
