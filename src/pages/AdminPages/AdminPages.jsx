@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { TextField, Button, MenuItem, Box, Grid, Typography, Divider, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Select, Menu, TextareaAutosize } from "@mui/material";
-import { Add, MoreVert } from "@mui/icons-material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Button, MenuItem, Box, Grid, Typography, Divider, Select } from "@mui/material";
+
 import AdminPageHome from "./AdminPageHome";
 import AdminPageCallForPapers from "./AdminPageCallForPapers";
 import AdminPageContact from "./AdminPageContact";
