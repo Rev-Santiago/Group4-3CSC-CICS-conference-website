@@ -202,6 +202,7 @@ export default function MiniDrawer({ children }) {
                   <ListItemButton
                     onClick={() => navigate(path)}
                     sx={{
+                      mx: 1,
                       "&:hover": {
                         backgroundColor: "#B7152F",
                         color: "white",
@@ -231,6 +232,7 @@ export default function MiniDrawer({ children }) {
             {open ? (
               <ListItemButton
                 sx={{
+                  mx: 1,
                   "&:hover": {
                     backgroundColor: "#B7152F",
                     color: "white",
@@ -247,6 +249,7 @@ export default function MiniDrawer({ children }) {
               <Tooltip title="Account" placement="right">
                 <ListItemButton
                   sx={{
+                    mx: 1,
                     "&:hover": {
                       backgroundColor: "#B7152F",
                       color: "white",
@@ -271,6 +274,7 @@ export default function MiniDrawer({ children }) {
             <ListItemButton
               onClick={handleLogout}
               sx={{
+                mx: 1,
                 "&:hover": {
                   backgroundColor: "#B7152F",
                   color: "white",
@@ -288,6 +292,7 @@ export default function MiniDrawer({ children }) {
               <ListItemButton
                 onClick={handleLogout}
                 sx={{
+                  mx: 1,
                   "&:hover": {
                     backgroundColor: "#B7152F",
                     color: "white",
