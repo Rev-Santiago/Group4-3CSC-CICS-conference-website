@@ -1,10 +1,10 @@
-import withMT from "@material-tailwind/react/utils/withMT";
+const withMT = require("@material-tailwind/react/utils/withMT");
 
-export default withMT({
+module.exports = withMT({
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}", 
-    "!./node_modules/**/*" // Explicitly ignore node_modules
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "node_modules/@material-tailwind/react/components/**/*.{js,ts,jsx,tsx}" // Ensure Material Tailwind works
   ],
   theme: {
     extend: {

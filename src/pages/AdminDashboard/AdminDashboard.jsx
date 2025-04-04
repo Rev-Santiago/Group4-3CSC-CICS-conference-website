@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     fetchScreenshots();
   }, []);
 
-  const pages = ["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History"];
+  const pages = ["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History", "Registration & Fees", "Publication", "Schedule", "Venue", "Keynote Speakers", "Invited Speakers"];
 
   return (
     <div className="bg-gray-200 rounded-3xl min-h-screen flex flex-col items-center px-4">
