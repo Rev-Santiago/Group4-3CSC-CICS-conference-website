@@ -27,8 +27,9 @@ import { useContext } from "react";
 import { AuthContext } from "../../App";
 import Tooltip from "@mui/material/Tooltip";
 import Divider from "@mui/material/Divider";
+import GroupIcon from '@mui/icons-material/Group';
 
-const drawerWidth = 200;
+const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -192,7 +193,7 @@ export default function MiniDrawer({ children }) {
               {open && text === "Events" && (
                 <>
                   <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
-                  <Typography variant="caption" sx={{ mt: 2, mb: 1 , pl: 2, color: "gray", display: "block" }}>
+                  <Typography variant="caption" sx={{ mt: 2, mb: 1, pl: 2, color: "gray", display: "block" }}>
                     Content Management
                   </Typography>
                 </>
@@ -224,13 +225,51 @@ export default function MiniDrawer({ children }) {
             <>
               <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
               <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
-                User
+                User Management
               </Typography>
             </>
           )}
           <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
             {open ? (
               <ListItemButton
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "10px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                    <GroupIcon />
+                </ListItemIcon>
+                <ListItemText primary="Users" />
+              </ListItemButton>
+            ) : (
+              <Tooltip title="Users" placement="right">
+                <ListItemButton
+                  sx={{
+                    mx: 1,
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "10px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <GroupIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </Tooltip>
+            )}
+          </ListItem>
+
+          <ListItem disablePadding sx={{ display: "block" }}>
+            {open ? (
+              <ListItemButton
+                onClick={() => navigate("/admin-dashboard/account")}
                 sx={{
                   mx: 1,
                   "&:hover": {
@@ -248,6 +287,7 @@ export default function MiniDrawer({ children }) {
             ) : (
               <Tooltip title="Account" placement="right">
                 <ListItemButton
+                  onClick={() => navigate("/account")}
                   sx={{
                     mx: 1,
                     "&:hover": {

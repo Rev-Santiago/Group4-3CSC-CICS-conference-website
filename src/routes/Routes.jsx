@@ -21,6 +21,8 @@ import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
 import AdminEventsPage from "../pages/AdminEventsPage/AdminEventsPage";
 import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
+import RegisterPage from "../pages/RegisterPage/RegisterPage";
+import AdminAccountPage from "../pages/AdminAccountPage/AdminAccountPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -55,6 +57,7 @@ const AdminLayout = () => {
             { path: "/keynote-speakers", element: <KeynoteSpeakersPage /> },
             { path: "/invited-speakers", element: <InvitedSpeakersPage /> },
             { path: "/login", element: <LoginPage /> },
+            { path: "/register", element: <RegisterPage /> },
 
             {
                 path: "/admin-dashboard",
@@ -65,7 +68,7 @@ const AdminLayout = () => {
                         { path: "events", element: <AdminEventsPage /> },
                         { path: "pages", element: <AdminPages /> },
                         // { path: "contact", element: <AdminContactsPage /> },
-                        { path: "partners", element: <PartnersPage /> },
+                        { path: "account", element: <AdminAccountPage /> },
                         { path: "committee", element: <CommitteePage /> },
                         { path: "event-history", element: <EventsHistoryPage /> },
                         { path: "registration-and-fees", element: <RegistrationAndFeesPage /> },

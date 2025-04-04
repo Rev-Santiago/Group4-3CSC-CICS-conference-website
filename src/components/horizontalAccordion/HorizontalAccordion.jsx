@@ -105,7 +105,7 @@ export default function HorizontalAccordion() {
                                 Edas Submission Link for CICS
                             </Button>
                             <Typography
-                                className="text-customRed mt-2 cursor-pointer pt-3"
+                                className="text-customRed mt-2 cursor-pointer pt-3 hover:underline"
                                 onClick={() => navigate("/call-for-papers")}
                             >
                                 Go to Call For Papers Page ➤
@@ -173,7 +173,7 @@ export default function HorizontalAccordion() {
 
                             {/* Link to Publications Page */}
                             <Typography
-                                className="text-customRed mt-4 cursor-pointer pt-3"
+                                className="text-customRed mt-4 cursor-pointer pt-3 hover:underline"
                                 onClick={() => navigate("/publication")}
                             >
                                 Go to Publication Page ➤
@@ -181,7 +181,6 @@ export default function HorizontalAccordion() {
                         </AccordionDetails>
                     </Accordion>
                 </Box>
-
             </div>
         </Container>
     );
