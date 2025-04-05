@@ -11,6 +11,7 @@ import rateLimit from "express-rate-limit";
 import process from "process";
 import icsRoute from "./routes/icsRoute.js";
 import screenshotRouter from "./routes/screenShot.js";
+import eventsRouter from "./routes/events.js";
 
 
 const app = express();
@@ -33,6 +34,9 @@ app.use(
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
+
+app.use("/uploads", express.static("uploads"));
+app.use("/api", eventsRouter);
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({

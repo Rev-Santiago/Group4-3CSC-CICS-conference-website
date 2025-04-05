@@ -4,12 +4,18 @@ import puppeteer from "puppeteer";
 const router = express.Router();
 
 const pages = {
-    Home: "http://localhost:5173/",
-    "Call For Papers": "http://localhost:5173/call-for-papers",
-    Contacts: "http://localhost:5173/contact",
-    Partners: "http://localhost:5173/partners",
-    Committee: "http://localhost:5173/committee",
-    "Event History": "http://localhost:5173/event-history"
+  Home: "http://localhost:5173/",
+  "Call For Papers": "http://localhost:5173/call-for-papers",
+  Contacts: "http://localhost:5173/contact",
+  Partners: "http://localhost:5173/partners",
+  Committee: "http://localhost:5173/committee",
+  "Event History": "http://localhost:5173/event-history",
+  "Registration & Fees": "http://localhost:5173/registration-and-fees",
+  Publication: "http://localhost:5173/publication",
+  Schedule: "http://localhost:5173/schedule",
+  Venue: "http://localhost:5173/venue",
+  "Keynote Speakers": "http://localhost:5173/keynote-speakers",
+  "Invited Speakers": "http://localhost:5173/invited-speakers"
 };
 
 // Capture screenshot function
