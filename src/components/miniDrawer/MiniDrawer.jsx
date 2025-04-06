@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { styled, useTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar from "@mui/material/AppBar";
@@ -16,24 +17,17 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import Tooltip from "@mui/material/Tooltip";
-import HomeIcon from "@mui/icons-material/Home";
-import ArticleIcon from "@mui/icons-material/Article";
-import ContactsIcon from "@mui/icons-material/Contacts";
-import GroupIcon from "@mui/icons-material/Group";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import HistoryIcon from "@mui/icons-material/History";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import BookIcon from "@mui/icons-material/Book";
-import EventIcon from "@mui/icons-material/Event";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import StarIcon from "@mui/icons-material/Star";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import EventsIcon from "@mui/icons-material/Event";
+import PagesIcon from "@mui/icons-material/Pages";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
 import cicsSeal from "../../assets/cics-seal.png";
 import { useContext } from "react";
-import { AuthContext } from "../../App"; 
+import { AuthContext } from "../../App";
+import Tooltip from "@mui/material/Tooltip";
+import Divider from "@mui/material/Divider";
+import GroupIcon from '@mui/icons-material/Group';
 
 const drawerWidth = 240;
 
@@ -61,7 +55,7 @@ const closedMixin = (theme) => ({
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-end",
+  justifyContent: "center",
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
 }));
@@ -84,127 +78,274 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== "open" })(
-  ({ theme, open }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    whiteSpace: "nowrap",
-    boxSizing: "border-box",
-    color: "white", // ✅ Text color
-    "& .MuiDrawer-paper": {
-      backgroundColor: "black", // ✅ Ensures the drawer stays black
-      color: "white", // ✅ Ensures the text is white
-    },
-    "& .MuiListItemIcon-root": {
-      color: "white", // ✅ Icons white
-    },
-    ...(open
-      ? {
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== "open",
+})(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  color: "white",
+  "& .MuiDrawer-paper": {
+    backgroundColor: "black",
+    color: "white",
+  },
+  "& .MuiListItemIcon-root": {
+    color: "white",
+  },
+  ...(open
+    ? {
+      ...openedMixin(theme),
+      "& .MuiDrawer-paper": {
         ...openedMixin(theme),
-        "& .MuiDrawer-paper": { ...openedMixin(theme), backgroundColor: "black", color: "white" },
-      }
-      : {
+        backgroundColor: "black",
+        color: "white",
+      },
+    }
+    : {
+      ...closedMixin(theme),
+      "& .MuiDrawer-paper": {
         ...closedMixin(theme),
-        "& .MuiDrawer-paper": { ...closedMixin(theme), backgroundColor: "black", color: "white" },
-      }),
-  })
-);
+        backgroundColor: "black",
+        color: "white",
+      },
+    }),
+}));
 
 const menuItems = [
-  { text: "Home", icon: <HomeIcon />, path: "/admin-dashboard/home" },
-  { text: "Call For Papers", icon: <ArticleIcon />, path: "/admin-dashboard/call-for-papers" },
-  { text: "Contacts", icon: <ContactsIcon />, path: "/admin-dashboard/contact" },
-  { text: "Partners", icon: <GroupIcon />, path: "/admin-dashboard/partners" },
-  { text: "Committee", icon: <PeopleAltIcon />, path: "/admin-dashboard/committee" },
-  { text: "Event History", icon: <HistoryIcon />, path: "/admin-dashboard/event-history" },
-  { text: "Registration & Fees", icon: <MonetizationOnIcon />, path: "/admin-dashboard/registration-and-fees" },
-  { text: "Publication", icon: <BookIcon />, path: "/admin-dashboard/publication" },
-  { text: "Schedule", icon: <EventIcon />, path: "/admin-dashboard/schedule" },
-  { text: "Venue", icon: <LocationOnIcon />, path: "/admin-dashboard/venue" },
-  { text: "Keynote Speakers", icon: <StarIcon />, path: "/admin-dashboard/keynote-speakers" },
-  { text: "Invited Speakers", icon: <PersonIcon />, path: "/admin-dashboard/invited-speakers" },
+  { text: "Dashboard", icon: <DashboardIcon />, path: "/admin-dashboard" },
+  { text: "Events", icon: <EventsIcon />, path: "events" },
+  { text: "Pages", icon: <PagesIcon />, path: "pages" },
 ];
 
 export default function MiniDrawer({ children }) {
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
   const { handleLogout } = useContext(AuthContext);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open} sx={{ backgroundColor: "black", borderBottom: "4px solid #B7152F" }}>
+      <AppBar
+        position="fixed"
+        open={open}
+        sx={{ backgroundColor: "black", borderBottom: "4px solid #B7152F" }}
+      >
         <Toolbar>
-          <IconButton color="inherit" aria-label="open drawer" onClick={handleDrawerOpen} edge="start">
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerOpen}
+            edge="start"
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
+            }}
+          >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" marginLeft={"3px"}>
             Admin Dashboard
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
-
-        <DrawerHeader sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center", // Ensures logo stays centered
-          position: "relative", // Allows absolute positioning of the button
-          width: "100%"
-        }}>
-          <img src={cicsSeal} alt="Logo" style={{ width: "55px", height: "auto", marginTop: "12px" }} />
-
+        <DrawerHeader>
+          <img
+            src={cicsSeal}
+            alt="Logo"
+            style={{ width: "55px", height: "auto", marginTop: "12px" }}
+          />
           <IconButton
             onClick={handleDrawerClose}
             sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
               color: "white",
               position: "absolute",
-              right: "10px" // Pushes the button to the right edge
-            }}>
+              right: "10px"
+            }}
+          >
             {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
+        {open && (
+          <>
+            <Typography variant="caption" sx={{ pl: 2, pt: 2, color: "gray" }}>
+              Main
+            </Typography>
+          </>
+        )}
         <List>
-        {menuItems.map(({ text, icon, path }) => (
-  <ListItem key={text} disablePadding sx={{ display: "block" }}>
-    <Tooltip title={!open ? text : ""} placement="right">
-      <ListItemButton
-        component={path ? Link : "div"} // Prevents crash if path is undefined
-        to={path || "#"} // Uses "#" if no path is provided
-        sx={{ justifyContent: open ? "initial" : "center" }}
-      >
-        <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : "auto", justifyContent: "center" }}>
-          {icon}
-        </ListItemIcon>
-        {open && <ListItemText primary={text} />}
-      </ListItemButton>
-    </Tooltip>
-  </ListItem>
-))}
+          {menuItems.map(({ text, icon, path }) => (
+            <React.Fragment key={text} >
+              {/* Conditionally render Divider and Typography if open */}
+              {open && text === "Events" && (
+                <>
+                  <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+                  <Typography variant="caption" sx={{ mt: 2, mb: 1, pl: 2, color: "gray", display: "block" }}>
+                    Content Management
+                  </Typography>
+                </>
+              )}
+              <ListItem disablePadding>
+                <Tooltip title={!open ? text : ""} placement="right">
+                  <ListItemButton
+                    onClick={() => navigate(path)}
+                    sx={{
+                      mx: 1,
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "8px",
+                      },
+                    }}
+                  >
+
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    {open && <ListItemText primary={text} />}
+                  </ListItemButton>
+                </Tooltip>
+              </ListItem>
+            </React.Fragment>
+          ))}
+
+          {/* Account Section (Moved outside the loop) */}
+          {open && (
+            <>
+              <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+              <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
+                User Management
+              </Typography>
+            </>
+          )}
+          <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
+            {open ? (
+              <ListItemButton
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "10px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                    <GroupIcon />
+                </ListItemIcon>
+                <ListItemText primary="Users" />
+              </ListItemButton>
+            ) : (
+              <Tooltip title="Users" placement="right">
+                <ListItemButton
+                  sx={{
+                    mx: 1,
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "10px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <GroupIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </Tooltip>
+            )}
+          </ListItem>
+
+          <ListItem disablePadding sx={{ display: "block" }}>
+            {open ? (
+              <ListItemButton
+                onClick={() => navigate("/admin-dashboard/account")}
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "10px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <AccountCircleIcon />
+                </ListItemIcon>
+                <ListItemText primary="Account" />
+              </ListItemButton>
+            ) : (
+              <Tooltip title="Account" placement="right">
+                <ListItemButton
+                  onClick={() => navigate("/account")}
+                  sx={{
+                    mx: 1,
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "10px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <AccountCircleIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </Tooltip>
+            )}
+          </ListItem>
         </List>
-        <ListItem disablePadding sx={{ display: "block", mt: 2 }}>
-          <ListItemButton>
-            <ListItemIcon>
-              <AccountCircleIcon />
-            </ListItemIcon>
-            {open && <ListItemText primary="Account" />}
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}>
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon color="error" />
-            </ListItemIcon>
-            {open && <ListItemText primary="Log Out" sx={{ color: "red" }} />}
-          </ListItemButton>
+
+        <ListItem
+          disablePadding
+          sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}
+        >
+          {open ? (
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                mx: 1,
+                "&:hover": {
+                  backgroundColor: "#B7152F",
+                  color: "white",
+                  borderRadius: "8px",
+                },
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon color="error" />
+              </ListItemIcon>
+              <ListItemText primary="Log Out" sx={{ color: "red" }} />
+            </ListItemButton>
+          ) : (
+            <Tooltip title="Log Out" placement="right">
+              <ListItemButton
+                onClick={handleLogout}
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <LogoutIcon color="error" />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
+          )}
         </ListItem>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

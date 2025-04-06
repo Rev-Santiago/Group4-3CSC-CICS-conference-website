@@ -5,10 +5,12 @@ import cics2 from "../../assets/frassati-image.png";
 
 const CarouselImage = () => {
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     const handleResize = () => {
       setWindowHeight(window.innerHeight);
+      setWindowWidth(window.innerWidth);
     };
     window.addEventListener("resize", handleResize);
     return () => {
@@ -19,21 +21,20 @@ const CarouselImage = () => {
   return (
     <div className="relative flex justify-center items-center w-full">
       <Carousel 
-        transition={{ duration: 3 }}
+        transition={{ duration: 1 }}
         autoplay={true}
         loop={true}
-        prevArrow=""
-        nextArrow=""
-        className="w-11/12 h-96">
+        className="w-full h-auto"
+      >
         <img
           src={cics1}
           alt="CICS Image 1"
-          className="h-full w-full object-cover"
+          className="w-full h-auto max-h-[80vh] object-contain"
         />
         <img
           src={cics2}
           alt="CICS Image 2"
-          className="h-full w-full object-cover"
+          className="w-full h-auto max-h-[80vh] object-contain"
         />
       </Carousel>
     </div>

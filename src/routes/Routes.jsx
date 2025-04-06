@@ -15,12 +15,14 @@ import KeynoteSpeakersPage from "../pages/KeynoteSpeakersPage/KeynoteSpeakersPag
 import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard/AdminDashboard";
-import AdminHome from "../pages/AdminHome/AdminHome";
+import AdminPages from "../pages/AdminPages/AdminPages";
 import AdminCallForPapers from "../pages/AdminCallForPapers/AdminCallForPapers";
 import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
-import AdminContactsPage from "../pages/AdminContactsPage/AdminContactsPage";
+import AdminEventsPage from "../pages/AdminEventsPage/AdminEventsPage";
 import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
+import RegisterPage from "../pages/RegisterPage/RegisterPage";
+import AdminAccountPage from "../pages/AdminAccountPage/AdminAccountPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -55,6 +57,7 @@ const AdminLayout = () => {
             { path: "/keynote-speakers", element: <KeynoteSpeakersPage /> },
             { path: "/invited-speakers", element: <InvitedSpeakersPage /> },
             { path: "/login", element: <LoginPage /> },
+            { path: "/register", element: <RegisterPage /> },
 
             {
                 path: "/admin-dashboard",
@@ -62,10 +65,10 @@ const AdminLayout = () => {
                 children: [
                     { element: <AdminLayout />, children: [
                         { index: true, element: <AdminDashboard /> },
-                        { path: "home", element: <AdminHome /> },
-                        { path: "call-for-papers", element: <AdminCallForPapers /> },
-                        { path: "contact", element: <AdminContactsPage /> },
-                        { path: "partners", element: <PartnersPage /> },
+                        { path: "events", element: <AdminEventsPage /> },
+                        { path: "pages", element: <AdminPages /> },
+                        // { path: "contact", element: <AdminContactsPage /> },
+                        { path: "account", element: <AdminAccountPage /> },
                         { path: "committee", element: <CommitteePage /> },
                         { path: "event-history", element: <EventsHistoryPage /> },
                         { path: "registration-and-fees", element: <RegistrationAndFeesPage /> },

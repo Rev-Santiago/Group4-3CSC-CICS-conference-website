@@ -23,7 +23,7 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
-    localStorage.removeItem("authToken"); // ✅ Remove token
+    localStorage.removeItem("authToken");
     await fetch("http://localhost:5000/api/logout", {
       method: "POST",
       credentials: "include",
@@ -39,15 +39,22 @@ function App() {
     <AuthContext.Provider value={{ auth, setAuth, handleLogout }}>
       <LayoutContext.Provider value={{ hideLayout, setHideLayout }}>
         <div>
-          <Box sx={{ maxWidth: "1100px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
-            {!shouldHideLayout && <BaseNavbar />}
-            {state === "loading" ? <LoaderPage /> : <Outlet />}
-          </Box>
+          {/* ✅ Conditionally Apply Layout Only for Non-Admin Pages */}
+          {!shouldHideLayout ? (
+            <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px"}}>
+              <BaseNavbar />
+              {state === "loading" ? <LoaderPage /> : <Outlet />}
+            </Box>
+          ) : (
+            <Outlet /> // Directly render for Admin pages
+          )}
+
           {!shouldHideLayout && <BaseFooter />}
         </div>
       </LayoutContext.Provider>
     </AuthContext.Provider>
   );
 }
+
 
 export default App;

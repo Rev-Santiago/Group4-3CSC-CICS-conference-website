@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
 import { AuthContext } from "../../App";
+import Typography from "@mui/material/Typography";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -69,6 +70,12 @@ export default function LoginPage() {
                         sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                         onChange={() => setCaptchaVerified(true)}
                     />
+                    <Typography
+                        className="text-blue-700 mt-4 cursor-pointer pt-3 hover:underline"
+                        onClick={() => navigate("/register")}
+                    >
+                        Register Here
+                    </Typography>
                     <button type="submit" className="w-full bg-customRed text-white p-2 rounded mt-4">
                         Log In
                     </button>
