@@ -59,13 +59,15 @@ export default function AdminDashboard() {
   const pages = ["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History", "Registration & Fees", "Publication", "Schedule", "Venue", "Keynote Speakers", "Invited Speakers"];
 
   return (
-    <div className="bg-gray-200 rounded-3xl min-h-screen flex flex-col items-center px-4">
-      <h1 className="text-4xl font-bold text-center mt-10 mb-5 border-b-2 border-black pb-2">
+    <div className="rounded-3xl min-h-screen flex flex-col items-center px-4 ">
+      <h1 className="text-4xl font-bold text-center mt-10  ">
         Page Preview
       </h1>
+      <div className="w-[90%] border-black  border-b  mb-5 pb-2" />
+
 
       {/* Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-5 mb-8">
         {pages.map((title, index) => (
           <PageCardComponent
             key={index}

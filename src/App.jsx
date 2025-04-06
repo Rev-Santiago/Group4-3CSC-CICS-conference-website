@@ -41,12 +41,14 @@ function App() {
         <div>
           {/* ✅ Conditionally Apply Layout Only for Non-Admin Pages */}
           {!shouldHideLayout ? (
-            <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px"}}>
+            <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
               <BaseNavbar />
               {state === "loading" ? <LoaderPage /> : <Outlet />}
             </Box>
           ) : (
-            <Outlet /> // Directly render for Admin pages
+            <body className="m-0 p-0 min-h-screen bg-lightGray">
+              <Outlet />
+            </body>
           )}
 
           {!shouldHideLayout && <BaseFooter />}

@@ -13,18 +13,18 @@ const RegistrationAndFeesPage = () => {
             {/* Conference Fees Section */}
             <h2 className="text-2xl mb-4">Conference Fees</h2>
             <div className="overflow-x-auto">
-                <table className="w-full border border-gray-300 text-left">
+                <table className="w-full border border-black text-left">
                     <thead>
                         <tr className="bg-customRed text-white">
-                            <th className="p-3 border border-gray-300 text-center">Categories</th>
-                            <th className="p-3 border border-gray-300 text-center">Registration Fees</th>
+                            <th className="p-3 border border-black text-center">Categories</th>
+                            <th className="p-3 border border-black text-center">Registration Fees</th>
                         </tr>
                     </thead>
                     <tbody>
                         {feesData.map((item, index) => (
-                            <tr key={index} className="border border-gray-300">
-                                <td className="p-3 border border-gray-300 text-center">{item.category}</td>
-                                <td className="p-3 border border-gray-300 text-center">{item.fee}</td>
+                            <tr key={index} className="border border-black">
+                                <td className="p-3 border border-black text-center">{item.category}</td>
+                                <td className="p-3 border border-black text-center">{item.fee}</td>
                             </tr>
                         ))}
                     </tbody>

@@ -15,11 +15,11 @@ const AdminAccountPage = () => {
     const [currency, setCurrency] = useState("INR");
 
     return (
-        <section className="bg-gray-200 rounded-3xl">
+        <section className="">
             <div className="p-6 max-w-4xl mx-auto ">
                 {/* Profile Section */}
-                <Paper className="p-6 mb-6 shadow-md rounded-lg">
-                    <Typography variant="h6" className="mb-4">
+                <div className="bg-white p-6 mb-6 shadow-md rounded-xl">
+                    <Typography variant="h6" sx={{ mb: 2 }}>
                         Change Profile
                     </Typography>
                     <div className="flex flex-col items-center">
@@ -32,11 +32,11 @@ const AdminAccountPage = () => {
                             Allowed JPG, GIF, PNG. Max size 800KB.
                         </Typography>
                     </div>
-                </Paper>
+                </div>
 
-                {/* Personal Details */}
-                <Paper className="p-6 mb-6 shadow-md rounded-lg">
-                    <Typography variant="h6" sx={{ mb:2 }}>
+                {/* Personal Details Box */}
+                <div className="bg-white p-6 mb-6 shadow-md rounded-lg">
+                    <Typography variant="h6" sx={{ mb: 2 }}>
                         Personal Details
                     </Typography>
                     <Grid container spacing={3}>
@@ -47,20 +47,20 @@ const AdminAccountPage = () => {
                             <TextField fullWidth label="Last Name" variant="outlined" size="small" />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <TextField fullWidth label="Email" variant="outlined" size="small"  />
+                            <TextField fullWidth label="Email" variant="outlined" size="small" />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <TextField fullWidth label="Phone" variant="outlined" size="small"  />
+                            <TextField fullWidth label="Phone" variant="outlined" size="small" />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField fullWidth label="Address" variant="outlined" size="small" />
                         </Grid>
                     </Grid>
-                </Paper>
+                </div>
 
-                {/* Change Password */}
-                <Paper className="p-6 mb-6 shadow-md rounded-lg">
-                    <Typography variant="h6" sx={{ mb:2 }}>
+                {/* Change Password Box */}
+                <div className="bg-white p-6 mb-6 shadow-md rounded-lg">
+                    <Typography variant="h6" sx={{ mb: 2 }}>
                         Change Password
                     </Typography>
                     <Grid container spacing={3}>
@@ -75,12 +75,11 @@ const AdminAccountPage = () => {
                         </Grid>
                     </Grid>
 
-                    {/* Save & Cancel Buttons */}
                     <div className="flex justify-end gap-4 mt-6">
                         <Button variant="outlined">Cancel</Button>
                         <Button variant="contained" sx={{ backgroundColor: "#B7152F" }} startIcon={<Save />}>Save</Button>
                     </div>
-                </Paper>
+                </div>
 
 
             </div>

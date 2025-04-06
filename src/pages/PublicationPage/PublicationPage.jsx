@@ -40,28 +40,28 @@ const PublicationPage = () => {
 
             <h3 className="text-xl text-center mb-4">Previous Conference Publications</h3>
             <div className="w-full overflow-x-auto">
-                <table className="w-full table-fixed border-collapse border border-gray-300">
+                <table className="w-full table-fixed border-collapse border border-black">
                     <thead>
                         <tr className="bg-customRed text-white">
-                            <th className="py-2 px-4 border border-gray-300 w-1/4">Date</th>
-                            <th className="py-2 px-4 border border-gray-300 w-3/4">Description</th>
+                            <th className="py-2 px-4 border border-black w-1/4">Date</th>
+                            <th className="py-2 px-4 border border-black w-3/4">Description</th>
                         </tr>
                     </thead>
                     <tbody>
                         {publications.length > 0 ? (
                             publications.map((pub, index) => (
-                                <tr key={index} className="border border-gray-300">
-                                    <td className="py-2 px-4 border border-gray-300 text-center min-h-[50px]">
+                                <tr key={index} className="border border-black">
+                                    <td className="py-2 px-4 border border-black text-center min-h-[50px]">
                                         {new Date(pub.publication_date).toLocaleDateString()}
                                     </td>
-                                    <td className="py-2 px-4 border border-gray-300 text-center min-h-[50px]">
+                                    <td className="py-2 px-4 border border-black text-center min-h-[50px]">
                                         {pub.publication_description}
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="2" className="py-2 px-4 border border-gray-300 text-center min-h-[50px]">
+                                <td colSpan="2" className="py-2 px-4 border border-black text-center min-h-[50px]">
                                     No publications available.
                                 </td>
                             </tr>

@@ -16,13 +16,13 @@ import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPag
 import LoginPage from "../pages/LoginPage/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard/AdminDashboard";
 import AdminPages from "../pages/AdminPages/AdminPages";
-import AdminCallForPapers from "../pages/AdminCallForPapers/AdminCallForPapers";
 import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
 import AdminEventsPage from "../pages/AdminEventsPage/AdminEventsPage";
 import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import AdminAccountPage from "../pages/AdminAccountPage/AdminAccountPage";
+import AdminUserManagementPage from "../pages/AdminUserManagementPage/AdminUserManagementPage";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -67,16 +67,8 @@ const AdminLayout = () => {
                         { index: true, element: <AdminDashboard /> },
                         { path: "events", element: <AdminEventsPage /> },
                         { path: "pages", element: <AdminPages /> },
-                        // { path: "contact", element: <AdminContactsPage /> },
                         { path: "account", element: <AdminAccountPage /> },
-                        { path: "committee", element: <CommitteePage /> },
-                        { path: "event-history", element: <EventsHistoryPage /> },
-                        { path: "registration-and-fees", element: <RegistrationAndFeesPage /> },
-                        { path: "publication", element: <PublicationPage /> },
-                        { path: "schedule", element: <SchedulePage /> },
-                        { path: "venue", element: <VenuePage /> },
-                        { path: "keynote-speakers", element: <KeynoteSpeakersPage /> },
-                        { path: "invited-speakers", element: <InvitedSpeakersPage /> },
+                        { path: "user-management", element: <AdminUserManagementPage /> },
                     ]}
                 ],
             },

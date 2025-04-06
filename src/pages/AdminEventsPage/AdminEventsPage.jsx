@@ -32,7 +32,7 @@ const AdminEventsPage = () => {
     };
 
     return (
-        <section className="flex justify-center items-center bg-gray-200 rounded-3xl p-6">
+        <section className="flex justify-center items-center rounded-3xl p-6">
             <div className="w-full max-w-6xl">
                 <Grid container spacing={3}>
                     {/* Sidebar Actions */}

@@ -12,7 +12,7 @@ export default function BaseFooter() {
         
         {/* Logo Section */}
         <div className="flex flex-col items-center md:items-start md:ml-16 ">
-          <img src={cicsSeal} alt="UST Logo" className="w-16 h-16 mb-2" />
+          <img src={cicsSeal} alt="UST Logo" className="w-14 h-16 mb-2" />
           <p className="text-sm">
             University of Santo Tomas, <br />
             College of Information and Computing Sciences, <br />

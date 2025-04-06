@@ -53,13 +53,14 @@ export default function HorizontalAccordion() {
 
                 {/* Accordion 1 - Registration and Tracks */}
                 <Box >
-                    <Accordion className="!bg-customRed border border-gray-400" expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1")}>
+                    <Accordion className="!bg-customRed border border-gray-400"  expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1") }>
                         <AccordionSummary
                             expandIcon={expanded === "panel1" ? <CloseIcon sx={{ color: "white" }} /> : <AddIcon sx={{ color: "white" }} />}
                             aria-controls="panel1-content"
                             id="panel1-header"
+                            sx={{ justifyContent: "center" }}
                         >
-                            <Typography component="span" className="text-white">
+                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem" }}>
                                 Register now at CICS 2025 and Join us
                             </Typography>
                         </AccordionSummary>
@@ -121,8 +122,9 @@ export default function HorizontalAccordion() {
                             expandIcon={expanded === "panel2" ? <CloseIcon sx={{ color: "white" }} /> : <AddIcon sx={{ color: "white" }} />}
                             aria-controls="panel2-content"
                             id="panel2-header"
+                            sx={{ justifyContent: "center" }}
                         >
-                            <Typography component="span" className="text-white">Publications</Typography>
+                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem"}}>Publications</Typography>
                         </AccordionSummary>
                         <AccordionDetails className="bg-white">
                             <Typography variant="h6" className="font-bold text-center pb-2">
@@ -130,20 +132,21 @@ export default function HorizontalAccordion() {
                             </Typography>
 
                             {/* Table Section with Borders */}
-                            <TableContainer component={Paper} className="border">
+                            <TableContainer className="border" sx={{ borderColor: "black" }}>
                                 <Table>
                                     <TableHead>
-                                        <TableRow sx={{ backgroundColor: "#B7152F" }}>
+                                        <TableRow sx={{ backgroundColor: "#B7152F", borderColor: "black",  }}>
                                             <TableCell
                                                 sx={{
                                                     color: "white",
                                                     fontWeight: "bold",
                                                     borderRight: "1px solid black",
-                                                    textAlign: "center"
+                                                    textAlign: "center",
+                                                    borderColor: "black"
                                                 }}>
                                                 Date
                                             </TableCell>
-                                            <TableCell sx={{ color: "white", fontWeight: "bold", textAlign: "center" }}>
+                                            <TableCell sx={{ color: "white", fontWeight: "bold", textAlign: "center", borderColor: "black" }}>
                                                 Description
                                             </TableCell>
                                         </TableRow>
@@ -152,17 +155,17 @@ export default function HorizontalAccordion() {
                                         {publications.length > 0 ? (
                                             publications.map((pub, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", }}>
+                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", borderColor: "black"}}>
                                                         {formatDate(pub.publication_date)}
                                                     </TableCell>
-                                                    <TableCell sx={{ textAlign: "center" }}>
+                                                    <TableCell sx={{ textAlign: "center", borderColor: "black"}}>
                                                         {pub.publication_description}
                                                     </TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={2} sx={{ textAlign: "center" }}>
+                                                <TableCell colSpan={2} sx={{ textAlign: "center", borderColor: "black" }}>
                                                     No publications available
                                                 </TableCell>
                                             </TableRow>

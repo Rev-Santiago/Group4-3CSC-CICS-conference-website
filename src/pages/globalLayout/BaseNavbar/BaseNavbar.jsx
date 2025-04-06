@@ -7,7 +7,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import cicsLogo from '../../../assets/cics-logo.png';
 import cicsLogoSmall from '../../../assets/cics-seal.png'
+import cicsTextWithLogo from '../../../assets/cics-logo-with-text.png'
 import Breadcrumbs from "../../../components/breadcrumbComponent/Breadcrumbs.jsx";
+
 
 function a11yProps(index) {
   return {
@@ -57,13 +59,19 @@ export default function Navbar() {
   };
 
   return (
-    <Box className="container mx-auto" sx={{ width: '100%', margin: '0 auto', position: 'relative'}}>
+    <Box className="container mx-auto" sx={{ width: '100%', margin: '0 auto', position: 'relative' }} >
       {/* Logo and Mobile Menu Toggle */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2, ml: 3, gap: 2 }}>
         <img
-          src={isSmallScreen ? cicsLogoSmall : cicsLogo}
+          src={isSmallScreen ? cicsLogoSmall : cicsTextWithLogo}
           alt="CICS Logo"
-          style={{ width: isSmallScreen ? '100px' : '500px', height: 'auto' }}
+          style={{
+            width: isSmallScreen ? '100px' : '480px', // back to readable size
+
+            height: 'auto',
+            objectFit: 'contain',
+            display: 'block',
+          }}
         />
 
         {/* Desktop Search Bar */}
@@ -117,39 +125,49 @@ export default function Navbar() {
       >
         {isMediumScreen ? (
           <Grid container spacing={2} sx={{ padding: 2 }}>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Home" component={Link} to="/" {...a11yProps(0)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Call For Papers" component={Link} to="/call-for-papers" {...a11yProps(1)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="About Us ▼" onClick={(e) => handleMenuOpen(e, 'about')} {...a11yProps(2)}
-                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
+                sx={{
+                  textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" },
+                  "@media (max-width:960px)": {
+                    fontSize: "0.74rem"
+                  }
+                }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Registration & Fees" component={Link} to="/registration-and-fees" {...a11yProps(3)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Publication" component={Link} to="/publication" {...a11yProps(4)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Schedule" component={Link} to="/schedule" {...a11yProps(5)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Venue" component={Link} to="/venue" {...a11yProps(6)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Speakers ▼" onClick={(e) => handleMenuOpen(e, 'speakers')} {...a11yProps(7)}
-                sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
+                sx={{
+                  textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" },
+                  "@media (max-width:960px)": {
+                    fontSize: "0.74rem"
+                  }
+                }} />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={2}>
               <Tab label="Login" component={Link} to="/login" {...a11yProps(8)}
                 sx={{ textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } }} />
             </Grid>
@@ -162,7 +180,7 @@ export default function Navbar() {
             centered
             textColor="inherit"
             TabIndicatorProps={{ style: { display: 'none' } }}
-            sx={{ "& .MuiTab-root": { textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white" } } }}
+            sx={{ "& .MuiTab-root": { textTransform: "none", transition: "0.3s", "&:hover": { backgroundColor: "#B7152F", color: "white", } } }}
           >
 
             <Tab label="Home" component={Link} to="/" {...a11yProps(0)} />
@@ -180,7 +198,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
       <Collapse in={openNav}
-        sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F' }}
+        sx={{ width: '100%', backgroundColor: 'black', color: 'white', py: 2, borderTop: '5px solid #B7152F', "& .MuiTab-root": { fontFamily: 'Open Sans, sans-serif' } }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Tab label="Home" component={Link} to="/" {...a11yProps(0)}
@@ -214,7 +232,7 @@ export default function Navbar() {
       </Collapse>
 
       {/* Dropdown Menus */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} sx={{ "& .MuiTab-root": { fontFamily: 'Open Sans, sans-serif' } }}>
         {menuType === 'about' && (
           <>
             <MenuItem component={Link} to="/contact" onClick={handleMenuClose}>

@@ -55,7 +55,7 @@ const EventsHistoryPage = () => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-customRed text-white">
-                    <th className="w-1/2 py-3 border-r-2 border-black text-center">Time</th>
+                    <th className="w-1/2 py-3 border-r border-black text-center">Time</th>
                     <th className="w-1/2 py-3 text-center">Program</th>
                   </tr>
                 </thead>
@@ -63,7 +63,7 @@ const EventsHistoryPage = () => {
                   {event.schedule && event.schedule.length > 0 ? (
                     event.schedule.map((item, idx) => (
                       <tr key={idx} className="border-t border-black">
-                        <td className="w-1/2 py-3 text-center border-r-2 border-black">{item.time}</td>
+                        <td className="w-1/2 py-3 text-center border-r border-black">{item.time}</td>
                         <td className="w-1/2 py-3 text-center">
                           {item.program && item.program.length > 0 ? (
                             item.program.map((detail, i) => (

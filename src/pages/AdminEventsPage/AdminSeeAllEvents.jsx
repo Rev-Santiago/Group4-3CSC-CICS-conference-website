@@ -72,7 +72,7 @@ const AdminSeeAllEvent = () => {
                             <TableCell sx={{ borderRight: "1px solid #000" }}>{event.theme}</TableCell>
                             <TableCell sx={{ borderRight: "1px solid #000" }}>{event.category}</TableCell>
                             <TableCell>
-                                <IconButton onClick={(e) => handleMenuOpen(e, event)}>
+                                <IconButton onClick={(e) => handleMenuOpen(e, event)} size="small">
                                     <MoreVert />
                                 </IconButton>
                             </TableCell>
@@ -81,7 +81,13 @@ const AdminSeeAllEvent = () => {
                 </TableBody>
             </Table>
             {/* MoreVert Dropdown Menu */}
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+            <Menu PaperProps={{
+                sx: { boxShadow: 3 },
+            }}
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+            >
                 <MenuItem onClick={() => { console.log("Edit", selectedEvent); handleMenuClose(); }}>Edit</MenuItem>
                 <MenuItem onClick={() => { console.log("Delete", selectedEvent); handleMenuClose(); }}>Delete</MenuItem>
             </Menu>

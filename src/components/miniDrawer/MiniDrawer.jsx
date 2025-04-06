@@ -48,7 +48,7 @@ const closedMixin = (theme) => ({
   overflowX: "hidden",
   width: `calc(${theme.spacing(7)} + 1px)`,
   [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
+    width: `calc(${theme.spacing(8)} + 10px)`,
   },
 });
 
@@ -158,11 +158,13 @@ export default function MiniDrawer({ children }) {
       </AppBar>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
-          <img
-            src={cicsSeal}
-            alt="Logo"
-            style={{ width: "55px", height: "auto", marginTop: "12px" }}
-          />
+          {open && (
+            <img
+              src={cicsSeal}
+              alt="Logo"
+              style={{ width: "55px", height: "auto", marginTop: "12px" }}
+            />
+          )}
           <IconButton
             onClick={handleDrawerClose}
             sx={{
@@ -232,6 +234,7 @@ export default function MiniDrawer({ children }) {
           <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
             {open ? (
               <ListItemButton
+                onClick={() => navigate("/admin-dashboard/user-management")}
                 sx={{
                   mx: 1,
                   "&:hover": {
@@ -242,13 +245,14 @@ export default function MiniDrawer({ children }) {
                 }}
               >
                 <ListItemIcon>
-                    <GroupIcon />
+                  <GroupIcon />
                 </ListItemIcon>
                 <ListItemText primary="Users" />
               </ListItemButton>
             ) : (
               <Tooltip title="Users" placement="right">
                 <ListItemButton
+                  onClick={() => navigate("/admin-dashboard/user-management")}
                   sx={{
                     mx: 1,
                     "&:hover": {
