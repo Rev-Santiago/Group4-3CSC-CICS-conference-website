@@ -291,7 +291,7 @@ export default function MiniDrawer({ children }) {
             ) : (
               <Tooltip title="Account" placement="right">
                 <ListItemButton
-                  onClick={() => navigate("/account")}
+                  onClick={() => navigate("/admin-dashboard/account")}
                   sx={{
                     mx: 1,
                     "&:hover": {

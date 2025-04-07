@@ -172,7 +172,7 @@ const SchedulePage = () => {
                                             <tr key={i} className="border border-black text-center">
                                                 <td className="border border-black p-2">{event.time}</td>
                                                 <td className="border border-black p-2">{event.program}</td>
-                                                <td className="border border-black p-2 flex justify-center gap-2">
+                                                <td className="border p-2 flex justify-center gap-2">
                                                     <button
                                                         onClick={() => handleAddToCalendar({ ...event, date: day.date })}
                                                         className="bg-customRed text-white px-4 py-2 rounded-lg"
