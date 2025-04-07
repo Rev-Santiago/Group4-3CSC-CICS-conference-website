@@ -30,7 +30,7 @@ app.use(express.json());
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: "http://localhost:5173", // Ensure this matches the client-side URL
+        origin: "https://cics-conference-website.onrender.com", // Ensure this matches the client-side URL
         credentials: true,  // Allow cookies and authorization headers
     })
 );
