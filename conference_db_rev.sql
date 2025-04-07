@@ -41,6 +41,61 @@ INSERT INTO `conference_publications` VALUES (1,'2025-03-01','Exploring AI in He
 UNLOCK TABLES;
 
 --
+-- Table structure for table `event_approvals`
+--
+
+DROP TABLE IF EXISTS `event_approvals`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `event_approvals` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `event_id` int DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `approved_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `event_id` (`event_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `event_approvals_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`),
+  CONSTRAINT `event_approvals_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `event_approvals`
+--
+
+LOCK TABLES `event_approvals` WRITE;
+/*!40000 ALTER TABLE `event_approvals` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event_approvals` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `event_drafts`
+--
+
+DROP TABLE IF EXISTS `event_drafts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `event_drafts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `event_data` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `event_drafts`
+--
+
+LOCK TABLES `event_drafts` WRITE;
+/*!40000 ALTER TABLE `event_drafts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event_drafts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `events`
 --
 
@@ -111,4 +166,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-05 20:33:21
+-- Dump completed on 2025-04-07  8:14:25
