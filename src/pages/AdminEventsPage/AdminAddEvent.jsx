@@ -1,5 +1,5 @@
-// src/pages/AdminAddEvent.jsx
-import { useState, useEffect } from "react";
+// src/pages/AdminEventsPage/AdminAddEvent.jsx
+import { useState } from "react";
 import {
     Grid,
     TextField,
@@ -12,6 +12,8 @@ import {
     DialogContent,
     DialogActions,
     Box,
+    Alert,
+    Snackbar
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
@@ -31,6 +33,7 @@ export default function AdminAddEvent({ currentUser }) {
         zoomLink: "",
     });
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,49 +45,104 @@ export default function AdminAddEvent({ currentUser }) {
         setEventData((prev) => ({ ...prev, [name]: files[0] }));
     };
 
-    const handleSubmit = async () => {
+    const resetForm = () => {
+        setEventData({
+            title: "",
+            date: "",
+            startTime: "",
+            endTime: "",
+            venue: "",
+            keynoteSpeaker: "",
+            invitedSpeaker: "",
+            theme: "",
+            category: "",
+            keynoteImage: null,
+            invitedImage: null,
+            zoomLink: "",
+        });
+    };
+
+    const getAuthToken = () => {
+        return localStorage.getItem('authToken');
+    };
+
+    const handleSaveDraft = async () => {
         const formData = new FormData();
         Object.entries(eventData).forEach(([key, value]) => {
             if (value) formData.append(key, value);
         });
 
         try {
+            const res = await fetch("http://localhost:5000/api/drafts", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`
+                }
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            setNotification({
+                open: true,
+                message: "📝 Draft saved successfully!",
+                severity: "success"
+            });
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: `❌ Error: ${err.message || "Failed to save draft"}`,
+                severity: "error"
+            });
+        }
+    };
+
+    const handlePublish = async () => {
+        const formData = new FormData();
+        Object.entries(eventData).forEach(([key, value]) => {
+            if (value) formData.append(key, value);
+        });
+
+        try {
+            for (let pair of formData.entries()) {
+                console.log(`${pair[0]}: ${pair[1]}`);
+            }
             const res = await fetch("http://localhost:5000/api/events", {
                 method: "POST",
                 body: formData,
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`
+                }
             });
 
-            if (!res.ok) throw new Error("Failed to publish event");
-            alert("✅ Event published successfully!");
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to publish event");
+
+            setNotification({
+                open: true,
+                message: "✅ Event published successfully!",
+                severity: "success"
+            });
+
             resetForm();
         } catch (err) {
             console.error(err);
-            alert("❌ Error publishing event.");
-        }
-    };
-
-    const handleSaveDraft = async () => {
-        try {
-            const res = await fetch("http://localhost:5000/api/drafts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(eventData),
+            setNotification({
+                open: true,
+                message: `❌ Error: ${err.message || "Failed to publish event"}`,
+                severity: "error"
             });
-
-            if (!res.ok) throw new Error("Failed to save draft");
-            alert("📝 Draft saved successfully!");
-        } catch (err) {
-            console.error(err);
-            alert("❌ Error saving draft.");
         }
     };
 
+    const accountType = localStorage.getItem("accountType");
     const handleOpenDetails = () => setDetailsOpen(true);
     const handleCloseDetails = () => setDetailsOpen(false);
+    const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
 
     return (
         <Box className="p-4">
-            {/* Speakers */}
             <Grid item xs={12}>
                 <Typography variant="subtitle1">Details:</Typography>
             </Grid>
@@ -112,10 +170,11 @@ export default function AdminAddEvent({ currentUser }) {
                 <Grid item xs={12}>
                     <TextField fullWidth size="small" label="Zoom Link" name="zoomLink" value={eventData.zoomLink} onChange={handleChange} />
                 </Grid>
-                {/* Speakers */}
+
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Speaker(s):</Typography>
                 </Grid>
+
                 <Grid item xs={12} className="flex items-center gap-2">
                     <TextField fullWidth size="small" label="Keynote Speaker" name="keynoteSpeaker" value={eventData.keynoteSpeaker} onChange={handleChange} />
                     <IconButton color="black">
@@ -129,7 +188,6 @@ export default function AdminAddEvent({ currentUser }) {
                         <input type="file" name="keynoteImage" hidden onChange={handleFileChange} />
                     </Button>
                     {eventData.keynoteImage && <Typography>{eventData.keynoteImage.name}</Typography>}
-
                 </Grid>
 
                 <Grid item xs={12} className="flex items-center gap-2">
@@ -161,8 +219,8 @@ export default function AdminAddEvent({ currentUser }) {
                 <Grid item xs={12} className="flex gap-2">
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
-                    {currentUser?.account_type === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handleSubmit}>Publish</Button>
+                    {accountType === "super_admin" && (
+                        <Button variant="contained" color="success" onClick={handlePublish}>Publish</Button>
                     )}
                 </Grid>
             </Grid>
@@ -178,6 +236,17 @@ export default function AdminAddEvent({ currentUser }) {
                     <Button onClick={handleCloseDetails}>Close</Button>
                 </DialogActions>
             </Dialog>
+
+            <Snackbar 
+                open={notification.open} 
+                autoHideDuration={6000} 
+                onClose={handleCloseNotification}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseNotification} severity={notification.severity}>
+                    {notification.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

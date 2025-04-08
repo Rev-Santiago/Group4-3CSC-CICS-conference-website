@@ -36,6 +36,9 @@ export default function LoginPage() {
             }
 
             localStorage.setItem("authToken", data.token);
+            localStorage.setItem("accountType", data.account_type); // Storing the account type in localStorage
+
+            setAuth({ token: data.token, accountType: data.account_type });
             setAuth(data.token);
             navigate("/admin-dashboard"); // ✅ Redirect after successful login
         } catch (err) {

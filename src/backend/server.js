@@ -12,6 +12,7 @@ import process from "process";
 import icsRoute from "./routes/icsRoute.js";
 import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
+import eventRoutes from "./routes/eventRoutes.js";
 
 
 const app = express();
@@ -34,7 +35,7 @@ app.use(
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
-
+app.use("/api", eventRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
 
@@ -197,15 +198,13 @@ app.post("/api/register", async (req, res) => {
 });
 
 
-// 🔑 User Login
 app.post("/api/login", loginLimiter, async (req, res) => {
     const { email, password } = req.body;
     console.log(`Login attempt for: ${email}`); // Debugging Log
 
     try {
-        // Check if user exists
-        const [users] = await db.query("SELECT id, email, password FROM users WHERE email = ?", [email]);
-        
+        // Check if user exists and fetch account type
+        const [users] = await db.query("SELECT id, email, password, account_type FROM users WHERE email = ?", [email]);
         if (!users || users.length === 0) {
             console.log(`Login failed: User not found - ${email}`);
             return res.status(401).json({ error: "Invalid email or password" });
@@ -225,13 +224,17 @@ app.post("/api/login", loginLimiter, async (req, res) => {
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
 
         console.log(`Login successful: ${email}`);
-        res.json({ message: "Login successful", token });
+        // Include account_type in the response
+        res.json({ message: "Login successful", token, account_type: user.account_type });
 
     } catch (error) {
         console.error(`Login Error for ${email}:`, error.message); // Log the actual error
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+
+
 
 // 🚀 Protected User Dashboard Route
 app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
