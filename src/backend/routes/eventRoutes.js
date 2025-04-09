@@ -8,8 +8,6 @@ import process from "process";
 
 const router = express.Router();
 
-
-
 // Set up Multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -35,7 +33,6 @@ const upload = multer({
   },
 });
 
-  
 // Middleware to authenticate JWT Tokens
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -50,6 +47,13 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Utility to format time into 12-hour AM/PM format
+const formatTime = (time) => {
+  if (!time) return "";
+  const date = new Date(`1970-01-01T${time}`);
+  return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 // Route: Save event draft
 router.post("/drafts", authenticateToken, upload.fields([
   { name: "keynoteImage", maxCount: 1 },
@@ -58,17 +62,12 @@ router.post("/drafts", authenticateToken, upload.fields([
   try {
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
 
-    // Format start and end time to 12-hour AM/PM format
-    const formatTime = (time) => {
-      if (!time) return "";
-      const date = new Date(`1970-01-01T${time}`);
-      return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
-
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
 
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -94,6 +93,7 @@ router.post("/drafts", authenticateToken, upload.fields([
       userId
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Draft saved successfully." });
   } catch (err) {
@@ -120,17 +120,12 @@ router.post("/events", authenticateToken, upload.fields([
 
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
 
-    // Format start and end time to 12-hour AM/PM format
-    const formatTime = (time) => {
-      if (!time) return "";
-      const date = new Date(`1970-01-01T${time}`);
-      return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
-
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
 
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -154,6 +149,7 @@ router.post("/events", authenticateToken, upload.fields([
       userId
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Event published successfully." });
   } catch (err) {
@@ -162,21 +158,16 @@ router.post("/events", authenticateToken, upload.fields([
   }
 });
 
-const formatTime = (time) => {
-    if (!time) return "";
-    const date = new Date(`1970-01-01T${time}`);
-    return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  };
 // Route: Get drafts for current user
 router.get("/drafts", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const [rows] = await db.query(
       `SELECT * FROM event_drafts WHERE created_by = ? ORDER BY created_at DESC`,
       [userId]
     );
-    
+
     res.status(200).json({ drafts: rows });
   } catch (err) {
     console.error("Error fetching drafts:", err);
@@ -190,7 +181,7 @@ router.get("/events", authenticateToken, async (req, res) => {
     const [rows] = await db.query(
       `SELECT * FROM events ORDER BY created_at DESC`
     );
-    
+
     res.status(200).json({ events: rows });
   } catch (err) {
     console.error("Error fetching events:", err);
@@ -206,11 +197,13 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
   try {
     const { id } = req.params;
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
-    
+
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
-    
+
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -226,6 +219,7 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
       theme, category, keynoteImage || invitedImage || null, id, req.user.id
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Draft updated successfully." });
   } catch (err) {
