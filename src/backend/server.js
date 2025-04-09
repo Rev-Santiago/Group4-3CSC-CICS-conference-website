@@ -16,6 +16,8 @@ import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 
 const app = express();
+app.set('trust proxy', 1); // ✅ Add this line
+
 const PORT = process.env.PORT || 500;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
