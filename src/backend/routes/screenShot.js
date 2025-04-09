@@ -1,5 +1,5 @@
 import express from "express";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 
 const router = express.Router();
 const BASE_URL = "https://cics-conference-website.onrender.com";
@@ -19,10 +19,9 @@ const pages = {
   "Invited Speakers": `${BASE_URL}/invited-speakers`,
 };
 
-// ✅ Screenshot utility function
+// ✅ Screenshot function
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
@@ -53,15 +52,14 @@ const captureScreenshot = async (url) => {
   return `data:image/png;base64,${screenshot}`;
 };
 
-// 🧠 Cache
+// 🧠 Screenshot cache
 let screenshotCache = {
   data: {},
   timestamp: 0,
 };
+const CACHE_DURATION = 1000 * 60 * 5; // 5 min
 
-const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
-
-// 🔍 Cached screenshots
+// GET /screenshots (with cache)
 router.get("/screenshots", async (req, res) => {
   try {
     const now = Date.now();
@@ -96,7 +94,7 @@ router.get("/screenshots", async (req, res) => {
   }
 });
 
-// 🔄 Force refresh
+// GET /screenshots/refresh (force refresh)
 router.get("/screenshots/refresh", async (req, res) => {
   try {
     const screenshotData = await Promise.all(
