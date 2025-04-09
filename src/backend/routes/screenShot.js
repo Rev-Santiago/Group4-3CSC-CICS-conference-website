@@ -1,23 +1,36 @@
-// 📦 Import Puppeteer for serverless environments like Render
+// 📦 Imports
+import express from "express";
 import puppeteer from "puppeteer";
 
-/**
- * Captures a full-page screenshot of the given URL
- * optimized for serverless environments like Render.
- * 
- * @param {string} url - The page URL to capture
- * @returns {string} base64 encoded PNG image string
- */
+// 🌐 Setup
+const router = express.Router();
+const BASE_URL = "https://cics-conference-website.onrender.com";
+
+const pages = {
+  Home: `${BASE_URL}/`,
+  "Call For Papers": `${BASE_URL}/call-for-papers`,
+  Contacts: `${BASE_URL}/contact`,
+  Partners: `${BASE_URL}/partners`,
+  Committee: `${BASE_URL}/committee`,
+  "Event History": `${BASE_URL}/event-history`,
+  "Registration & Fees": `${BASE_URL}/registration-and-fees`,
+  Publication: `${BASE_URL}/publication`,
+  Schedule: `${BASE_URL}/schedule`,
+  Venue: `${BASE_URL}/venue`,
+  "Keynote Speakers": `${BASE_URL}/keynote-speakers`,
+  "Invited Speakers": `${BASE_URL}/invited-speakers`,
+};
+
+// 📸 Capture screenshot utility (optimized)
 const captureScreenshot = async (url) => {
-  // 🛠️ Get the path to the headless Chromium binary
- const browser = await puppeteer.launch({
-  headless: true,
-  args: ["--no-sandbox", "--disable-setuid-sandbox"],
-});
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   const page = await browser.newPage();
 
-  // ⚡ Speed optimization: Block fonts, images, and stylesheets
+  // ⚡ Speed boost: block unnecessary requests
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const type = req.resourceType();
@@ -28,33 +41,73 @@ const captureScreenshot = async (url) => {
     }
   });
 
-  // 🌐 Navigate to the page
   await page.goto(url, {
-    waitUntil: "networkidle2", // waits for most requests to finish
-    timeout: 20000,
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
   });
 
-  // 📏 Get full height of the <body> to capture the entire page
+  // 📏 Adjust viewport to full height
   const bodyHandle = await page.$("body");
-  const box = await bodyHandle?.boundingBox();
+  const { height } = await bodyHandle.boundingBox();
+  await page.setViewport({ width: 1280, height: Math.ceil(height) });
 
-  if (!box) {
-    throw new Error("❌ Could not get body bounding box!");
-  }
-
-  // 🖼️ Set viewport height to match page content
-  await page.setViewport({
-    width: 1280,
-    height: Math.ceil(box.height),
-  });
-
-  // 📸 Capture the screenshot in base64 encoding
+  // 📸 Screenshot
   const screenshot = await page.screenshot({ encoding: "base64" });
 
   await browser.close();
-
-  // 🎯 Return the image as a data URI
   return `data:image/png;base64,${screenshot}`;
 };
 
-export default captureScreenshot;
+// 🧠 In-memory cache
+let screenshotCache = {};
+
+// 🔍 Route: GET /api/screenshots
+router.get("/screenshots", async (req, res) => {
+  try {
+    if (Object.keys(screenshotCache).length) {
+      return res.json(screenshotCache);
+    }
+
+    const screenshotData = {};
+    for (const [title, url] of Object.entries(pages)) {
+      try {
+        console.log(`📸 Capturing: ${title}`);
+        screenshotData[title] = await captureScreenshot(url);
+      } catch (err) {
+        console.error(`❌ Failed to capture ${title}`, err.message);
+        screenshotData[title] = null;
+      }
+    }
+
+    screenshotCache = screenshotData;
+    res.json(screenshotData);
+  } catch (error) {
+    console.error("Error capturing screenshots:", error);
+    res.status(500).json({ error: "Failed to capture screenshots" });
+  }
+});
+
+// 🔄 Route: GET /api/screenshots/refresh
+router.get("/screenshots/refresh", async (req, res) => {
+  try {
+    const screenshotData = {};
+
+    for (const [title, url] of Object.entries(pages)) {
+      try {
+        console.log(`📸 Refreshing: ${title}`);
+        screenshotData[title] = await captureScreenshot(url);
+      } catch (err) {
+        console.error(`❌ Failed to refresh ${title}`, err.message);
+        screenshotData[title] = null;
+      }
+    }
+
+    screenshotCache = screenshotData;
+    res.json({ message: "Screenshots refreshed successfully." });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to refresh screenshots." });
+  }
+});
+
+// 🚀 Export router
+export default router;
