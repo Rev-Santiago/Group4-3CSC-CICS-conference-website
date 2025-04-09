@@ -194,30 +194,37 @@ app.get("/api/events-history", async (req, res) => {
     }
 });
 
-// 🔐 User Login
 app.post("/api/login", loginLimiter, async (req, res) => {
     const { email, password } = req.body;
+    console.log(`Login attempt for: ${email}`); // Debugging Log
+
     try {
         // Check if user exists and fetch account type
         const [users] = await db.query("SELECT id, email, password, account_type FROM users WHERE email = ?", [email]);
         if (!users || users.length === 0) {
+            console.log(`Login failed: User not found - ${email}`);
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
         const user = users[0];
+        console.log(`User found: ${user.email}`); // Debugging Log
+
+        // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log(`Login failed: Incorrect password - ${email}`);
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
+        // Generate token
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-
 
         console.log(`Login successful: ${email}`);
         // Include account_type in the response
         res.json({ message: "Login successful", token, account_type: user.account_type });
 
     } catch (error) {
+        console.error(`Login Error for ${email}:`, error.message); // Log the actual error
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
