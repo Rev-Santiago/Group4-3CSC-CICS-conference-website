@@ -1,8 +1,6 @@
-// 📦 Imports
 import express from "express";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 
-// 🌐 Setup
 const router = express.Router();
 const BASE_URL = "https://cics-conference-website.onrender.com";
 
@@ -21,16 +19,16 @@ const pages = {
   "Invited Speakers": `${BASE_URL}/invited-speakers`,
 };
 
-// 📸 Capture screenshot utility (fast + optimized)
+// ✅ Screenshot utility function
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
-    headless: "new",
+    executablePath: "/usr/bin/chromium-browser",
+    headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   const page = await browser.newPage();
 
-  // ⚡ Block unnecessary resources
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const type = req.resourceType();
@@ -46,16 +44,16 @@ const captureScreenshot = async (url) => {
     timeout: 15000,
   });
 
-  // 🖼️ Use fixed height for speed (skip full scroll height)
   await page.setViewport({ width: 1280, height: 720 });
 
   const screenshot = await page.screenshot({ encoding: "base64" });
 
   await browser.close();
+
   return `data:image/png;base64,${screenshot}`;
 };
 
-// 🧠 In-memory cache
+// 🧠 Cache
 let screenshotCache = {
   data: {},
   timestamp: 0,
@@ -63,7 +61,7 @@ let screenshotCache = {
 
 const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
 
-// 🔍 Route: GET /api/screenshots (cached + parallel)
+// 🔍 Cached screenshots
 router.get("/screenshots", async (req, res) => {
   try {
     const now = Date.now();
@@ -73,7 +71,6 @@ router.get("/screenshots", async (req, res) => {
       return res.json(screenshotCache.data);
     }
 
-    // 🧵 Generate all screenshots in parallel
     const screenshotData = await Promise.all(
       Object.entries(pages).map(async ([title, url]) => {
         try {
@@ -99,7 +96,7 @@ router.get("/screenshots", async (req, res) => {
   }
 });
 
-// 🔄 Route: GET /api/screenshots/refresh (force update)
+// 🔄 Force refresh
 router.get("/screenshots/refresh", async (req, res) => {
   try {
     const screenshotData = await Promise.all(
@@ -127,5 +124,4 @@ router.get("/screenshots/refresh", async (req, res) => {
   }
 });
 
-// 🚀 Export router
 export default router;
