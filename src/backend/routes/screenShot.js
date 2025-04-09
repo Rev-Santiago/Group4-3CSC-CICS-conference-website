@@ -20,12 +20,11 @@ const pages = {
 };
 
 // ✅ Screenshot utility function
-const captureScreenshot = async (url) => {
-  const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+const browser = await puppeteer.launch({
+  executablePath: puppeteer.executablePath(), // works with puppeteer-core
+  headless: true,
+  args: ["--no-sandbox", "--disable-setuid-sandbox"]
+});
 
   const page = await browser.newPage();
 
