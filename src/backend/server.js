@@ -24,8 +24,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ✅ Security Middleware
-app.use(helmet()); // Security headers
-app.use(express.json());
+// ✅ Helmet with CSP to allow reCAPTCHA
+app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "https://www.google.com",
+            "https://www.gstatic.com",
+            "'unsafe-inline'" // optional, helps with some reCAPTCHA rendering
+          ],
+          frameSrc: ["'self'", "https://www.google.com"],
+          connectSrc: ["'self'", "https://www.google.com"],
+        }
+      }
+    })
+  );
+  app.use(express.json());
 
 // ✅ CORS Configuration
 app.use(
@@ -187,6 +204,26 @@ app.post("/api/login", loginLimiter, async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+//new for captcha
+app.post("/api/verify-captcha", async (req, res) => {
+    const { token } = req.body;
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
+
+    try {
+        const response = await fetch(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`,
+            {
+                method: "POST",
+            }
+        );
+        const data = await response.json();
+        res.json({ success: data.success });
+    } catch (error) {
+        console.error("Captcha verification failed:", error);
+        res.status(500).json({ success: false });
     }
 });
 
