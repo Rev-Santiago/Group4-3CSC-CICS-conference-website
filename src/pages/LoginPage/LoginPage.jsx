@@ -84,8 +84,8 @@ export default function LoginPage() {
                     <ReCAPTCHA
                         className="flex justify-center"
                         sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                        onChange={() => setCaptchaVerified(true)}
-                    />
+                        onChange={(token) => setCaptchaVerified(token)}
+                        />
                     <Typography
                         className="text-blue-700 mt-4 cursor-pointer pt-3 hover:underline"
                         onClick={() => navigate("/register")}
