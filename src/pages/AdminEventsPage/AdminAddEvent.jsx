@@ -42,12 +42,13 @@ export default function AdminAddEvent({ currentUser }) {
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
 
     const handleCategoryChange = (e, newValue) => {
-        if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
-            setCustomCategories([...customCategories, newValue]);
-        }
-        setEventData((prev) => ({ ...prev, category: newValue }));
-        console.log("Category updated:", newValue);
-    };
+    if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
+        setCustomCategories([...customCategories, newValue]);
+    }
+    setEventData((prev) => ({ ...prev, category: newValue }));
+    console.log("Category updated:", newValue); // Debugging line
+};
+
 
     const [customVenues, setCustomVenues] = useState([]);
     const defaultVenues = ["Cafeteria", "Auditorium"];
@@ -93,12 +94,19 @@ export default function AdminAddEvent({ currentUser }) {
 
     const handleSaveDraft = async () => {
         const formData = new FormData();
+        
+        // Log values before appending them
+        console.log("Event Data: ", eventData);
+        
         Object.entries(eventData).forEach(([key, value]) => {
-            if (value !== "") {
+            if (value) {
                 formData.append(key, value);
             }
         });
-
+    
+        // Check if the fields are properly appended
+        console.log("Form Data keys: ", [...formData.keys()]);
+    
         try {
             const res = await fetch(`${BACKEND_URL}/api/drafts`, {
                 method: "POST",
@@ -107,14 +115,15 @@ export default function AdminAddEvent({ currentUser }) {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-
+    
+            // Check if response is HTML (a sign of error page)
             if (res.headers.get("content-type")?.includes("text/html")) {
                 throw new Error("Received HTML, which might be an error page.");
             }
-
+    
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to save draft");
-
+    
             setNotification({
                 open: true,
                 message: "📝 Draft saved successfully!",
@@ -129,13 +138,14 @@ export default function AdminAddEvent({ currentUser }) {
             });
         }
     };
-
+    
+    
     const handlePublish = async () => {
         const formData = new FormData();
         Object.entries(eventData).forEach(([key, value]) => {
-            if (value !== "") formData.append(key, value);
+            if (value) formData.append(key, value);
         });
-
+    
         try {
             const res = await fetch(`${BACKEND_URL}/api/events`, {
                 method: "POST",
@@ -144,16 +154,16 @@ export default function AdminAddEvent({ currentUser }) {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-
+    
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to publish event");
-
+    
             setNotification({
                 open: true,
                 message: "✅ Event published successfully!",
                 severity: "success"
             });
-
+    
             resetForm();
         } catch (err) {
             console.error(err);
@@ -258,6 +268,7 @@ export default function AdminAddEvent({ currentUser }) {
                         )}
                     />
                 </Grid>
+
                 <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
