@@ -8,36 +8,65 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import process from "process";
+import path from "path"; // For serving static files
+import { fileURLToPath } from 'url'; // ES module compatible import
+import { dirname } from 'path'; // For path handling
 import icsRoute from "./routes/icsRoute.js";
 import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 import eventRoutes from "./routes/eventRoutes.js";
-
+import process from "process";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.set('trust proxy', 1); // ✅ Add this line
+
+const PORT = process.env.PORT || 500;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-// ✅ Security Middleware
-app.use(helmet()); // Security headers
+// Get the current directory name for serving static files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 app.use(express.json());
+// ✅ Security Middleware
+// ✅ Helmet with CSP to allow reCAPTCHA
 
 // ✅ CORS Configuration
 app.use(
     cors({
-        origin: "http://localhost:5173", // Ensure this matches the client-side URL
+        origin: "https://cics-conference-website.onrender.com", // Ensure this matches the client-side URL
         credentials: true,  // Allow cookies and authorization headers
     })
 );
 
-
+app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "https://www.google.com",
+            "https://www.gstatic.com",
+            "'unsafe-inline'"
+          ],
+          connectSrc: [
+            "'self'",
+            "http://localhost:5000", // ✅ allow local fetch
+            "https://www.google.com"
+          ],
+          frameSrc: ["'self'", "https://www.google.com"]
+        }
+      }
+    })
+  );
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
 app.use("/api", eventRoutes);
-app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
+app.use("/uploads", express.static("uploads"));
+
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({
@@ -59,7 +88,6 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
-
 
 // 🚀 Check API Status
 app.get("/api", (req, res) => {
@@ -108,7 +136,6 @@ app.get("/api/publications/latest", async (req, res) => {
     }
 });
 
-// 📅 Fetch Event History (with optional date filtering)
 // 📅 Fetch Event History (with pagination and past events only)
 app.get("/api/events-history", async (req, res) => {
     try {
@@ -166,75 +193,53 @@ app.get("/api/events-history", async (req, res) => {
     }
 });
 
-
-
-// 🔐 Register a New User with Custom Account Type
-app.post("/api/register", async (req, res) => {
-    const { email, password, account_type = 'admin' } = req.body; // Default to 'admin'
-    
-    // Validate input
-    if (!email || !password || password.length < 8) {
-        return res.status(400).json({ error: "Invalid email or password." });
-    }
-
-    if (account_type !== 'admin' && account_type !== 'super_admin') {
-        return res.status(400).json({ error: "Invalid account type." });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Insert the new user with the specified account_type
-        await db.execute(
-            "INSERT INTO users (email, password, account_type) VALUES (?, ?, ?)", 
-            [email, hashedPassword, account_type]
-        );
-        
-        res.json({ message: "User registered successfully." });
-    } catch (error) {
-        console.error("Error during user registration:", error.message);
-        res.status(500).json({ error: "Registration failed." });
-    }
-});
-
-
+// 🔐 User Login
 app.post("/api/login", loginLimiter, async (req, res) => {
     const { email, password } = req.body;
-    console.log(`Login attempt for: ${email}`); // Debugging Log
-
     try {
         // Check if user exists and fetch account type
         const [users] = await db.query("SELECT id, email, password, account_type FROM users WHERE email = ?", [email]);
         if (!users || users.length === 0) {
-            console.log(`Login failed: User not found - ${email}`);
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
         const user = users[0];
-        console.log(`User found: ${user.email}`); // Debugging Log
-
-        // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.log(`Login failed: Incorrect password - ${email}`);
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
-        // Generate token
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+
 
         console.log(`Login successful: ${email}`);
         // Include account_type in the response
         res.json({ message: "Login successful", token, account_type: user.account_type });
 
     } catch (error) {
-        console.error(`Login Error for ${email}:`, error.message); // Log the actual error
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
+//new for captcha
+app.post("/api/verify-captcha", async (req, res) => {
+    const { token } = req.body;
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
 
-
+    try {
+        const response = await fetch(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`,
+            {
+                method: "POST",
+            }
+        );
+        const data = await response.json();
+        res.json({ success: data.success });
+    } catch (error) {
+        console.error("Captcha verification failed:", error);
+        res.status(500).json({ success: false });
+    }
+});
 
 // 🚀 Protected User Dashboard Route
 app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
@@ -276,43 +281,6 @@ app.get("/api/schedule", async (req, res) => {
     }
 });
 
-
-
-app.get("/api/events", async (req, res) => {
-    try {
-        const [rows] = await db.query(
-            `SELECT event_date, program, venue, online_room_link, time_slot 
-             FROM events
-             WHERE event_date >= CURDATE()  -- Only fetch events for today or future dates
-             ORDER BY event_date ASC`
-        );
-
-        const formattedData = rows.reduce((acc, event) => {
-            const date = event.event_date.toISOString().split("T")[0];
-            if (!acc[date]) {
-                acc[date] = [];
-            }
-            acc[date].push({
-                time: event.time_slot,
-                program: event.program,
-                venue: event.venue,
-                online_room_link: event.online_room_link,
-            });
-            return acc;
-        }, {});
-
-        const responseData = Object.keys(formattedData).map((date) => ({
-            date,
-            events: formattedData[date],
-        }));
-
-        res.json(responseData);
-    } catch (error) {
-        console.error("Error fetching events:", error.message);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
 // 📅 Admin Event Preview API
 app.get("/api/admin_event_preview", async (req, res) => {
     try {
@@ -344,8 +312,16 @@ app.get("/api/admin_event_preview", async (req, res) => {
     }
 });
 
+// Serve static files from the React app (build folder)
+if (process.env.NODE_ENV === "production") {
+    // Serve static files from the correct 'dist' folder
+    app.use(express.static(path.join(__dirname, "../../dist")));  // Adjusted path to the dist folder
 
-
+    // For any other route, serve the index.html for React Router
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "../../dist", "index.html"));
+    });
+}
 
 
 // 🚀 Start Server
