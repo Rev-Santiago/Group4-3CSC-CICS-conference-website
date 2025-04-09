@@ -4,10 +4,13 @@ const VenuePage = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // ✅ Use environment variable for backend URL
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/events");
+                const response = await fetch(`${BACKEND_URL}/api/events`);
                 const data = await response.json();
 
                 // Get today's date in YYYY-MM-DD format
@@ -25,7 +28,7 @@ const VenuePage = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [BACKEND_URL]); // ✅ dependency for environment changes
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };
