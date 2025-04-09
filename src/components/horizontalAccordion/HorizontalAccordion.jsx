@@ -36,16 +36,17 @@ export default function HorizontalAccordion() {
     };
 
     // Fetch publications on component mount
-    React.useEffect(() => {
-        fetch("http://localhost:5000/api/publications?page=1&limit=4")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.data) {
-                    setPublications(data.data);
-                }
-            })
-            .catch((error) => console.error("Error fetching publications:", error));
-    }, []);
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+    console.log("Fetching from:", `${BACKEND_URL}/api/publications?page=1&limit=4`);
+    
+    fetch(`${BACKEND_URL}/api/publications?page=1&limit=4`)
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.data) {
+                setPublications(data.data);
+            }
+        })
+        .catch((error) => console.error("Error fetching publications:", error));
 
     return (
         <Container>
