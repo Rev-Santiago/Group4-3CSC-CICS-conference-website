@@ -31,12 +31,12 @@ app.use(express.json());
 // ✅ Helmet with CSP to allow reCAPTCHA
 
 // ✅ CORS Configuration
-app.use(
-    cors({
-        origin: "https://cics-conference-website.onrender.com", // Ensure this matches the client-side URL
-        credentials: true,  // Allow cookies and authorization headers
-    })
-);
+app.use(cors({
+    origin: "https://cics-conference-website.onrender.com",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],  // Ensure OPTIONS is allowed
+    credentials: true,
+}));
+
 
 app.use(
     helmet({
