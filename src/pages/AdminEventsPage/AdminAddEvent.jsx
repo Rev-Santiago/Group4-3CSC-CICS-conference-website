@@ -42,13 +42,13 @@ export default function AdminAddEvent({ currentUser }) {
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
 
     const handleCategoryChange = (e, newValue) => {
-    if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
-        setCustomCategories([...customCategories, newValue]);
-    }
-    setEventData((prev) => ({ ...prev, category: newValue }));
-    console.log("Category updated:", newValue); // Debugging line
-};
-
+        if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
+            setCustomCategories([...customCategories, newValue]);
+        }
+        setEventData((prev) => ({ ...prev, category: newValue }));
+        console.log("Category updated:", newValue); // Debugging line
+    };
+    
 
     const [customVenues, setCustomVenues] = useState([]);
     const defaultVenues = ["Cafeteria", "Auditorium"];
@@ -104,8 +104,8 @@ export default function AdminAddEvent({ currentUser }) {
             }
         });
     
-        // Check if the fields are properly appended
-        console.log("Form Data keys: ", [...formData.keys()]);
+        // Check if category is added to FormData
+        console.log("Category value in FormData: ", eventData.category);
     
         try {
             const res = await fetch(`${BACKEND_URL}/api/drafts`, {
@@ -116,7 +116,6 @@ export default function AdminAddEvent({ currentUser }) {
                 }
             });
     
-            // Check if response is HTML (a sign of error page)
             if (res.headers.get("content-type")?.includes("text/html")) {
                 throw new Error("Received HTML, which might be an error page.");
             }
@@ -139,7 +138,7 @@ export default function AdminAddEvent({ currentUser }) {
         }
     };
     
-    
+
     const handlePublish = async () => {
         const formData = new FormData();
         Object.entries(eventData).forEach(([key, value]) => {
