@@ -104,9 +104,16 @@ export default function AdminAddEvent({ currentUser }) {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-    
+            
+            
+            // Check if response is HTML (a sign of error page)
+            if (res.headers.get("content-type")?.includes("text/html")) {
+                throw new Error("Received HTML, which might be an error page.");
+            }
+            
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            
     
             setNotification({
                 open: true,

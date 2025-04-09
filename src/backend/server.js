@@ -15,6 +15,7 @@ import icsRoute from "./routes/icsRoute.js";
 import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 import process from "process";
+import eventRoutes from "./routes/eventRoutes.js";
 
 const app = express();
 app.set('trust proxy', 1); 
@@ -64,6 +65,8 @@ app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
+app.use("/api", eventRoutes);
+
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({

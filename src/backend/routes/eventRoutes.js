@@ -8,6 +8,8 @@ import process from "process";
 
 const router = express.Router();
 
+
+
 // Set up Multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -21,8 +23,19 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Max size 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Invalid file type'), false);
+    }
+    cb(null, true);
+  },
+});
 
+  
 // Middleware to authenticate JWT Tokens
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -30,7 +43,7 @@ const authenticateToken = (req, res, next) => {
 
   if (!token) return res.status(403).json({ error: "Access denied." });
 
-  jwt.verify(token, process.env.JWT_SECRET || "your_super_secret_key_here", (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: "Invalid token." });
     req.user = user;
     next();
@@ -67,14 +80,14 @@ router.post("/drafts", authenticateToken, upload.fields([
         speaker, theme, category, photo_url, created_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
     const values = [
       date || null,
       eventTime,
       title || "",
       venue || "",
       zoomLink || "",
-      `${keynoteSpeaker || ""}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
+      speaker,
       theme || "",
       category || "",
       keynoteImage || invitedImage || null,
