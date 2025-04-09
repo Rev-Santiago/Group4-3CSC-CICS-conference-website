@@ -25,30 +25,6 @@ const __dirname = dirname(__filename);
 
 // ✅ Security Middleware
 // ✅ Helmet with CSP to allow reCAPTCHA
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "https://www.google.com",
-          "https://www.gstatic.com",
-          "'unsafe-inline'"
-        ],
-        connectSrc: [
-          "'self'",
-          "http://localhost:5000", // ✅ allow local fetch
-          "https://www.google.com"
-        ],
-        frameSrc: ["'self'", "https://www.google.com"]
-      }
-    }
-  })
-);
-
-
-  
 
 // ✅ CORS Configuration
 app.use(
@@ -57,6 +33,28 @@ app.use(
         credentials: true,  // Allow cookies and authorization headers
     })
 );
+
+app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "https://www.google.com",
+            "https://www.gstatic.com",
+            "'unsafe-inline'"
+          ],
+          connectSrc: [
+            "'self'",
+            "http://localhost:5000", // ✅ allow local fetch
+            "https://www.google.com"
+          ],
+          frameSrc: ["'self'", "https://www.google.com"]
+        }
+      }
+    })
+  );
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
