@@ -2,23 +2,24 @@ import express from "express";
 import puppeteer from "puppeteer-core";
 
 const router = express.Router();
+const BASE_URL = "https://cics-conference-website.onrender.com";
 
 const pages = {
-  Home: "http://localhost:5173/",
-  "Call For Papers": "http://localhost:5173/call-for-papers",
-  Contacts: "http://localhost:5173/contact",
-  Partners: "http://localhost:5173/partners",
-  Committee: "http://localhost:5173/committee",
-  "Event History": "http://localhost:5173/event-history",
-  "Registration & Fees": "http://localhost:5173/registration-and-fees",
-  Publication: "http://localhost:5173/publication",
-  Schedule: "http://localhost:5173/schedule",
-  Venue: "http://localhost:5173/venue",
-  "Keynote Speakers": "http://localhost:5173/keynote-speakers",
-  "Invited Speakers": "http://localhost:5173/invited-speakers"
+  Home: `${BASE_URL}/`,
+  "Call For Papers": `${BASE_URL}/call-for-papers`,
+  Contacts: `${BASE_URL}/contact`,
+  Partners: `${BASE_URL}/partners`,
+  Committee: `${BASE_URL}/committee`,
+  "Event History": `${BASE_URL}/event-history`,
+  "Registration & Fees": `${BASE_URL}/registration-and-fees`,
+  Publication: `${BASE_URL}/publication`,
+  Schedule: `${BASE_URL}/schedule`,
+  Venue: `${BASE_URL}/venue`,
+  "Keynote Speakers": `${BASE_URL}/keynote-speakers`,
+  "Invited Speakers": `${BASE_URL}/invited-speakers`,
 };
 
-// Capture screenshot function
+// ✅ Screenshot utility function
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
     executablePath: "/usr/bin/chromium-browser",
@@ -52,20 +53,75 @@ const captureScreenshot = async (url) => {
   return `data:image/png;base64,${screenshot}`;
 };
 
-// API route to capture screenshots
+// 🧠 Cache
+let screenshotCache = {
+  data: {},
+  timestamp: 0,
+};
+
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
+
+// 🔍 Cached screenshots
 router.get("/screenshots", async (req, res) => {
-    try {
-        const screenshotData = {};
+  try {
+    const now = Date.now();
+    const isFresh = now - screenshotCache.timestamp < CACHE_DURATION;
 
-        for (const [title, url] of Object.entries(pages)) {
-            screenshotData[title] = await captureScreenshot(url);
-        }
-
-        res.json(screenshotData);
-    } catch (error) {
-        console.error("Error capturing screenshots:", error);
-        res.status(500).json({ error: "Failed to capture screenshots" });
+    if (isFresh && Object.keys(screenshotCache.data).length) {
+      return res.json(screenshotCache.data);
     }
+
+    const screenshotData = await Promise.all(
+      Object.entries(pages).map(async ([title, url]) => {
+        try {
+          console.log(`📸 Capturing: ${title}`);
+          const image = await captureScreenshot(url);
+          return [title, image];
+        } catch (err) {
+          console.error(`❌ Failed to capture ${title}`, err.message);
+          return [title, null];
+        }
+      })
+    );
+
+    screenshotCache = {
+      data: Object.fromEntries(screenshotData),
+      timestamp: now,
+    };
+
+    res.json(screenshotCache.data);
+  } catch (error) {
+    console.error("Error capturing screenshots:", error);
+    res.status(500).json({ error: "Failed to capture screenshots" });
+  }
+});
+
+// 🔄 Force refresh
+router.get("/screenshots/refresh", async (req, res) => {
+  try {
+    const screenshotData = await Promise.all(
+      Object.entries(pages).map(async ([title, url]) => {
+        try {
+          console.log(`📸 Refreshing: ${title}`);
+          const image = await captureScreenshot(url);
+          return [title, image];
+        } catch (err) {
+          console.error(`❌ Failed to refresh ${title}`, err.message);
+          return [title, null];
+        }
+      })
+    );
+
+    screenshotCache = {
+      data: Object.fromEntries(screenshotData),
+      timestamp: Date.now(),
+    };
+
+    res.json({ message: "Screenshots refreshed successfully." });
+  } catch (error) {
+    console.error("Refresh error:", error);
+    res.status(500).json({ error: "Failed to refresh screenshots." });
+  }
 });
 
 export default router;
