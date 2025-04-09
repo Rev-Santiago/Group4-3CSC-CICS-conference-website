@@ -81,4 +81,37 @@ router.post("/events", upload.fields([
   }
 });
 
+// Route: GET /api/events
+router.get("/events", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT event_date, time_slot, program, venue, online_room_link  
+       FROM events 
+       WHERE event_date >= CURDATE()
+       ORDER BY event_date, time_slot`
+    );
+
+    // Group events by date
+    const groupedData = rows.reduce((acc, event) => {
+      const dateKey = event.event_date.toISOString().split("T")[0];
+      if (!acc[dateKey]) {
+        acc[dateKey] = { date: dateKey, events: [] };
+      }
+      acc[dateKey].events.push({
+        time: event.time_slot,
+        program: event.program,
+        venue: event.venue,
+        online_room_link: event.online_room_link,
+      });
+      return acc;
+    }, {});
+
+    res.json(Object.values(groupedData));
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 export default router;

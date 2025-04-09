@@ -26,23 +26,29 @@ const __dirname = dirname(__filename);
 // ✅ Security Middleware
 // ✅ Helmet with CSP to allow reCAPTCHA
 app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "https://www.google.com",
-            "https://www.gstatic.com",
-            "'unsafe-inline'" // optional, helps with some reCAPTCHA rendering
-          ],
-          frameSrc: ["'self'", "https://www.google.com"],
-          connectSrc: ["'self'", "https://www.google.com"],
-        }
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://www.google.com",
+          "https://www.gstatic.com",
+          "'unsafe-inline'"
+        ],
+        connectSrc: [
+          "'self'",
+          "http://localhost:5000", // ✅ allow local fetch
+          "https://www.google.com"
+        ],
+        frameSrc: ["'self'", "https://www.google.com"]
       }
-    })
-  );
-  app.use(express.json());
+    }
+  })
+);
+
+
+  
 
 // ✅ CORS Configuration
 app.use(
