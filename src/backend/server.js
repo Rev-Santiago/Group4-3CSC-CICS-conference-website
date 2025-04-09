@@ -23,6 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+app.use(express.json());
 // ✅ Security Middleware
 // ✅ Helmet with CSP to allow reCAPTCHA
 
