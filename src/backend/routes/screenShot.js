@@ -20,21 +20,38 @@ const pages = {
 
 // Capture screenshot function
 const captureScreenshot = async (url) => {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    
-    await page.goto(url, { waitUntil: "networkidle2" });
+  const browser = await puppeteer.launch({
+    executablePath: puppeteer.executablePath(),
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
-    // Get the full height of the document
-    const bodyHandle = await page.$("body");
-    const { height } = await bodyHandle.boundingBox();
-    await page.setViewport({ width: 1280, height: Math.ceil(height) });
+  const page = await browser.newPage();
 
-    const screenshot = await page.screenshot({ encoding: "base64" });
-    await browser.close();
+  await page.setRequestInterception(true);
+  page.on("request", (req) => {
+    const type = req.resourceType();
+    if (["image", "stylesheet", "font"].includes(type)) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
 
-    return `data:image/png;base64,${screenshot}`;
+  await page.goto(url, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
+
+  await page.setViewport({ width: 1280, height: 720 });
+
+  const screenshot = await page.screenshot({ encoding: "base64" });
+
+  await browser.close();
+
+  return `data:image/png;base64,${screenshot}`;
 };
+
 // API route to capture screenshots
 router.get("/screenshots", async (req, res) => {
     try {
