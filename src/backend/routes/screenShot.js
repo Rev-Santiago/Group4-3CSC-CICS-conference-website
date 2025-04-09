@@ -1,6 +1,5 @@
-// 📦 Import Puppeteer + Chrome for serverless environments like Render
-import chromium from "chrome-aws-lambda";
-import puppeteer from "puppeteer-core";
+// 📦 Import Puppeteer for serverless environments like Render
+import puppeteer from "puppeteer";
 
 /**
  * Captures a full-page screenshot of the given URL
@@ -11,15 +10,10 @@ import puppeteer from "puppeteer-core";
  */
 const captureScreenshot = async (url) => {
   // 🛠️ Get the path to the headless Chromium binary
-  const executablePath = await chromium.executablePath;
-
-  // 🚀 Launch Puppeteer with Render-safe flags
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: executablePath || '/usr/bin/chromium-browser', // fallback for local/dev
-    headless: chromium.headless,
-  });
+ const browser = await puppeteer.launch({
+  headless: true,
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+});
 
   const page = await browser.newPage();
 
