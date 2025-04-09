@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "start": "node src/backend/server.js",
     "devStart": "nodemon src/backend/server.js"
+    "postinstall": "puppeteer install"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
