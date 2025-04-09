@@ -9,7 +9,7 @@ const CallForPapersPage = () => {
                 {/* Submission Button */}
                 <div className="mt-4">
                     <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md">
-                        Submission Link for CICS 2024
+                        EDAS Submission Link for CICS
                     </button>
                 </div>
 

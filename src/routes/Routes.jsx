@@ -23,6 +23,7 @@ import NotFoundPage from "../pages/NotFoundPage/NotFoundPage";
 import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import AdminAccountPage from "../pages/AdminAccountPage/AdminAccountPage";
 import AdminUserManagementPage from "../pages/AdminUserManagementPage/AdminUserManagementPage";
+import AdminPublicationPage from "../pages/AdminPublicationsPage/AdminPublicationsPage"
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -66,9 +67,11 @@ const AdminLayout = () => {
                     { element: <AdminLayout />, children: [
                         { index: true, element: <AdminDashboard /> },
                         { path: "events", element: <AdminEventsPage /> },
+                        { path: "publications", element: <AdminPublicationPage /> },
                         { path: "pages", element: <AdminPages /> },
                         { path: "account", element: <AdminAccountPage /> },
                         { path: "user-management", element: <AdminUserManagementPage /> },
+                        
                     ]}
                 ],
             },

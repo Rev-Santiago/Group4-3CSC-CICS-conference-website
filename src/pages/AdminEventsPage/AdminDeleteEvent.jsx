@@ -17,7 +17,6 @@ const AdminDeleteEvent = () => {
         }
     };
 
-
     const handleEventChange = (event) => {
         setSelectedEvent(event.target.value);
     };

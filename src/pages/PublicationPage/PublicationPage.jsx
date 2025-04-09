@@ -54,7 +54,7 @@ const PublicationPage = () => {
                                     <td className="py-2 px-4 border border-black text-center min-h-[50px]">
                                         {new Date(pub.publication_date).toLocaleDateString()}
                                     </td>
-                                    <td className="py-2 px-4 border border-black text-center min-h-[50px]">
+                                    <td className="py-2 px-4 border border-black text-center min-h-[50px] hover:underline text-blue-800">
                                         {pub.publication_description}
                                     </td>
                                 </tr>

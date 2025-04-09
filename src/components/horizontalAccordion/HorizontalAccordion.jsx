@@ -53,7 +53,7 @@ export default function HorizontalAccordion() {
 
                 {/* Accordion 1 - Registration and Tracks */}
                 <Box >
-                    <Accordion className="!bg-customRed border border-gray-400"  expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1") }>
+                    <Accordion className="!bg-customRed border border-gray-400" expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1")}>
                         <AccordionSummary
                             expandIcon={expanded === "panel1" ? <CloseIcon sx={{ color: "white" }} /> : <AddIcon sx={{ color: "white" }} />}
                             aria-controls="panel1-content"
@@ -124,7 +124,7 @@ export default function HorizontalAccordion() {
                             id="panel2-header"
                             sx={{ justifyContent: "center" }}
                         >
-                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem"}}>Publications</Typography>
+                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem" }}>Publications</Typography>
                         </AccordionSummary>
                         <AccordionDetails className="bg-white">
                             <Typography variant="h6" className="font-bold text-center pb-2">
@@ -135,7 +135,7 @@ export default function HorizontalAccordion() {
                             <TableContainer className="border" sx={{ borderColor: "black" }}>
                                 <Table>
                                     <TableHead>
-                                        <TableRow sx={{ backgroundColor: "#B7152F", borderColor: "black",  }}>
+                                        <TableRow sx={{ backgroundColor: "#B7152F", borderColor: "black", }}>
                                             <TableCell
                                                 sx={{
                                                     color: "white",
@@ -155,10 +155,20 @@ export default function HorizontalAccordion() {
                                         {publications.length > 0 ? (
                                             publications.map((pub, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", borderColor: "black"}}>
+                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", borderColor: "black" }}>
                                                         {formatDate(pub.publication_date)}
                                                     </TableCell>
-                                                    <TableCell sx={{ textAlign: "center", borderColor: "black"}}>
+                                                    <TableCell
+                                                        sx={{
+                                                            textAlign: 'center',
+                                                            borderColor: 'black',
+                                                            color: 'rgb(30, 58, 138)', 
+                                                            '&:hover': {
+                                                                textDecoration: 'underline', 
+                                                                color: 'rgb(29, 78, 216)', 
+                                                            },
+                                                        }}
+                                                    >
                                                         {pub.publication_description}
                                                     </TableCell>
                                                 </TableRow>

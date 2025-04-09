@@ -167,7 +167,7 @@ export default function AdminAddEvent({ currentUser }) {
     return (
         <Box className="p-4">
             <Grid item xs={12}>
-                <Typography variant="subtitle1">Details:</Typography>
+                <Typography variant="subtitle1">Event Details:</Typography>
             </Grid>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
