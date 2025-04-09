@@ -92,9 +92,18 @@ export default function AdminAddEvent({ currentUser }) {
 
     const handleSaveDraft = async () => {
         const formData = new FormData();
+        
+        // Log values before appending them
+        console.log("Event Data: ", eventData);
+        
         Object.entries(eventData).forEach(([key, value]) => {
-            if (value) formData.append(key, value);
+            if (value) {
+                formData.append(key, value);
+            }
         });
+    
+        // Check if the fields are properly appended
+        console.log("Form Data keys: ", [...formData.keys()]);
     
         try {
             const res = await fetch(`${BACKEND_URL}/api/drafts`, {
@@ -104,16 +113,14 @@ export default function AdminAddEvent({ currentUser }) {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-            
-            
+    
             // Check if response is HTML (a sign of error page)
             if (res.headers.get("content-type")?.includes("text/html")) {
                 throw new Error("Received HTML, which might be an error page.");
             }
-            
+    
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to save draft");
-            
     
             setNotification({
                 open: true,
@@ -129,6 +136,7 @@ export default function AdminAddEvent({ currentUser }) {
             });
         }
     };
+    
     
     const handlePublish = async () => {
         const formData = new FormData();
