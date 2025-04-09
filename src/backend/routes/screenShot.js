@@ -21,7 +21,7 @@ const pages = {
 // Capture screenshot function
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
-    executablePath: puppeteer.executablePath(),
+    executablePath: "/usr/bin/chromium-browser",
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
