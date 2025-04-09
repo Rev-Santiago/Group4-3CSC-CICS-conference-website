@@ -21,7 +21,7 @@ const pages = {
   "Invited Speakers": `${BASE_URL}/invited-speakers`,
 };
 
-// 📸 Capture screenshot utility (optimized)
+// 📸 Capture screenshot utility (fast + optimized)
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
     headless: "new",
@@ -30,7 +30,7 @@ const captureScreenshot = async (url) => {
 
   const page = await browser.newPage();
 
-  // ⚡ Speed boost: block unnecessary requests
+  // ⚡ Block unnecessary resources
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const type = req.resourceType();
@@ -46,12 +46,9 @@ const captureScreenshot = async (url) => {
     timeout: 15000,
   });
 
-  // 📏 Adjust viewport to full height
-  const bodyHandle = await page.$("body");
-  const { height } = await bodyHandle.boundingBox();
-  await page.setViewport({ width: 1280, height: Math.ceil(height) });
+  // 🖼️ Use fixed height for speed (skip full scroll height)
+  await page.setViewport({ width: 1280, height: 720 });
 
-  // 📸 Screenshot
   const screenshot = await page.screenshot({ encoding: "base64" });
 
   await browser.close();
@@ -59,52 +56,73 @@ const captureScreenshot = async (url) => {
 };
 
 // 🧠 In-memory cache
-let screenshotCache = {};
+let screenshotCache = {
+  data: {},
+  timestamp: 0,
+};
 
-// 🔍 Route: GET /api/screenshots
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
+
+// 🔍 Route: GET /api/screenshots (cached + parallel)
 router.get("/screenshots", async (req, res) => {
   try {
-    if (Object.keys(screenshotCache).length) {
-      return res.json(screenshotCache);
+    const now = Date.now();
+    const isFresh = now - screenshotCache.timestamp < CACHE_DURATION;
+
+    if (isFresh && Object.keys(screenshotCache.data).length) {
+      return res.json(screenshotCache.data);
     }
 
-    const screenshotData = {};
-    for (const [title, url] of Object.entries(pages)) {
-      try {
-        console.log(`📸 Capturing: ${title}`);
-        screenshotData[title] = await captureScreenshot(url);
-      } catch (err) {
-        console.error(`❌ Failed to capture ${title}`, err.message);
-        screenshotData[title] = null;
-      }
-    }
+    // 🧵 Generate all screenshots in parallel
+    const screenshotData = await Promise.all(
+      Object.entries(pages).map(async ([title, url]) => {
+        try {
+          console.log(`📸 Capturing: ${title}`);
+          const image = await captureScreenshot(url);
+          return [title, image];
+        } catch (err) {
+          console.error(`❌ Failed to capture ${title}`, err.message);
+          return [title, null];
+        }
+      })
+    );
 
-    screenshotCache = screenshotData;
-    res.json(screenshotData);
+    screenshotCache = {
+      data: Object.fromEntries(screenshotData),
+      timestamp: now,
+    };
+
+    res.json(screenshotCache.data);
   } catch (error) {
     console.error("Error capturing screenshots:", error);
     res.status(500).json({ error: "Failed to capture screenshots" });
   }
 });
 
-// 🔄 Route: GET /api/screenshots/refresh
+// 🔄 Route: GET /api/screenshots/refresh (force update)
 router.get("/screenshots/refresh", async (req, res) => {
   try {
-    const screenshotData = {};
+    const screenshotData = await Promise.all(
+      Object.entries(pages).map(async ([title, url]) => {
+        try {
+          console.log(`📸 Refreshing: ${title}`);
+          const image = await captureScreenshot(url);
+          return [title, image];
+        } catch (err) {
+          console.error(`❌ Failed to refresh ${title}`, err.message);
+          return [title, null];
+        }
+      })
+    );
 
-    for (const [title, url] of Object.entries(pages)) {
-      try {
-        console.log(`📸 Refreshing: ${title}`);
-        screenshotData[title] = await captureScreenshot(url);
-      } catch (err) {
-        console.error(`❌ Failed to refresh ${title}`, err.message);
-        screenshotData[title] = null;
-      }
-    }
+    screenshotCache = {
+      data: Object.fromEntries(screenshotData),
+      timestamp: Date.now(),
+    };
 
-    screenshotCache = screenshotData;
     res.json({ message: "Screenshots refreshed successfully." });
   } catch (error) {
+    console.error("Refresh error:", error);
     res.status(500).json({ error: "Failed to refresh screenshots." });
   }
 });
