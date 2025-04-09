@@ -50,6 +50,9 @@ export default function LoginPage() {
             }
     
             localStorage.setItem("authToken", data.token);
+            localStorage.setItem("accountType", data.account_type); // Storing the account type in localStorage
+
+            setAuth({ token: data.token, accountType: data.account_type });
             setAuth(data.token);
             navigate("/admin-dashboard");
     
@@ -88,9 +91,9 @@ export default function LoginPage() {
                         />
                     <Typography
                         className="text-blue-700 mt-4 cursor-pointer pt-3 hover:underline"
-                        onClick={() => navigate("/register")}
+                        onClick={() => navigate("")}
                     >
-                        Register Here
+                        Forgot Password?
                     </Typography>
                     <button type="submit" className="w-full bg-customRed text-white p-2 rounded mt-4">
                         Log In
