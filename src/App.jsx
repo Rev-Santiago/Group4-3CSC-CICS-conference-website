@@ -38,8 +38,9 @@ function App() {
   return (
     <AuthContext.Provider value={{ auth, setAuth, handleLogout }}>
       <LayoutContext.Provider value={{ hideLayout, setHideLayout }}>
-        <div>
+        <div className="flex flex-col min-h-screen">
           {/* ✅ Conditionally Apply Layout Only for Non-Admin Pages */}
+          <main className="flex-grow">
           {!shouldHideLayout ? (
             <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
               <BaseNavbar />
@@ -50,6 +51,7 @@ function App() {
               <Outlet />
             </body>
           )}
+          </main>
 
           {!shouldHideLayout && <BaseFooter />}
         </div>

@@ -76,7 +76,7 @@ const AdminEventsPage = () => {
                             {activeButton === "Add Event" && <AdminAddEvent />}
 
                             {/* Buttons */}
-                            {activeButton !== "See all Events" &&
+                            {/* {activeButton !== "See all Events" &&
                                 <Grid
                                     item xs={12}
                                     className="flex flex-wrap gap-3"
@@ -96,7 +96,7 @@ const AdminEventsPage = () => {
                                         {activeButton === "Delete Event" ? "Delete" : "Publish"}
                                     </Button>
                                 </Grid>
-                            }
+                            } */}
                         </Box>
                     </Grid>
                 </Grid>

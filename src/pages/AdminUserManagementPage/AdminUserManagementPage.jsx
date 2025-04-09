@@ -10,7 +10,6 @@ export default function AdminUserManagementPage() {
 
     const handleRemove = () => {
         handleMenuClose();
-        // onRemove(); // Uncomment this if you define `onRemove` elsewhere
     };
 
     return (

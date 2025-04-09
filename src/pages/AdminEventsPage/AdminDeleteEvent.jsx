@@ -23,14 +23,14 @@ const AdminDeleteEvent = () => {
     };
 
     return (
-        <Paper sx={{ p: 3, mt: 1 }}>
-            <Typography variant="subtitle1">Select an Event</Typography>
+        <Box className="p-4">
+            <Typography variant="subtitle1" sx={{ mb: 2 }}>Select an Event</Typography>
             <Select
                 fullWidth
                 size="small"
                 value={selectedEvent}
                 onChange={handleEventChange}
-                variant="outlined"
+                variant="outlined"   
             >
                 <MenuItem value="">Select an event to delete</MenuItem>
                 {events.map((event) => (
@@ -43,7 +43,7 @@ const AdminDeleteEvent = () => {
                     About to delete: {selectedEvent}
                 </Typography>
             )}
-        </Paper>
+        </Box>
     );
 };
 

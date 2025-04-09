@@ -13,7 +13,8 @@ import {
     DialogActions,
     Box,
     Alert,
-    Snackbar
+    Snackbar,
+    Autocomplete,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
@@ -34,6 +35,28 @@ export default function AdminAddEvent({ currentUser }) {
     });
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+
+    const [customCategories, setCustomCategories] = useState([]);
+    const defaultCategories = ["Workshop", "Seminar", "Keynote"];
+    const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
+
+    const handleCategoryChange = (e, newValue) => {
+        if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
+            setCustomCategories([...customCategories, newValue]);
+        }
+        setEventData({ ...eventData, category: newValue });
+    };
+
+    const [customVenues, setCustomVenues] = useState([]);
+    const defaultVenues = ["Cafeteria", "Auditorium"];
+    const venueOptions = [...new Set([...defaultVenues, ...customVenues])];
+
+    const handleVenueChange = (e, newValue) => {
+        if (newValue && !defaultVenues.includes(newValue) && !customVenues.includes(newValue)) {
+            setCustomVenues([...customVenues, newValue]);
+        }
+        setEventData({ ...eventData, venue: newValue });
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -148,7 +171,7 @@ export default function AdminAddEvent({ currentUser }) {
             </Grid>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Title" name="title" value={eventData.title} onChange={handleChange} />
+                    <TextField fullWidth size="small" label="Title" name="title" value={eventData.title} onChange={handleChange} sx={{ mt: 2 }}/>
                 </Grid>
                 <Grid item xs={6}>
                     <TextField fullWidth size="small" label="Date" type="date" name="date" InputLabelProps={{ shrink: true }} value={eventData.date} onChange={handleChange} />
@@ -161,10 +184,15 @@ export default function AdminAddEvent({ currentUser }) {
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Venue" name="venue" select value={eventData.venue} onChange={handleChange}>
-                        <MenuItem value="Cafeteria">Cafeteria</MenuItem>
-                        <MenuItem value="Auditorium">Auditorium</MenuItem>
-                    </TextField>
+                    <Autocomplete
+                        freeSolo
+                        options={venueOptions}
+                        value={eventData.venue}
+                        onChange={handleVenueChange}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Venue" size="small" fullWidth />
+                        )}
+                    />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -206,21 +234,30 @@ export default function AdminAddEvent({ currentUser }) {
                 </Grid>
 
                 <Grid item xs={12}>
+                    <Typography variant="subtitle1">Event Classification:</Typography>
+                </Grid>
+
+                <Grid item xs={12}>
                     <TextField fullWidth size="small" label="Theme" name="theme" value={eventData.theme} onChange={handleChange} />
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Category" name="category" select value={eventData.category} onChange={handleChange}>
-                        <MenuItem value="Conference">Conference</MenuItem>
-                        <MenuItem value="Workshop">Workshop</MenuItem>
-                    </TextField>
+                    <Autocomplete
+                        freeSolo
+                        options={categoryOptions}
+                        value={eventData.category}
+                        onChange={handleCategoryChange}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Category" size="small" fullWidth />
+                        )}
+                    />
                 </Grid>
 
-                <Grid item xs={12} className="flex gap-2">
+                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
-                    {accountType === "super_admin" && (
-                        <Button variant="contained" color="success" onClick={handlePublish}>Publish</Button>
+                    {currentUser?.account_type === "super_admin" && (
+                        <Button variant="contained" color="error" onClick={handleSubmit}>Publish</Button>
                     )}
                 </Grid>
             </Grid>
@@ -237,9 +274,9 @@ export default function AdminAddEvent({ currentUser }) {
                 </DialogActions>
             </Dialog>
 
-            <Snackbar 
-                open={notification.open} 
-                autoHideDuration={6000} 
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
                 onClose={handleCloseNotification}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
