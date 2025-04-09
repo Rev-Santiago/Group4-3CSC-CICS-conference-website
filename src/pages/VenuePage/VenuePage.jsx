@@ -11,15 +11,16 @@ const VenuePage = () => {
         const fetchEvents = async () => {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/events`);
-
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
                 const data = await response.json();
-
-                // Get today's date in YYYY-MM-DD format
+                console.log("Fetched data:", data);
+                if (!Array.isArray(data)) {
+                    throw new Error("Expected an array from /api/events");
+                }
                 const today = new Date().toISOString().split("T")[0];
-
-                // Filter events to only include today or future dates
                 const upcomingEvents = data.filter(event => event.date >= today);
-
                 setScheduleData(upcomingEvents);
             } catch (error) {
                 console.error("Error fetching events:", error);
