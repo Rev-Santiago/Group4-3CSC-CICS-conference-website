@@ -10,7 +10,7 @@ const VenuePage = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/events`);
+                const response = await fetch('${BACKEND_URL}/api/events');
                 const data = await response.json();
 
                 // Get today's date in YYYY-MM-DD format
