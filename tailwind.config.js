@@ -13,6 +13,9 @@ module.exports = withMT({
       },
       colors: {
         customRed: "#B7152F",
+        customDarkRed: "#8A0F22",
+        customBlue: "#1D4ED8",
+        customDarkBlue: "#1E3A8A",
         lightGray: '#eeeeee',
       },
       fontFamily: {

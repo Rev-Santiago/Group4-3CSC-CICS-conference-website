@@ -22,14 +22,19 @@ const pages = {
 const captureScreenshot = async (url) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+    
     await page.goto(url, { waitUntil: "networkidle2" });
+
+    // Get the full height of the document
+    const bodyHandle = await page.$("body");
+    const { height } = await bodyHandle.boundingBox();
+    await page.setViewport({ width: 1280, height: Math.ceil(height) });
 
     const screenshot = await page.screenshot({ encoding: "base64" });
     await browser.close();
 
     return `data:image/png;base64,${screenshot}`;
 };
-
 // API route to capture screenshots
 router.get("/screenshots", async (req, res) => {
     try {

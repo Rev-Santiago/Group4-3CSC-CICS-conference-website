@@ -4,6 +4,13 @@ const VenuePage = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const scrollToDate = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
     useEffect(() => {
         const fetchEvents = async () => {
             try {
@@ -42,6 +49,26 @@ const VenuePage = () => {
             </p>
 
             <h2 className="text-2xl mb-6 text-center">Venue Details</h2>
+
+            {/* Dropdown + Button */}
+            {!loading && scheduleData.length > 0 && (
+                <div className="flex justify-center items-center gap-2 mb-6">
+                    <select
+                        onChange={(e) => scrollToDate(e.target.value)}
+                        className="border border-gray-400 rounded p-2 text-gray-700"
+                        defaultValue=""
+                    >
+                        <option value="" disabled>
+                            Jump to Date
+                        </option>
+                        {scheduleData.map((day, idx) => (
+                            <option key={idx} value={`date-${idx}`}>
+                                {formatDate(day.date)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             {loading ? (
                 <p className="text-center">Loading events...</p>
@@ -89,6 +116,13 @@ const VenuePage = () => {
                     </div>
                 ))
             )}
+            {/* Back to top */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-6 right-6 bg-customRed text-white px-4 py-2 rounded-full shadow-lg hover:bg-customDarkRed"
+            >
+                ▲
+            </button>
         </section>
     );
 };

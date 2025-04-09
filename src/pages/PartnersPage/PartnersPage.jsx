@@ -34,7 +34,7 @@ const PartnersPage = () => {
                         <img
                             src={partner.logo} // Dynamic logo from the array
                             alt={`${partner.name} Logo`}
-                            className="w-full h-full object-cover rounded-full"
+                            className="w-full h-full object-cover rounded-md"
                         />
                     </div>
 

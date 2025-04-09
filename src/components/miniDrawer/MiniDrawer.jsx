@@ -19,7 +19,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import EventsIcon from "@mui/icons-material/Event";
-import PagesIcon from "@mui/icons-material/Pages";
+import WebIcon from '@mui/icons-material/Web';
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import cicsSeal from "../../assets/cics-seal.png";
@@ -28,6 +28,7 @@ import { AuthContext } from "../../App";
 import Tooltip from "@mui/material/Tooltip";
 import Divider from "@mui/material/Divider";
 import GroupIcon from '@mui/icons-material/Group';
+import ArticleIcon from '@mui/icons-material/Article';
 
 const drawerWidth = 240;
 
@@ -115,8 +116,8 @@ const Drawer = styled(MuiDrawer, {
 const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin-dashboard" },
   { text: "Events", icon: <EventsIcon />, path: "events" },
-  { text: "Publications", icon: <EventsIcon />, path: "publications" },
-  { text: "Pages", icon: <PagesIcon />, path: "pages" },
+  { text: "Publications", icon: <ArticleIcon />, path: "publications" },
+  { text: "Pages", icon: <WebIcon />, path: "pages" },
 ];
 
 export default function MiniDrawer({ children }) {

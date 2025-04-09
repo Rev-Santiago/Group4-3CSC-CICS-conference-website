@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Menu, MenuItem, IconButton, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function PageCardComponent({ title, lastEdited, screenshotUrl }) {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [open, setOpen] = useState(false); 
+  const [open, setOpen] = useState(false);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -22,12 +23,20 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
   return (
     <div className="flex justify-center">
       <div className="border shadow-lg rounded-md p-4 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
-        <img
-          src={screenshotUrl}  
-          alt={title}
-          className="w-full h-40 object-cover rounded-md cursor-pointer"
-          onClick={() => setOpen(true)}
-        />
+        {/* Show CircularProgress if screenshotUrl is null */}
+        {screenshotUrl ? (
+          <img
+            src={screenshotUrl}
+            alt={title}
+            className="w-full h-40 object-cover rounded-md cursor-pointer"
+            onClick={() => setOpen(true)}
+          />
+        ) : (
+          <div className="w-full h-40 flex justify-center items-center">
+            <CircularProgress />
+          </div>
+        )}
+
         <div className="flex justify-between items-center mt-2">
           <h2 className="text-lg font-semibold hover:underline cursor-pointer" onClick={() => setOpen(true)}>
             {title}
@@ -43,10 +52,14 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
         </button>
 
         {/* 🔹 Scrollable Image Preview Modal */}
-        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md" scroll="paper">
+        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" scroll="paper">
           <DialogTitle className="text-center font-semibold">{title}</DialogTitle>
-          <DialogContent dividers className="flex justify-center items-center max-h-[80vh]">
-            <img src={screenshotUrl} alt={title} className="max-w-full h-auto rounded-md" />
+          <DialogContent dividers className="flex justify-center items-center ">
+            <img
+              src={screenshotUrl}
+              alt={title}
+              className="w-full h-200 object-cover "
+            />
           </DialogContent>
         </Dialog>
 

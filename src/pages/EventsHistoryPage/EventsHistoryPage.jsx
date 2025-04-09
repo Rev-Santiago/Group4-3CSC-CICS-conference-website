@@ -91,29 +91,25 @@ const EventsHistoryPage = () => {
         <p className="text-center text-gray-600">No events available.</p>
       )}
 
-      <div className="flex justify-center mt-6 mb-10">
+      <div className="flex justify-center mt-6 mb-10 w-full max-w-4xl mx-auto space-x-4">
         <button
-          disabled={currentPage === 1}
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          className={`px-6 py-2 mx-2 text-white font-semibold rounded-md transition-all duration-300 ${
-            currentPage === 1 ? "bg-gray-400 cursor-not-allowed" : "bg-customRed hover:bg-red-800 shadow-md hover:shadow-lg"
-          }`}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-300 text-black rounded disabled:opacity-50"
         >
-          ◀ Previous
+          Previous
         </button>
 
-        <span className="px-6 py-2 border border-gray-400 rounded-md bg-white font-semibold shadow-sm">
-          {currentPage} / {totalPages}
+        <span className="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-medium text-gray-800">
+          Page {currentPage} of {totalPages}
         </span>
 
         <button
-          disabled={currentPage === totalPages}
           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          className={`px-6 py-2 mx-2 text-white font-semibold rounded-md transition-all duration-300 ${
-            currentPage === totalPages ? "bg-gray-400 cursor-not-allowed" : "bg-customRed hover:bg-red-800 shadow-md hover:shadow-lg"
-          }`}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-300 text-black rounded disabled:opacity-50"
         >
-          Next ▶
+          Next 
         </button>
       </div>
     </div>

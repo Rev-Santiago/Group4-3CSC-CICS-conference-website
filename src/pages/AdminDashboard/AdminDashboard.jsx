@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MiniDrawer from "../../components/miniDrawer/MiniDrawer";
 import PageCardComponent from "../../components/pageCardsComponent/PageCardsComponent";
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function AdminDashboard() {
   const [adminData, setAdminData] = useState(null);
@@ -73,7 +74,7 @@ export default function AdminDashboard() {
             key={index}
             title={title}
             lastEdited="1:05 PM"
-            screenshotUrl={screenshots[title] || "/loading-placeholder.jpg"} // ✅ Show a placeholder until loaded
+            screenshotUrl={screenshots[title] || null}  // Pass null if no screenshot is available
           />
         ))}
       </div>

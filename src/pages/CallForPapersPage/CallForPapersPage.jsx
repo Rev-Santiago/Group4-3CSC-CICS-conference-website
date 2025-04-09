@@ -4,11 +4,15 @@ const CallForPapersPage = () => {
     return (
         <section className="call-for-paper">
             <div className="container mx-auto pb-6 text-gray-900">
+
                 <h1 className="text-3xl">Submission Link</h1>
 
                 {/* Submission Button */}
                 <div className="mt-4">
-                    <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md">
+                    <p className="text-gray-700">
+                        Submit your papers at:
+                    </p>
+                    <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed">
                         EDAS Submission Link for CICS
                     </button>
                 </div>

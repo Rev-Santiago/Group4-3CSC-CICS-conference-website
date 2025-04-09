@@ -31,6 +31,17 @@ const PublicationPage = () => {
 
     return (
         <section className="container mx-auto pb-10">
+            <h1 className="text-3xl">Submission Link</h1>
+
+            {/* Submission Button */}
+            <div className="my-4">
+            <p className="text-gray-700">
+               Submit your papers at:
+            </p>
+                <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed">
+                    EDAS Submission Link for CICS
+                </button>
+            </div>
             <h2 className="text-2xl mb-4">Publication</h2>
 
             <h3 className="text-xl text-customRed mb-2">Conference Proceedings</h3>
@@ -72,8 +83,8 @@ const PublicationPage = () => {
 
             {/* Pagination Controls */}
             <div className="mt-4 flex justify-center space-x-4">
-                <button 
-                    onClick={handlePrevPage} 
+                <button
+                    onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
                 >
@@ -82,8 +93,8 @@ const PublicationPage = () => {
 
                 <span className="px-4 py-2">Page {currentPage} of {totalPages}</span>
 
-                <button 
-                    onClick={handleNextPage} 
+                <button
+                    onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
                 >

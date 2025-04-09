@@ -33,6 +33,13 @@ const SchedulePage = () => {
         return new Date(dateString).toLocaleDateString("en-US", options);
     };
 
+    const scrollToDate = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    };
+
     const handleAddToCalendar = (event) => {
         if (!event || !event.time || !event.program || !event.date) {
             console.error("Invalid event data:", event);
@@ -94,13 +101,13 @@ const SchedulePage = () => {
             console.error("Invalid event data:", event);
             return;
         }
-    
+
         const { program, time, venue, online_room_link, date } = event;
-    
+
         console.log("Event Data:", event); // Debugging
-    
+
         const [startTime, endTime] = time.split(" - ");
-    
+
         const formatTime = (timeStr) => {
             const [time, modifier] = timeStr.split(" ");
             let [hours, minutes] = time.split(":").map(Number);
@@ -108,28 +115,28 @@ const SchedulePage = () => {
             if (modifier === "AM" && hours === 12) hours = 0;
             return `${hours.toString().padStart(2, "0")}${minutes.toString().padStart(2, "0")}00`;
         };
-    
+
         const eventDate = new Date(date);
         const formattedDate = eventDate.toISOString().split("T")[0].replace(/-/g, "");
-    
+
         const formattedStartTime = `${formattedDate}T${formatTime(startTime)}`;
         const formattedEndTime = `${formattedDate}T${formatTime(endTime)}`;
 
-    
+
         const details = `Venue: ${venue || "TBA"}\nOnline Room: ${online_room_link || "N/A"}`;
-        
+
         const googleCalendarURL = new URL("https://calendar.google.com/calendar/render");
         googleCalendarURL.searchParams.append("action", "TEMPLATE");
         googleCalendarURL.searchParams.append("text", program);
         googleCalendarURL.searchParams.append("dates", `${formattedStartTime}/${formattedEndTime}`);
         googleCalendarURL.searchParams.append("details", details.split("\n").join("\n"));
- // Correct line break encoding
+        // Correct line break encoding
         googleCalendarURL.searchParams.append("location", venue || "");
         googleCalendarURL.searchParams.append("ctz", "Asia/Manila");
-    
+
         window.open(googleCalendarURL.toString(), "_blank");
     };
-    
+
     return (
         <section className="container mx-auto pb-10">
             <h5 className="text-xl text-customRed mb-4">Announcements</h5>
@@ -138,13 +145,34 @@ const SchedulePage = () => {
             </p>
 
             <h2 className="text-2xl mb-6 text-center">Schedule Details</h2>
+
+            {/* Dropdown + Button */}
+            {!loading && scheduleData.length > 0 && (
+                <div className="flex justify-center items-center gap-2 mb-6">
+                    <select
+                        onChange={(e) => scrollToDate(e.target.value)}
+                        className="border border-gray-400 rounded p-2 text-gray-700"
+                        defaultValue=""
+                    >
+                        <option value="" disabled>
+                            Jump to Date
+                        </option>
+                        {scheduleData.map((day, idx) => (
+                            <option key={idx} value={`date-${idx}`}>
+                                {formatDate(day.date)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
             <p className="text-center text-gray-600">*Works with Google Calendar, iCalendar, and Outlook</p>
 
             {loading ? (
                 <p className="text-center">Loading schedule...</p>
             ) : scheduleData.length > 0 ? (
                 scheduleData.map((day, index) => (
-                    <div key={index} className="mb-10">
+                    <div key={index} id={`date-${index}`} className="mb-10">
                         <h6 className="text-xl text-center mb-4">{formatDate(day.date)}</h6>
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse border border-black">
@@ -175,13 +203,13 @@ const SchedulePage = () => {
                                                 <td className="border p-2 flex justify-center gap-2">
                                                     <button
                                                         onClick={() => handleAddToCalendar({ ...event, date: day.date })}
-                                                        className="bg-customRed text-white px-4 py-2 rounded-lg"
+                                                        className="bg-customRed hover:bg-customDarkRed text-white px-4 py-2 rounded-lg"
                                                     >
                                                         iCalendar
                                                     </button>
                                                     <button
                                                         onClick={() => handleAddToGoogleCalendar({ ...event, date: day.date })}
-                                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                                                        className="bg-customBlue hover:bg-customDarkBlue text-white px-4 py-2 rounded-lg "
                                                     >
                                                         Google Calendar
                                                     </button>
@@ -197,6 +225,13 @@ const SchedulePage = () => {
             ) : (
                 <p className="text-center">No upcoming events available.</p>
             )}
+            {/* Back to top */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="fixed bottom-6 right-6 bg-customRed text-white px-4 py-2 rounded-full shadow-lg hover:bg-customDarkRed"
+            >
+                ▲
+            </button>
         </section>
     );
 };

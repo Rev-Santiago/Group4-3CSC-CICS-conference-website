@@ -102,7 +102,7 @@ export default function HorizontalAccordion() {
                             {/* Submission Link */}
                             <Typography variant="h6" className="font-bold mt-4 pb-3">Submission Link</Typography>
                             <Typography className="text-gray-700">Please submit your papers at</Typography>
-                            <Button className="!bg-customRed hover:customRed mt-2 !text-white">
+                            <Button className="!bg-customRed hover:!bg-customDarkRed hover:customRed mt-2 !text-white">
                                 Edas Submission Link for CICS
                             </Button>
                             <Typography
@@ -186,7 +186,7 @@ export default function HorizontalAccordion() {
 
                             {/* Link to Publications Page */}
                             <Typography
-                                className="text-customRed mt-4 cursor-pointer pt-3 hover:underline"
+                                className="text-customRed mt-4 cursor-pointer pt-3 hover:underline "
                                 onClick={() => navigate("/publication")}
                             >
                                 Go to Publication Page ➤

@@ -34,7 +34,7 @@ const InvitedSpeakersPage = () => {
                         <img
                             src={speaker.image} // Dynamic image from the array
                             alt={`${speaker.name} Image`}
-                            className="w-full h-full object-cover rounded-full"
+                            className="w-full h-full object-cover rounded-md"
                         />
                     </div>
 
