@@ -21,7 +21,7 @@ const pages = {
   "Invited Speakers": `${BASE_URL}/invited-speakers`,
 };
 
-// 📸 Capture screenshot utility
+// 📸 Capture screenshot utility (optimized)
 const captureScreenshot = async (url) => {
   const browser = await puppeteer.launch({
     headless: "new",
@@ -29,18 +29,39 @@ const captureScreenshot = async (url) => {
   });
 
   const page = await browser.newPage();
-  await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
+  // ⚡ Speed boost: block unnecessary requests
+  await page.setRequestInterception(true);
+  page.on("request", (req) => {
+    const type = req.resourceType();
+    if (["image", "stylesheet", "font"].includes(type)) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+
+  await page.goto(url, {
+    waitUntil: "domcontentloaded",
+    timeout: 15000,
+  });
+
+  // 📏 Adjust viewport to full height
+  const bodyHandle = await page.$("body");
+  const { height } = await bodyHandle.boundingBox();
+  await page.setViewport({ width: 1280, height: Math.ceil(height) });
+
+  // 📸 Screenshot
   const screenshot = await page.screenshot({ encoding: "base64" });
-  await browser.close();
 
+  await browser.close();
   return `data:image/png;base64,${screenshot}`;
 };
 
 // 🧠 In-memory cache
 let screenshotCache = {};
 
-// 🔍 Route: GET /api/screenshots (load from cache if available)
+// 🔍 Route: GET /api/screenshots
 router.get("/screenshots", async (req, res) => {
   try {
     if (Object.keys(screenshotCache).length) {
@@ -66,7 +87,7 @@ router.get("/screenshots", async (req, res) => {
   }
 });
 
-// 🔄 Route: GET /api/screenshots/refresh (force refresh)
+// 🔄 Route: GET /api/screenshots/refresh
 router.get("/screenshots/refresh", async (req, res) => {
   try {
     const screenshotData = {};
@@ -88,5 +109,5 @@ router.get("/screenshots/refresh", async (req, res) => {
   }
 });
 
-// 🚀 Export router to be used in server.js
+// 🚀 Export router
 export default router;
