@@ -167,7 +167,7 @@ export default function AdminAddEvent({ currentUser }) {
     return (
         <Box className="p-4">
             <Grid item xs={12}>
-                <Typography variant="subtitle1">Details:</Typography>
+                <Typography variant="subtitle1">Event Details:</Typography>
             </Grid>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -257,7 +257,7 @@ export default function AdminAddEvent({ currentUser }) {
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
                     {currentUser?.account_type === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handleSubmit}>Publish</Button>
+                        <Button variant="contained" color="error" onClick={handlePublish}>Publish</Button>
                     )}
                 </Grid>
             </Grid>
