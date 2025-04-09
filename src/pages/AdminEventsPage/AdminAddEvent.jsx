@@ -45,10 +45,8 @@ export default function AdminAddEvent({ currentUser }) {
         if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
             setCustomCategories([...customCategories, newValue]);
         }
-        setEventData((prev) => ({ ...prev, category: newValue }));
-        console.log("Category updated:", newValue); // Debugging line
+        setEventData({ ...eventData, category: newValue });
     };
-    
 
     const [customVenues, setCustomVenues] = useState([]);
     const defaultVenues = ["Cafeteria", "Auditorium"];
@@ -94,18 +92,9 @@ export default function AdminAddEvent({ currentUser }) {
 
     const handleSaveDraft = async () => {
         const formData = new FormData();
-        
-        // Log values before appending them
-        console.log("Event Data: ", eventData);
-        
         Object.entries(eventData).forEach(([key, value]) => {
-            if (value) {
-                formData.append(key, value);
-            }
+            if (value) formData.append(key, value);
         });
-    
-        // Check if category is added to FormData
-        console.log("Category value in FormData: ", eventData.category);
     
         try {
             const res = await fetch(`${BACKEND_URL}/api/drafts`, {
@@ -115,13 +104,16 @@ export default function AdminAddEvent({ currentUser }) {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-    
+            
+            
+            // Check if response is HTML (a sign of error page)
             if (res.headers.get("content-type")?.includes("text/html")) {
                 throw new Error("Received HTML, which might be an error page.");
             }
-    
+            
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            
     
             setNotification({
                 open: true,
@@ -138,7 +130,6 @@ export default function AdminAddEvent({ currentUser }) {
         }
     };
     
-
     const handlePublish = async () => {
         const formData = new FormData();
         Object.entries(eventData).forEach(([key, value]) => {
