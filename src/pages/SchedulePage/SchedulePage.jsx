@@ -7,7 +7,8 @@ const SchedulePage = () => {
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/schedule");
+                const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+                const response = await fetch(`${BACKEND_URL}/api/schedule`);
                 const result = await response.json();
 
                 if (result.data) {

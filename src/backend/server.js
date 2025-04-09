@@ -16,7 +16,7 @@ import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 500;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 // Get the current directory name for serving static files
