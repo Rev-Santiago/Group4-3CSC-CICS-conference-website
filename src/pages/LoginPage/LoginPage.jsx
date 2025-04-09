@@ -15,33 +15,49 @@ export default function LoginPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         if (!captchaVerified) {
             setError("Please verify the CAPTCHA");
             return;
         }
-
+    
         try {
-            const response = await fetch("http://localhost:5000/api/login", {
+            // ✅ First verify captcha token with your backend
+            const captchaRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/verify-captcha`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: captchaVerified }),
+            });
+    
+            const captchaData = await captchaRes.json();
+            if (!captchaData.success) {
+                setError("Captcha verification failed");
+                return;
+            }
+    
+            // ✅ Then proceed with login
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await response.json();
             if (!response.ok) {
                 setError(data.error || "Login failed");
                 return;
             }
-
+    
             localStorage.setItem("authToken", data.token);
             setAuth(data.token);
-            navigate("/admin-dashboard"); // ✅ Redirect after successful login
+            navigate("/admin-dashboard");
+    
         } catch (err) {
             setError("Something went wrong. Please try again.");
         }
     };
+    
 
     return (
         <div className="flex justify-center items-center">
