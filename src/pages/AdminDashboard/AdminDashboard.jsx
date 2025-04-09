@@ -18,7 +18,7 @@ export default function AdminDashboard() {
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/admin-dashboard`, ... {
+        const response = await fetch(`${BACKEND_URL}/api/admin-dashboard`, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
