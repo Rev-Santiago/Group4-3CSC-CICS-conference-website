@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Menu, MenuItem, IconButton, Dialog, DialogContent, DialogTitle } from "@mui/material";
+import {
+  Menu,
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from "@mui/material/CircularProgress";
 
 export default function PageCardComponent({ title, lastEdited, screenshotUrl }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -20,25 +27,44 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
     handleMenuClose();
   };
 
+  const generateScreenshotUrl = (title) => {
+    return `/screenshots/${title
+      .toLowerCase()
+      .replace(/ & /g, "-")
+      .replace(/\s+/g, "-")}.png`;
+  };
+
+  const fallbackUrl = generateScreenshotUrl(title);
+  const imageUrl = screenshotUrl || fallbackUrl;
+
   return (
     <div className="flex justify-center">
       <div className="border shadow-lg rounded-md p-4 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
-        {/* Show CircularProgress if screenshotUrl is null */}
-        {screenshotUrl ? (
-          <img
-            src={screenshotUrl}
-            alt={title}
-            className="w-full h-40 object-cover rounded-md cursor-pointer"
-            onClick={() => setOpen(true)}
-          />
-        ) : (
-          <div className="w-full h-40 flex justify-center items-center">
-            <CircularProgress />
-          </div>
-        )}
+        {/* Screenshot or Spinner */}
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-40 object-cover rounded-md cursor-pointer"
+          onClick={() => setOpen(true)}
+          onError={(e) => {
+            e.target.style.display = "none";
+            const fallback = e.target.parentNode.querySelector(".spinner");
+            if (fallback) fallback.style.display = "flex";
+          }}
+        />
+        <div
+          className="w-full h-40 flex justify-center items-center spinner"
+          style={{ display: "none" }}
+        >
+          <CircularProgress />
+        </div>
 
+        {/* Title + Options */}
         <div className="flex justify-between items-center mt-2">
-          <h2 className="text-lg font-semibold hover:underline cursor-pointer" onClick={() => setOpen(true)}>
+          <h2
+            className="text-lg font-semibold hover:underline cursor-pointer"
+            onClick={() => setOpen(true)}
+          >
             {title}
           </h2>
 
@@ -51,14 +77,14 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
           Publish
         </button>
 
-        {/* 🔹 Scrollable Image Preview Modal */}
+        {/* Modal Preview */}
         <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" scroll="paper">
           <DialogTitle className="text-center font-semibold">{title}</DialogTitle>
           <DialogContent dividers className="flex justify-center items-center ">
             <img
-              src={screenshotUrl}
+              src={imageUrl}
               alt={title}
-              className="w-full h-200 object-cover "
+              className="w-full h-200 object-cover"
             />
           </DialogContent>
         </Dialog>

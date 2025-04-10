@@ -21,6 +21,8 @@ export default function HorizontalAccordion() {
     const [publications, setPublications] = React.useState([]);
     const [expanded, setExpanded] = React.useState(null);
 
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
     const handleAccordionChange = (panel) => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : null);
     };
@@ -36,17 +38,19 @@ export default function HorizontalAccordion() {
     };
 
     // Fetch publications on component mount
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-    console.log("Fetching from:", `${BACKEND_URL}/api/publications?page=1&limit=4`);
+    React.useEffect(() => {
+        console.log("Fetching from:", `${BACKEND_URL}/api/publications?page=1&limit=4`);
     
-    fetch(`${BACKEND_URL}/api/publications?page=1&limit=4`)
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.data) {
-                setPublications(data.data);
-            }
-        })
-        .catch((error) => console.error("Error fetching publications:", error));
+        fetch(`${BACKEND_URL}/api/publications?page=1&limit=4`)
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.data) {
+                    setPublications(data.data);
+                }
+            })
+            .catch((error) => console.error("Error fetching publications:", error));
+    }, []); // ✅ Only runs once
+    
 
     return (
         <Container>

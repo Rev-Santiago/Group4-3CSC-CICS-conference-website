@@ -1,125 +1,70 @@
 import express from "express";
+import chromium from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
+import fs from "fs";
+import path from "path";
 
 const router = express.Router();
-const BASE_URL = "https://cics-conference-website.onrender.com";
 
-const pages = {
-  Home: `${BASE_URL}/`,
-  "Call For Papers": `${BASE_URL}/call-for-papers`,
-  Contacts: `${BASE_URL}/contact`,
-  Partners: `${BASE_URL}/partners`,
-  Committee: `${BASE_URL}/committee`,
-  "Event History": `${BASE_URL}/event-history`,
-  "Registration & Fees": `${BASE_URL}/registration-and-fees`,
-  Publication: `${BASE_URL}/publication`,
-  Schedule: `${BASE_URL}/schedule`,
-  Venue: `${BASE_URL}/venue`,
-  "Keynote Speakers": `${BASE_URL}/keynote-speakers`,
-  "Invited Speakers": `${BASE_URL}/invited-speakers`,
-};
+const PAGES = [
+  "Home",
+  "Call For Papers",
+  "Committee",
+  "Contacts",
+  "Event History",
+  "Invited Speakers",
+  "Keynote Speakers",
+  "Partners",
+  "Publication",
+  "Registration & Fees",
+  "Schedule",
+  "Venue",
+];
 
-// ✅ Screenshot function
-const captureScreenshot = async (url) => {
+const BASE_URL = "https://cics-conference-website.onrender.com/";
+
+router.get("/generate-screenshots", async (req, res) => {
+  const results = {};
+  const executablePath =
+    process.env.AWS_EXECUTION_ENV ? await chromium.executablePath : puppeteer.executablePath();
+
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath,
+    headless: chromium.headless,
   });
 
-  const page = await browser.newPage();
-
-  await page.setRequestInterception(true);
-  page.on("request", (req) => {
-    const type = req.resourceType();
-    if (["image", "stylesheet", "font"].includes(type)) {
-      req.abort();
-    } else {
-      req.continue();
-    }
-  });
-
-  await page.goto(url, {
-    waitUntil: "domcontentloaded",
-    timeout: 15000,
-  });
-
-  await page.setViewport({ width: 1280, height: 720 });
-
-  const screenshot = await page.screenshot({ encoding: "base64" });
-
-  await browser.close();
-
-  return `data:image/png;base64,${screenshot}`;
-};
-
-// 🧠 Screenshot cache
-let screenshotCache = {
-  data: {},
-  timestamp: 0,
-};
-const CACHE_DURATION = 1000 * 60 * 5; // 5 min
-
-// GET /screenshots (with cache)
-router.get("/screenshots", async (req, res) => {
   try {
-    const now = Date.now();
-    const isFresh = now - screenshotCache.timestamp < CACHE_DURATION;
+    for (const pageName of PAGES) {
+      const page = await browser.newPage();
+      const urlPath = pageName.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
+      const fullUrl = `${BASE_URL}${urlPath}`;
 
-    if (isFresh && Object.keys(screenshotCache.data).length) {
-      return res.json(screenshotCache.data);
+      try {
+        await page.goto(fullUrl, { waitUntil: "networkidle2", timeout: 30000 });
+        const screenshotBuffer = await page.screenshot({ fullPage: true });
+
+        const filename = `${urlPath}.png`;
+        const filePath = path.join("screenshots", filename);
+        fs.mkdirSync("screenshots", { recursive: true });
+        fs.writeFileSync(filePath, screenshotBuffer);
+
+        results[pageName] = `/screenshots/${filename}`;
+      } catch {
+        results[pageName] = null;
+      }
+
+      await page.close();
     }
 
-    const screenshotData = await Promise.all(
-      Object.entries(pages).map(async ([title, url]) => {
-        try {
-          console.log(`📸 Capturing: ${title}`);
-          const image = await captureScreenshot(url);
-          return [title, image];
-        } catch (err) {
-          console.error(`❌ Failed to capture ${title}`, err.message);
-          return [title, null];
-        }
-      })
-    );
-
-    screenshotCache = {
-      data: Object.fromEntries(screenshotData),
-      timestamp: now,
-    };
-
-    res.json(screenshotCache.data);
-  } catch (error) {
-    console.error("Error capturing screenshots:", error);
-    res.status(500).json({ error: "Failed to capture screenshots" });
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: "Screenshot generation failed." });
+  } finally {
+    await browser.close();
   }
 });
 
-// GET /screenshots/refresh (force refresh)
-router.get("/screenshots/refresh", async (req, res) => {
-  try {
-    const screenshotData = await Promise.all(
-      Object.entries(pages).map(async ([title, url]) => {
-        try {
-          console.log(`📸 Refreshing: ${title}`);
-          const image = await captureScreenshot(url);
-          return [title, image];
-        } catch (err) {
-          console.error(`❌ Failed to refresh ${title}`, err.message);
-          return [title, null];
-        }
-      })
-    );
-
-    screenshotCache = {
-      data: Object.fromEntries(screenshotData),
-      timestamp: Date.now(),
-    };
-
-    res.json({ message: "Screenshots refreshed successfully." });
-  } catch (error) {
-    console.error("Refresh error:", error);
-    res.status(500).json({ error: "Failed to refresh screenshots." });
-  }
-});
 
 export default router;

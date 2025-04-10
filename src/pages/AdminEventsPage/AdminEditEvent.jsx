@@ -7,6 +7,7 @@ import {
 import { Add } from "@mui/icons-material";
 
 export default function AdminEditEvent() {
+    const accountType = localStorage.getItem("accountType");
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState("");
     const [eventData, setEventData] = useState({
@@ -16,30 +17,53 @@ export default function AdminEditEvent() {
         invitedImage: null
     });
     const [isPublished, setIsPublished] = useState(false);
-
+    const [userType, setUserType] = useState(""); // This should come from the auth context or API
+    
     // Fetch events and drafts
+    const fetchEvents = async () => {
+    try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+        
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        const [eventsRes, draftsRes] = await Promise.all([
+            axios.get("/api/events", { headers }),
+            axios.get("/api/drafts", { headers })
+        ]);
+
+        // Check if the response data contains the expected arrays
+        const events = Array.isArray(eventsRes.data?.events) ? eventsRes.data.events : [];
+        const drafts = Array.isArray(draftsRes.data?.drafts) ? draftsRes.data.drafts : [];
+
+
+        console.log("Events Response:", events);  // Debug log
+        console.log("Drafts Response:", drafts);  // Debug log
+
+        const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
+        const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+        
+        const combined = [...eventsWithStatus, ...draftsWithStatus];
+
+        // Optional: Sort published first
+        const sorted = combined.sort((a, b) => {
+          if (a.status === "Published" && b.status !== "Published") return -1;
+          if (b.status === "Published" && a.status !== "Published") return 1;
+          return 0;
+        });
+        
+        setEvents(sorted);
+
+    } catch (err) {
+        console.error("Error fetching events or drafts:", err.response?.data || err.message);
+    }
+};
+
+    
     useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const token = localStorage.getItem("authToken"); // Get token from local storage or session
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                const [eventsRes, draftsRes] = await Promise.all([
-                    axios.get("/api/events", { headers }),
-                    axios.get("/api/drafts", { headers })
-                ]);
-
-                // Mark status for drafts and events
-                const eventsWithStatus = eventsRes.data.events.map(e => ({ ...e, status: "Published" }));
-                const draftsWithStatus = draftsRes.data.drafts.map(d => ({ ...d, status: "Draft" }));
-
-                setEvents([...eventsWithStatus, ...draftsWithStatus]);
-            } catch (err) {
-                console.error("Error fetching events:", err);
-            }
-        };
-
         fetchEvents();
     }, []);
+    
 
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
     const [customCategories, setCustomCategories] = useState([]);
@@ -95,7 +119,7 @@ export default function AdminEditEvent() {
                 if (draftSelected) {
                     setEventData({
                         title: draftSelected.program || "",
-                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "", // Format the date to YYYY-MM-DD
+                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "",
                         startTime: start ? convertTo24Hour(start) : "",
                         endTime: end ? convertTo24Hour(end) : "",
                         venue: draftSelected.venue || "",
@@ -103,14 +127,14 @@ export default function AdminEditEvent() {
                         invitedSpeaker: draftSelected.speaker?.split(",")[1] || "",
                         theme: draftSelected.theme || "",
                         category: draftSelected.category || "",
-                        keynoteImage: draftSelected.keynoteImage ? draftSelected.keynoteImage : null,  // Optional: You can show a preview of the image here
-                        invitedImage: draftSelected.invitedImage ? draftSelected.invitedImage : null  // Same here for the invitedImage
+                        keynoteImage: draftSelected.keynoteImage || null,
+                        invitedImage: draftSelected.invitedImage || null
                     });
                 }
             } else {
                 setEventData({
                     title: selected.program || "",
-                    date: selected.event_date ? selected.event_date.split("T")[0] : "", // Format the date to YYYY-MM-DD
+                    date: selected.event_date ? selected.event_date.split("T")[0] : "",
                     startTime: start ? convertTo24Hour(start) : "",
                     endTime: end ? convertTo24Hour(end) : "",
                     venue: selected.venue || "",
@@ -118,8 +142,8 @@ export default function AdminEditEvent() {
                     invitedSpeaker: selected.speaker?.split(",")[1] || "",
                     theme: selected.theme || "",
                     category: selected.category || "",
-                    keynoteImage: selected.keynoteImage ? selected.keynoteImage : null,  // Optional: You can show a preview of the image here
-                    invitedImage: selected.invitedImage ? selected.invitedImage : null  // Same here for the invitedImage
+                    keynoteImage: selected.keynoteImage || null,
+                    invitedImage: selected.invitedImage || null
                 });
             }
             setIsPublished(selected.status === "Published");
@@ -186,7 +210,7 @@ export default function AdminEditEvent() {
                         {events.length > 0 ? (
                             events.map((event) => (
                                 <MenuItem key={event.id} value={event.id}>
-                                    {event.program} ({event.status})  {/* Replace 'program' with the correct field name */}
+                                    {event.program} ({event.status})
                                 </MenuItem>
                             ))
                         ) : (
@@ -273,15 +297,17 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish Buttons */}
-                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                    <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
-                    <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
-                    {selectedEventId && (
-                        <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
-                            Status: {isPublished ? "Published" : "Draft"}
-                        </Typography>
-                    )}
-                </Grid>
+                {accountType === "super_admin" && (
+                    <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                        <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
+                        <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
+                        {selectedEventId && (
+                            <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
+                                Status: {isPublished ? "Published" : "Draft"}
+                            </Typography>
+                        )}
+                    </Grid>
+                )}
             </Grid>
         </Box>
     );

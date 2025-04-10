@@ -96,7 +96,7 @@ router.post(
 );
 
 // Route: GET /api/events
-router.get("/events", async (req, res) => {
+router.get("/events/public", async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT event_date, time_slot, program, venue, online_room_link  

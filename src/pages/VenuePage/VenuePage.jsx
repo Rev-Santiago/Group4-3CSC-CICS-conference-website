@@ -17,7 +17,7 @@ const VenuePage = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/events`);
+                const response = await fetch(`http://localhost:5000/api/events`);
                 if (!response.ok) {
                     throw new Error(`HTTP error ${response.status}`);
                 }

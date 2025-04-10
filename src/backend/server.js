@@ -61,6 +61,9 @@ app.use(
     })
   );
 
+app.use(express.static(path.join(process.cwd(), 'public')));
+app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
+
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
 app.use("/uploads", express.static("uploads"));
@@ -319,6 +322,8 @@ app.get("/api/admin_event_preview", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
 
 // Serve static files from the React app (build folder)
 if (process.env.NODE_ENV === "production") {

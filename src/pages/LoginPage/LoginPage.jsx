@@ -48,13 +48,12 @@ export default function LoginPage() {
                 setError(data.error || "Login failed");
                 return;
             }
-    
-            localStorage.setItem("authToken", data.token);
-            localStorage.setItem("accountType", data.account_type); // Storing the account type in localStorage
-
-            setAuth({ token: data.token, accountType: data.account_type });
-            setAuth(data.token);
+            localStorage.setItem("authToken", data.token);         // ✅ Token for API
+            localStorage.setItem("accountType", data.account_type); // ✅ For UI role checks
+            
+            setAuth({ token: data.token, accountType: data.account_type }); // Only once
             navigate("/admin-dashboard");
+            
     
         } catch (err) {
             setError("Something went wrong. Please try again.");
