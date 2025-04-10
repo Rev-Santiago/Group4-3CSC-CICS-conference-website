@@ -35,9 +35,10 @@ app.use(
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
-app.use("/api", eventRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
+app.use("/api", eventRoutes);
+
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({

@@ -7,6 +7,7 @@ import {
 import { Add } from "@mui/icons-material";
 
 export default function AdminEditEvent() {
+    const accountType = localStorage.getItem("accountType");
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState("");
     const [eventData, setEventData] = useState({
@@ -16,30 +17,41 @@ export default function AdminEditEvent() {
         invitedImage: null
     });
     const [isPublished, setIsPublished] = useState(false);
-
+    
     // Fetch events and drafts
+    const fetchEvents = async () => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const [eventsRes, draftsRes] = await Promise.all([
+                axios.get("/api/events", { headers }),
+                axios.get("/api/drafts", { headers })
+            ]);
+    
+            // Debugging the responses
+            console.log("Events Response:", eventsRes.data);  // Log the entire events response
+            console.log("Drafts Response:", draftsRes.data);  // Log the entire drafts response
+    
+            // Ensure the response contains the 'events' array
+            const events = eventsRes.data?.events || [];
+            const drafts = draftsRes.data?.drafts || [];
+    
+            // If the response structure is different, handle it accordingly
+            const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
+            const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+    
+            setEvents([...eventsWithStatus, ...draftsWithStatus]);  // Update the events state
+        } catch (err) {
+            console.error("Error fetching events:", err);
+        }
+    };
+    
+    
+    
     useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const token = localStorage.getItem("authToken"); // Get token from local storage or session
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-                const [eventsRes, draftsRes] = await Promise.all([
-                    axios.get("/api/events", { headers }),
-                    axios.get("/api/drafts", { headers })
-                ]);
-
-                // Mark status for drafts and events
-                const eventsWithStatus = eventsRes.data.events.map(e => ({ ...e, status: "Published" }));
-                const draftsWithStatus = draftsRes.data.drafts.map(d => ({ ...d, status: "Draft" }));
-
-                setEvents([...eventsWithStatus, ...draftsWithStatus]);
-            } catch (err) {
-                console.error("Error fetching events:", err);
-            }
-        };
-
         fetchEvents();
     }, []);
+    
 
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
     const [customCategories, setCustomCategories] = useState([]);
@@ -95,7 +107,7 @@ export default function AdminEditEvent() {
                 if (draftSelected) {
                     setEventData({
                         title: draftSelected.program || "",
-                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "", // Format the date to YYYY-MM-DD
+                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "",
                         startTime: start ? convertTo24Hour(start) : "",
                         endTime: end ? convertTo24Hour(end) : "",
                         venue: draftSelected.venue || "",
@@ -103,14 +115,14 @@ export default function AdminEditEvent() {
                         invitedSpeaker: draftSelected.speaker?.split(",")[1] || "",
                         theme: draftSelected.theme || "",
                         category: draftSelected.category || "",
-                        keynoteImage: draftSelected.keynoteImage ? draftSelected.keynoteImage : null,  // Optional: You can show a preview of the image here
-                        invitedImage: draftSelected.invitedImage ? draftSelected.invitedImage : null  // Same here for the invitedImage
+                        keynoteImage: draftSelected.keynoteImage || null,
+                        invitedImage: draftSelected.invitedImage || null
                     });
                 }
             } else {
                 setEventData({
                     title: selected.program || "",
-                    date: selected.event_date ? selected.event_date.split("T")[0] : "", // Format the date to YYYY-MM-DD
+                    date: selected.event_date ? selected.event_date.split("T")[0] : "",
                     startTime: start ? convertTo24Hour(start) : "",
                     endTime: end ? convertTo24Hour(end) : "",
                     venue: selected.venue || "",
@@ -118,8 +130,8 @@ export default function AdminEditEvent() {
                     invitedSpeaker: selected.speaker?.split(",")[1] || "",
                     theme: selected.theme || "",
                     category: selected.category || "",
-                    keynoteImage: selected.keynoteImage ? selected.keynoteImage : null,  // Optional: You can show a preview of the image here
-                    invitedImage: selected.invitedImage ? selected.invitedImage : null  // Same here for the invitedImage
+                    keynoteImage: selected.keynoteImage || null,
+                    invitedImage: selected.invitedImage || null
                 });
             }
             setIsPublished(selected.status === "Published");
@@ -179,20 +191,25 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Select an Existing Event</Typography>
                     <Select
-                        fullWidth size="small" value={selectedEventId}
-                        onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
+                        fullWidth
+                        size="small"
+                        value={selectedEventId}
+                        onChange={handleEventSelection}
+                        displayEmpty
+                        sx={{ mt: 2 }}
                     >
                         <MenuItem value="" disabled>Select an event</MenuItem>
                         {events.length > 0 ? (
                             events.map((event) => (
                                 <MenuItem key={event.id} value={event.id}>
-                                    {event.program} ({event.status})  {/* Replace 'program' with the correct field name */}
+                                    {event.program} ({event.status === "Draft" ? "Draft" : "Published"})
                                 </MenuItem>
                             ))
                         ) : (
                             <MenuItem disabled>No events found</MenuItem>
                         )}
                     </Select>
+
                 </Grid>
 
                 <Grid item xs={12}>
@@ -273,15 +290,17 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish Buttons */}
-                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                    <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
-                    <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
-                    {selectedEventId && (
-                        <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
-                            Status: {isPublished ? "Published" : "Draft"}
-                        </Typography>
-                    )}
-                </Grid>
+                {accountType === "super_admin" && (
+                    <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                        <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
+                        <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
+                        {selectedEventId && (
+                            <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
+                                Status: {isPublished ? "Published" : "Draft"}
+                            </Typography>
+                        )}
+                    </Grid>
+                )}
             </Grid>
         </Box>
     );
