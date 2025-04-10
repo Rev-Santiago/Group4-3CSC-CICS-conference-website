@@ -8,58 +8,36 @@ import { Add } from "@mui/icons-material";
 
 export default function AdminEditEvent() {
     const accountType = localStorage.getItem("accountType");
-    const [events, setEvents] = useState([]);
-    const [selectedEventId, setSelectedEventId] = useState("");
+    const [drafts, setDrafts] = useState([]);
+    const [selectedDraftId, setSelectedDraftId] = useState("");
     const [eventData, setEventData] = useState({
         title: "", date: "", startTime: "", endTime: "",
         venue: "", keynoteSpeaker: "", invitedSpeaker: "",
         theme: "", category: "", keynoteImage: null,
         invitedImage: null
     });
-    const [isPublished, setIsPublished] = useState(false);
-    const [userType, setUserType] = useState(""); // This should come from the auth context or API
     
-    // Fetch events and drafts
-    const fetchEvents = async () => {
+    // Fetch only drafts
+    const fetchDrafts = async () => {
         try {
             const token = localStorage.getItem("authToken");
             if (!token) return;
             
             const headers = { Authorization: `Bearer ${token}` };
             
-            const [eventsRes, draftsRes] = await Promise.all([
-                axios.get("/api/events", { headers }),
-                axios.get("/api/drafts", { headers })
-            ]);
-
-            // Check if the response data contains the expected arrays
-            const events = Array.isArray(eventsRes.data?.events) ? eventsRes.data.events : [];
-            const drafts = Array.isArray(draftsRes.data?.drafts) ? draftsRes.data.drafts : [];
-
-            console.log("Events Response:", events);  // Debug log
-            console.log("Drafts Response:", drafts);  // Debug log
-
-            const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
-            const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+            const response = await axios.get("/api/drafts", { headers });
+            const draftsData = Array.isArray(response.data?.drafts) ? response.data.drafts : [];
             
-            const combined = [...eventsWithStatus, ...draftsWithStatus];
-
-            // Optional: Sort published first
-            const sorted = combined.sort((a, b) => {
-              if (a.status === "Published" && b.status !== "Published") return -1;
-              if (b.status === "Published" && a.status !== "Published") return 1;
-              return 0;
-            });
-            
-            setEvents(sorted);
+            console.log("Drafts Response:", draftsData);  // Debug log
+            setDrafts(draftsData);
 
         } catch (err) {
-            console.error("Error fetching events or drafts:", err.response?.data || err.message);
+            console.error("Error fetching drafts:", err.response?.data || err.message);
         }
     };
 
     useEffect(() => {
-        fetchEvents();
+        fetchDrafts();
     }, []);
     
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
@@ -84,10 +62,6 @@ export default function AdminEditEvent() {
         setEventData({ ...eventData, venue: newValue });
     };
 
-    useEffect(() => {
-        console.log(events);  // Add this to verify that events are being fetched and set correctly.
-    }, [events]);
-
     // Handle field changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -99,17 +73,17 @@ export default function AdminEditEvent() {
         setEventData((prev) => ({ ...prev, [name]: files[0] }));
     };
 
-    const handleEventSelection = (e) => {
+    const handleDraftSelection = (e) => {
         const id = e.target.value;
-        setSelectedEventId(id);
+        setSelectedDraftId(id);
 
-        // Find the selected event based on the id
-        const selected = events.find(event => event.id === id);
+        // Find the selected draft based on the id
+        const selected = drafts.find(draft => draft.id === id);
 
         if (selected) {
             const [start, end] = (selected.time_slot || "").split(" - ");
 
-            // Populate fields based on the selected event (whether draft or published)
+            // Populate fields based on the selected draft
             setEventData({
                 title: selected.program || "",
                 date: selected.event_date ? selected.event_date.split("T")[0] : "",
@@ -123,8 +97,6 @@ export default function AdminEditEvent() {
                 keynoteImage: selected.photo_url || null,
                 invitedImage: null
             });
-            
-            setIsPublished(selected.status === "Published");
         }
     };
 
@@ -160,15 +132,25 @@ export default function AdminEditEvent() {
 
             let response;
             // If editing an existing draft
-            if (selectedEventId && !isPublished) {
-                response = await axios.put(`/api/drafts/${selectedEventId}`, formData, { headers });
+            if (selectedDraftId) {
+                response = await axios.put(`/api/drafts/${selectedDraftId}`, formData, { headers });
             } else {
                 // Creating a new draft
                 response = await axios.post("/api/drafts", formData, { headers });
             }
             
             alert("Event saved as draft.");
-            fetchEvents(); // Refresh the events list
+            fetchDrafts(); // Refresh the drafts list
+            
+            // Clear form if creating a new draft
+            if (!selectedDraftId) {
+                setEventData({
+                    title: "", date: "", startTime: "", endTime: "",
+                    venue: "", keynoteSpeaker: "", invitedSpeaker: "",
+                    theme: "", category: "", keynoteImage: null,
+                    invitedImage: null
+                });
+            }
         } catch (err) {
             console.error("Error saving draft:", err.response?.data || err.message);
             alert("Failed to save draft.");
@@ -205,17 +187,26 @@ export default function AdminEditEvent() {
                 formData.append("invitedImage", eventData.invitedImage);
             }
 
-            let response;
-            // If editing an existing published event
-            if (selectedEventId && isPublished) {
-                response = await axios.put(`/api/events/${selectedEventId}`, formData, { headers });
-            } else {
-                // Creating a new published event
-                response = await axios.post("/api/events", formData, { headers });
-            }
+            // Always create a new published event
+            const response = await axios.post("/api/events", formData, { headers });
             
             alert("Event published successfully!");
-            fetchEvents(); // Refresh the events list
+            
+            // Delete the draft after publishing (as it's no longer a draft)
+            if (selectedDraftId) {
+                await axios.delete(`/api/drafts/${selectedDraftId}`, { headers });
+            }
+            
+            // Refresh and reset
+            fetchDrafts();
+            setSelectedDraftId("");
+            setEventData({
+                title: "", date: "", startTime: "", endTime: "",
+                venue: "", keynoteSpeaker: "", invitedSpeaker: "",
+                theme: "", category: "", keynoteImage: null,
+                invitedImage: null
+            });
+            
         } catch (err) {
             console.error("Error publishing event:", err.response?.data || err.message);
             alert("Failed to publish event.");
@@ -237,20 +228,20 @@ export default function AdminEditEvent() {
         <Box className="p-4">
             <Grid container spacing={3} className="mt-3">
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Select an Existing Event</Typography>
+                    <Typography variant="subtitle1">Select an Existing Draft</Typography>
                     <Select
-                        fullWidth size="small" value={selectedEventId}
-                        onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
+                        fullWidth size="small" value={selectedDraftId}
+                        onChange={handleDraftSelection} displayEmpty sx={{ mt: 2 }}
                     >
-                        <MenuItem value="" disabled>Select an event</MenuItem>
-                        {events.length > 0 ? (
-                            events.map((event) => (
-                                <MenuItem key={event.id} value={event.id}>
-                                    {event.program} ({event.status})
+                        <MenuItem value="" disabled>Select a draft</MenuItem>
+                        {drafts.length > 0 ? (
+                            drafts.map((draft) => (
+                                <MenuItem key={draft.id} value={draft.id}>
+                                    {draft.program || "Untitled Draft"}
                                 </MenuItem>
                             ))
                         ) : (
-                            <MenuItem disabled>No events found</MenuItem>
+                            <MenuItem disabled>No drafts found</MenuItem>
                         )}
                     </Select>
                 </Grid>
@@ -272,7 +263,7 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
-                        options={options} // from [...new Set([...defaultVenues, ...customVenues])]
+                        options={options}
                         value={eventData.venue}
                         onChange={handleVenueChange}
                         renderInput={(params) => (
@@ -328,7 +319,7 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
-                        options={categoryOptions} // from [...new Set([...defaultCategories, ...customCategories])]
+                        options={categoryOptions}
                         value={eventData.category}
                         onChange={handleCategoryChange}
                         renderInput={(params) => (
@@ -343,17 +334,13 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish Buttons */}
-                {accountType === "super_admin" && (
-                    <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                        <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
+                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                    <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
+                    
+                    {accountType === "super_admin" && (
                         <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
-                        {selectedEventId && (
-                            <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
-                                Status: {isPublished ? "Published" : "Draft"}
-                            </Typography>
-                        )}
-                    </Grid>
-                )}
+                    )}
+                </Grid>
             </Grid>
         </Box>
     );
