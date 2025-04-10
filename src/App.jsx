@@ -24,10 +24,13 @@ function App() {
 
   const handleLogout = async () => {
     localStorage.removeItem("authToken");
-    await fetch("http://localhost:5000/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+await fetch(`${BACKEND_URL}/api/logout`, {
+  method: "POST",
+  credentials: "include",
+});
+
     setAuth(null);
     navigate("/login");
   };
