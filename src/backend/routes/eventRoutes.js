@@ -21,7 +21,17 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Max size 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Invalid file type'), false);
+    }
+    cb(null, true);
+  },
+});
 
 // Middleware to authenticate JWT Tokens
 const authenticateToken = (req, res, next) => {
@@ -30,11 +40,18 @@ const authenticateToken = (req, res, next) => {
 
   if (!token) return res.status(403).json({ error: "Access denied." });
 
-  jwt.verify(token, process.env.JWT_SECRET || "your_super_secret_key_here", (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: "Invalid token." });
     req.user = user;
     next();
   });
+};
+
+// Utility to format time into 12-hour AM/PM format
+const formatTime = (time) => {
+  if (!time) return "";
+  const date = new Date(`1970-01-01T${time}`);
+  return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
 // Route: Save event draft
@@ -45,17 +62,12 @@ router.post("/drafts", authenticateToken, upload.fields([
   try {
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
 
-    // Format start and end time to 12-hour AM/PM format
-    const formatTime = (time) => {
-      if (!time) return "";
-      const date = new Date(`1970-01-01T${time}`);
-      return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
-
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
 
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -67,20 +79,21 @@ router.post("/drafts", authenticateToken, upload.fields([
         speaker, theme, category, photo_url, created_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
     const values = [
       date || null,
       eventTime,
       title || "",
       venue || "",
       zoomLink || "",
-      `${keynoteSpeaker || ""}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
+      speaker,
       theme || "",
       category || "",
       keynoteImage || invitedImage || null,
       userId
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Draft saved successfully." });
   } catch (err) {
@@ -107,17 +120,12 @@ router.post("/events", authenticateToken, upload.fields([
 
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
 
-    // Format start and end time to 12-hour AM/PM format
-    const formatTime = (time) => {
-      if (!time) return "";
-      const date = new Date(`1970-01-01T${time}`);
-      return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
-
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
 
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -141,6 +149,7 @@ router.post("/events", authenticateToken, upload.fields([
       userId
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Event published successfully." });
   } catch (err) {
@@ -149,21 +158,16 @@ router.post("/events", authenticateToken, upload.fields([
   }
 });
 
-const formatTime = (time) => {
-    if (!time) return "";
-    const date = new Date(`1970-01-01T${time}`);
-    return date.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  };
 // Route: Get drafts for current user
 router.get("/drafts", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const [rows] = await db.query(
       `SELECT * FROM event_drafts WHERE created_by = ? ORDER BY created_at DESC`,
       [userId]
     );
-    
+
     res.status(200).json({ drafts: rows });
   } catch (err) {
     console.error("Error fetching drafts:", err);
@@ -177,7 +181,7 @@ router.get("/events", authenticateToken, async (req, res) => {
     const [rows] = await db.query(
       `SELECT * FROM events ORDER BY created_at DESC`
     );
-    
+
     res.status(200).json({ events: rows });
   } catch (err) {
     console.error("Error fetching events:", err);
@@ -193,11 +197,13 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
   try {
     const { id } = req.params;
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
-    
+
+    // Format start and end times
     const formattedStartTime = formatTime(startTime);
     const formattedEndTime = formatTime(endTime);
     const eventTime = startTime && endTime ? `${formattedStartTime} - ${formattedEndTime}` : "";
-    
+
+    // Handle file uploads
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
@@ -213,6 +219,7 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
       theme, category, keynoteImage || invitedImage || null, id, req.user.id
     ];
 
+    // Execute the query
     await db.execute(query, values);
     res.status(200).json({ message: "Draft updated successfully." });
   } catch (err) {

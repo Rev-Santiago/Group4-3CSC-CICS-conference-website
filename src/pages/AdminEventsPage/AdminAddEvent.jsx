@@ -1,5 +1,6 @@
 // src/pages/AdminEventsPage/AdminAddEvent.jsx
 import { useState } from "react";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import {
     Grid,
     TextField,
@@ -94,18 +95,26 @@ export default function AdminAddEvent({ currentUser }) {
         Object.entries(eventData).forEach(([key, value]) => {
             if (value) formData.append(key, value);
         });
-
+    
         try {
-            const res = await fetch("http://localhost:5000/api/drafts", {
+            const res = await fetch(`${BACKEND_URL}/api/drafts`, {
                 method: "POST",
                 body: formData,
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-
+            
+            
+            // Check if response is HTML (a sign of error page)
+            if (res.headers.get("content-type")?.includes("text/html")) {
+                throw new Error("Received HTML, which might be an error page.");
+            }
+            
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            
+    
             setNotification({
                 open: true,
                 message: "📝 Draft saved successfully!",
@@ -120,34 +129,31 @@ export default function AdminAddEvent({ currentUser }) {
             });
         }
     };
-
+    
     const handlePublish = async () => {
         const formData = new FormData();
         Object.entries(eventData).forEach(([key, value]) => {
             if (value) formData.append(key, value);
         });
-
+    
         try {
-            for (let pair of formData.entries()) {
-                console.log(`${pair[0]}: ${pair[1]}`);
-            }
-            const res = await fetch("http://localhost:5000/api/events", {
+            const res = await fetch(`${BACKEND_URL}/api/events`, {
                 method: "POST",
                 body: formData,
                 headers: {
                     Authorization: `Bearer ${getAuthToken()}`
                 }
             });
-
+    
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to publish event");
-
+    
             setNotification({
                 open: true,
                 message: "✅ Event published successfully!",
                 severity: "success"
             });
-
+    
             resetForm();
         } catch (err) {
             console.error(err);
@@ -257,7 +263,7 @@ export default function AdminAddEvent({ currentUser }) {
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
                     {currentUser?.account_type === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handleSubmit}>Publish</Button>
+                        <Button variant="contained" color="error" onClick={handlePublish}>Publish</Button>
                     )}
                 </Grid>
             </Grid>

@@ -36,17 +36,17 @@ export default function HorizontalAccordion() {
     };
 
     // Fetch publications on component mount
-      React.useEffect(() => {
-        fetch("http://localhost:5000/api/publications?page=1&limit=4")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.data) {
-                    setPublications(data.data);
-                }
-            })
-            .catch((error) => console.error("Error fetching publications:", error));
-    }, []);
-
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+    console.log("Fetching from:", `${BACKEND_URL}/api/publications?page=1&limit=4`);
+    
+    fetch(`${BACKEND_URL}/api/publications?page=1&limit=4`)
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.data) {
+                setPublications(data.data);
+            }
+        })
+        .catch((error) => console.error("Error fetching publications:", error));
 
     return (
         <Container>
@@ -54,7 +54,7 @@ export default function HorizontalAccordion() {
 
                 {/* Accordion 1 - Registration and Tracks */}
                 <Box >
-                    <Accordion className="!bg-customRed border border-gray-400" expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1")}>
+                    <Accordion className="!bg-customRed border border-gray-400"  expanded={expanded === "panel1"} onChange={handleAccordionChange("panel1") }>
                         <AccordionSummary
                             expandIcon={expanded === "panel1" ? <CloseIcon sx={{ color: "white" }} /> : <AddIcon sx={{ color: "white" }} />}
                             aria-controls="panel1-content"
@@ -103,7 +103,7 @@ export default function HorizontalAccordion() {
                             {/* Submission Link */}
                             <Typography variant="h6" className="font-bold mt-4 pb-3">Submission Link</Typography>
                             <Typography className="text-gray-700">Please submit your papers at</Typography>
-                            <Button className="!bg-customRed hover:!bg-customDarkRed hover:customRed mt-2 !text-white">
+                            <Button className="!bg-customRed hover:customRed mt-2 !text-white">
                                 Edas Submission Link for CICS
                             </Button>
                             <Typography
@@ -125,7 +125,7 @@ export default function HorizontalAccordion() {
                             id="panel2-header"
                             sx={{ justifyContent: "center" }}
                         >
-                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem" }}>Publications</Typography>
+                            <Typography component="span" className="text-white" sx={{ width: "100%", textAlign: "center", fontSize: "1.1rem"}}>Publications</Typography>
                         </AccordionSummary>
                         <AccordionDetails className="bg-white">
                             <Typography variant="h6" className="font-bold text-center pb-2">
@@ -136,7 +136,7 @@ export default function HorizontalAccordion() {
                             <TableContainer className="border" sx={{ borderColor: "black" }}>
                                 <Table>
                                     <TableHead>
-                                        <TableRow sx={{ backgroundColor: "#B7152F", borderColor: "black", }}>
+                                        <TableRow sx={{ backgroundColor: "#B7152F", borderColor: "black",  }}>
                                             <TableCell
                                                 sx={{
                                                     color: "white",
@@ -156,20 +156,10 @@ export default function HorizontalAccordion() {
                                         {publications.length > 0 ? (
                                             publications.map((pub, index) => (
                                                 <TableRow key={index}>
-                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", borderColor: "black" }}>
+                                                    <TableCell sx={{ textAlign: "center", borderRight: "1px solid black", borderColor: "black"}}>
                                                         {formatDate(pub.publication_date)}
                                                     </TableCell>
-                                                    <TableCell
-                                                        sx={{
-                                                            textAlign: 'center',
-                                                            borderColor: 'black',
-                                                            color: 'rgb(30, 58, 138)', 
-                                                            '&:hover': {
-                                                                textDecoration: 'underline', 
-                                                                color: 'rgb(29, 78, 216)', 
-                                                            },
-                                                        }}
-                                                    >
+                                                    <TableCell sx={{ textAlign: "center", borderColor: "black"}}>
                                                         {pub.publication_description}
                                                     </TableCell>
                                                 </TableRow>
@@ -187,7 +177,7 @@ export default function HorizontalAccordion() {
 
                             {/* Link to Publications Page */}
                             <Typography
-                                className="text-customRed mt-4 cursor-pointer pt-3 hover:underline "
+                                className="text-customRed mt-4 cursor-pointer pt-3 hover:underline"
                                 onClick={() => navigate("/publication")}
                             >
                                 Go to Publication Page ➤

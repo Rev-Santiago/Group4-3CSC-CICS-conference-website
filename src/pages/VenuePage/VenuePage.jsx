@@ -4,6 +4,9 @@ const VenuePage = () => {
     const [scheduleData, setScheduleData] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // ✅ Use environment variable for backend URL
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
     const scrollToDate = (id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -14,15 +17,17 @@ const VenuePage = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/events");
+                const response = await fetch(`${BACKEND_URL}/api/events`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
                 const data = await response.json();
-
-                // Get today's date in YYYY-MM-DD format
+                console.log("Fetched data:", data);
+                if (!Array.isArray(data)) {
+                    throw new Error("Expected an array from /api/events");
+                }
                 const today = new Date().toISOString().split("T")[0];
-
-                // Filter events to only include today or future dates
                 const upcomingEvents = data.filter(event => event.date >= today);
-
                 setScheduleData(upcomingEvents);
             } catch (error) {
                 console.error("Error fetching events:", error);
@@ -32,7 +37,7 @@ const VenuePage = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [BACKEND_URL]); // ✅ dependency for environment changes
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };

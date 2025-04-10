@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MiniDrawer from "../../components/miniDrawer/MiniDrawer";
 import PageCardComponent from "../../components/pageCardsComponent/PageCardsComponent";
-import CircularProgress from '@mui/material/CircularProgress';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function AdminDashboard() {
   const [adminData, setAdminData] = useState(null);
@@ -18,7 +18,7 @@ export default function AdminDashboard() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/admin-dashboard", {
+        const response = await fetch(`${BACKEND_URL}/api/admin-dashboard`, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchScreenshots() {
       try {
-        const response = await fetch("http://localhost:5000/api/screenshots");
+        const response = await fetch(`${BACKEND_URL}/api/screenshots`);
         if (!response.ok) throw new Error("Failed to fetch screenshots");
 
         const data = await response.json();
