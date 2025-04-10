@@ -21,50 +21,47 @@ export default function AdminEditEvent() {
     
     // Fetch events and drafts
     const fetchEvents = async () => {
-    try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-        
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        const [eventsRes, draftsRes] = await Promise.all([
-            axios.get("/api/events", { headers }),
-            axios.get("/api/drafts", { headers })
-        ]);
+        try {
+            const token = localStorage.getItem("authToken");
+            if (!token) return;
+            
+            const headers = { Authorization: `Bearer ${token}` };
+            
+            const [eventsRes, draftsRes] = await Promise.all([
+                axios.get("/api/events", { headers }),
+                axios.get("/api/drafts", { headers })
+            ]);
 
-        // Check if the response data contains the expected arrays
-        const events = Array.isArray(eventsRes.data?.events) ? eventsRes.data.events : [];
-        const drafts = Array.isArray(draftsRes.data?.drafts) ? draftsRes.data.drafts : [];
+            // Check if the response data contains the expected arrays
+            const events = Array.isArray(eventsRes.data?.events) ? eventsRes.data.events : [];
+            const drafts = Array.isArray(draftsRes.data?.drafts) ? draftsRes.data.drafts : [];
 
+            console.log("Events Response:", events);  // Debug log
+            console.log("Drafts Response:", drafts);  // Debug log
 
-        console.log("Events Response:", events);  // Debug log
-        console.log("Drafts Response:", drafts);  // Debug log
+            const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
+            const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+            
+            const combined = [...eventsWithStatus, ...draftsWithStatus];
 
-        const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
-        const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
-        
-        const combined = [...eventsWithStatus, ...draftsWithStatus];
+            // Optional: Sort published first
+            const sorted = combined.sort((a, b) => {
+              if (a.status === "Published" && b.status !== "Published") return -1;
+              if (b.status === "Published" && a.status !== "Published") return 1;
+              return 0;
+            });
+            
+            setEvents(sorted);
 
-        // Optional: Sort published first
-        const sorted = combined.sort((a, b) => {
-          if (a.status === "Published" && b.status !== "Published") return -1;
-          if (b.status === "Published" && a.status !== "Published") return 1;
-          return 0;
-        });
-        
-        setEvents(sorted);
+        } catch (err) {
+            console.error("Error fetching events or drafts:", err.response?.data || err.message);
+        }
+    };
 
-    } catch (err) {
-        console.error("Error fetching events or drafts:", err.response?.data || err.message);
-    }
-};
-
-    
     useEffect(() => {
         fetchEvents();
     }, []);
     
-
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
     const [customCategories, setCustomCategories] = useState([]);
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
@@ -112,40 +109,21 @@ export default function AdminEditEvent() {
         if (selected) {
             const [start, end] = (selected.time_slot || "").split(" - ");
 
-            // Check if the selected event is a draft or published event
-            if (selected.status === "Draft") {
-                const draftSelected = events.find(draft => draft.id === id && draft.status === "Draft");
-
-                if (draftSelected) {
-                    setEventData({
-                        title: draftSelected.program || "",
-                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "",
-                        startTime: start ? convertTo24Hour(start) : "",
-                        endTime: end ? convertTo24Hour(end) : "",
-                        venue: draftSelected.venue || "",
-                        keynoteSpeaker: draftSelected.speaker?.split(",")[0] || "",
-                        invitedSpeaker: draftSelected.speaker?.split(",")[1] || "",
-                        theme: draftSelected.theme || "",
-                        category: draftSelected.category || "",
-                        keynoteImage: draftSelected.keynoteImage || null,
-                        invitedImage: draftSelected.invitedImage || null
-                    });
-                }
-            } else {
-                setEventData({
-                    title: selected.program || "",
-                    date: selected.event_date ? selected.event_date.split("T")[0] : "",
-                    startTime: start ? convertTo24Hour(start) : "",
-                    endTime: end ? convertTo24Hour(end) : "",
-                    venue: selected.venue || "",
-                    keynoteSpeaker: selected.speaker?.split(",")[0] || "",
-                    invitedSpeaker: selected.speaker?.split(",")[1] || "",
-                    theme: selected.theme || "",
-                    category: selected.category || "",
-                    keynoteImage: selected.keynoteImage || null,
-                    invitedImage: selected.invitedImage || null
-                });
-            }
+            // Populate fields based on the selected event (whether draft or published)
+            setEventData({
+                title: selected.program || "",
+                date: selected.event_date ? selected.event_date.split("T")[0] : "",
+                startTime: start ? convertTo24Hour(start) : "",
+                endTime: end ? convertTo24Hour(end) : "",
+                venue: selected.venue || "",
+                keynoteSpeaker: selected.speaker?.split(",")[0]?.trim() || "",
+                invitedSpeaker: selected.speaker?.split(",")[1]?.trim() || "",
+                theme: selected.theme || "",
+                category: selected.category || "",
+                keynoteImage: selected.photo_url || null,
+                invitedImage: null
+            });
+            
             setIsPublished(selected.status === "Published");
         }
     };
@@ -153,36 +131,94 @@ export default function AdminEditEvent() {
     // Save/update as draft
     const handleSave = async () => {
         try {
+            const token = localStorage.getItem("authToken");
+            if (!token) return;
+            
+            const headers = { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            };
+
             const formData = new FormData();
-            for (const key in eventData) {
-                if (eventData[key]) formData.append(key, eventData[key]);
+            formData.append("title", eventData.title);
+            formData.append("date", eventData.date);
+            formData.append("startTime", eventData.startTime);
+            formData.append("endTime", eventData.endTime);
+            formData.append("venue", eventData.venue);
+            formData.append("keynoteSpeaker", eventData.keynoteSpeaker);
+            formData.append("invitedSpeaker", eventData.invitedSpeaker);
+            formData.append("theme", eventData.theme);
+            formData.append("category", eventData.category);
+            
+            if (eventData.keynoteImage instanceof File) {
+                formData.append("keynoteImage", eventData.keynoteImage);
+            }
+            
+            if (eventData.invitedImage instanceof File) {
+                formData.append("invitedImage", eventData.invitedImage);
             }
 
-            // Include the event ID if we're editing an existing event
-            if (selectedEventId) formData.append("id", selectedEventId);
-            await axios.post("/api/events/draft", formData);
+            let response;
+            // If editing an existing draft
+            if (selectedEventId && !isPublished) {
+                response = await axios.put(`/api/drafts/${selectedEventId}`, formData, { headers });
+            } else {
+                // Creating a new draft
+                response = await axios.post("/api/drafts", formData, { headers });
+            }
+            
             alert("Event saved as draft.");
+            fetchEvents(); // Refresh the events list
         } catch (err) {
-            console.error("Error saving draft:", err);
-            alert("Failed to save.");
+            console.error("Error saving draft:", err.response?.data || err.message);
+            alert("Failed to save draft.");
         }
     };
 
     // Publish final event
     const handlePublish = async () => {
         try {
+            const token = localStorage.getItem("authToken");
+            if (!token) return;
+            
+            const headers = { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            };
+
             const formData = new FormData();
-            for (const key in eventData) {
-                if (eventData[key]) formData.append(key, eventData[key]);
+            formData.append("title", eventData.title);
+            formData.append("date", eventData.date);
+            formData.append("startTime", eventData.startTime);
+            formData.append("endTime", eventData.endTime);
+            formData.append("venue", eventData.venue);
+            formData.append("keynoteSpeaker", eventData.keynoteSpeaker);
+            formData.append("invitedSpeaker", eventData.invitedSpeaker);
+            formData.append("theme", eventData.theme);
+            formData.append("category", eventData.category);
+            
+            if (eventData.keynoteImage instanceof File) {
+                formData.append("keynoteImage", eventData.keynoteImage);
+            }
+            
+            if (eventData.invitedImage instanceof File) {
+                formData.append("invitedImage", eventData.invitedImage);
             }
 
-            // Include the event ID if we're editing an existing event
-            if (selectedEventId) formData.append("id", selectedEventId);
-            await axios.post("/api/events", formData); // publish route
-            alert("Event published!");
+            let response;
+            // If editing an existing published event
+            if (selectedEventId && isPublished) {
+                response = await axios.put(`/api/events/${selectedEventId}`, formData, { headers });
+            } else {
+                // Creating a new published event
+                response = await axios.post("/api/events", formData, { headers });
+            }
+            
+            alert("Event published successfully!");
+            fetchEvents(); // Refresh the events list
         } catch (err) {
-            console.error("Error publishing event:", err);
-            alert("Publish failed.");
+            console.error("Error publishing event:", err.response?.data || err.message);
+            alert("Failed to publish event.");
         }
     };
 
@@ -260,7 +296,12 @@ export default function AdminEditEvent() {
                 </Grid>
                 <Grid item xs={12}>
                     <TextField fullWidth size="small" label="Upload Keynote Image" type="file" name="keynoteImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
-                    {eventData.keynoteImage && <Typography variant="body2">{eventData.keynoteImage.name}</Typography>}
+                    {eventData.keynoteImage && typeof eventData.keynoteImage === 'string' && (
+                        <Typography variant="body2">Current image: {eventData.keynoteImage}</Typography>
+                    )}
+                    {eventData.keynoteImage instanceof File && (
+                        <Typography variant="body2">New image: {eventData.keynoteImage.name}</Typography>
+                    )}
                 </Grid>
 
                 <Grid item xs={12} className="flex items-center gap-2">
@@ -269,7 +310,12 @@ export default function AdminEditEvent() {
                 </Grid>
                 <Grid item xs={12}>
                     <TextField fullWidth size="small" label="Upload Invited Image" type="file" name="invitedImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
-                    {eventData.invitedImage && <Typography variant="body2">{eventData.invitedImage.name}</Typography>}
+                    {eventData.invitedImage && typeof eventData.invitedImage === 'string' && (
+                        <Typography variant="body2">Current image: {eventData.invitedImage}</Typography>
+                    )}
+                    {eventData.invitedImage instanceof File && (
+                        <Typography variant="body2">New image: {eventData.invitedImage.name}</Typography>
+                    )}
                 </Grid>
 
                 <Grid item xs={12}>
