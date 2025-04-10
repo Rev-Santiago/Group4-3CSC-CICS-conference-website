@@ -66,5 +66,25 @@ router.get("/generate-screenshots", async (req, res) => {
   }
 });
 
+router.get("/screenshots", (req, res) => {
+  const directory = "screenshots";
+  const screenshots = {};
+
+  if (!fs.existsSync(directory)) {
+    return res.json({});
+  }
+
+  fs.readdirSync(directory).forEach((file) => {
+    const name = file.replace(/-/g, " ").replace(".png", "")
+      .replace("registration fees", "Registration & Fees")
+      .replace("call for papers", "Call For Papers")
+      .replace(/\b\w/g, c => c.toUpperCase()); // Capitalize words
+
+    screenshots[name] = file;
+  });
+
+  res.json(screenshots);
+});
+
 
 export default router;
