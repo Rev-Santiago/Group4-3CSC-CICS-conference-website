@@ -212,7 +212,7 @@ router.post("/events", authenticateToken, upload.fields([
       theme || "", 
       category || "", 
       keynoteImage || invitedImage || null,
-      userId  // Make sure this value is included
+      userId
     ];
 
     await db.execute(query, values);
@@ -222,6 +222,7 @@ router.post("/events", authenticateToken, upload.fields([
     res.status(500).json({ error: "Failed to publish event: " + err.message });
   }
 });
+
 
 router.put("/events/:id", authenticateToken, upload.fields([
   { name: "keynoteImage", maxCount: 1 },
