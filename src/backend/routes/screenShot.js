@@ -25,15 +25,13 @@ const BASE_URL = "https://cics-conference-website.onrender.com/";
 
 router.get("/generate-screenshots", async (req, res) => {
   const results = {};
-  const executablePath =
-    process.env.AWS_EXECUTION_ENV ? await chromium.executablePath : puppeteer.executablePath();
+ const browser = await puppeteer.launch({
+  args: chromium.args,
+  defaultViewport: chromium.defaultViewport,
+  executablePath: await chromium.executablePath || puppeteer.executablePath(),
+  headless: true,
+});
 
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: chromium.headless,
-  });
 
   try {
     for (const pageName of PAGES) {
