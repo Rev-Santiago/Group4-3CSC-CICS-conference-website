@@ -48,7 +48,12 @@ export default function AdminDashboard() {
 
         const data = await response.json();
         console.log("Screenshots data:", data);
-        setScreenshots(data);
+        const screenshotsWithUrl = {};
+        Object.entries(data).forEach(([key, filename]) => {
+          screenshotsWithUrl[key] = `${BACKEND_URL}/uploads/screenshots/${filename}`;
+        });
+setScreenshots(screenshotsWithUrl);
+
       } catch (error) {
         console.error("Error fetching screenshots:", error);
       }
