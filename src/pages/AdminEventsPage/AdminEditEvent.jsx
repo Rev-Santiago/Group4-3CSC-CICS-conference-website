@@ -48,7 +48,7 @@ export default function AdminEditEvent() {
         if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
             setCustomCategories([...customCategories, newValue]);
         }
-        setEventData({ ...eventData, category: newValue });
+        setEventData({ ...eventData, category: newValue || "" }); // Ensure empty string fallback
     };
 
     const defaultVenues = ["Cafeteria", "Auditorium"];
@@ -59,7 +59,7 @@ export default function AdminEditEvent() {
         if (newValue && !defaultVenues.includes(newValue) && !customVenues.includes(newValue)) {
             setCustomVenues([...customVenues, newValue]);
         }
-        setEventData({ ...eventData, venue: newValue });
+        setEventData({ ...eventData, venue: newValue || "" }); // Ensure empty string fallback
     };
 
     // Handle field changes
@@ -205,17 +205,17 @@ export default function AdminEditEvent() {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
             };
-
+    
             const formData = new FormData();
-            formData.append("title", eventData.title);
-            formData.append("date", eventData.date);
-            formData.append("startTime", eventData.startTime);
-            formData.append("endTime", eventData.endTime);
-            formData.append("venue", eventData.venue);
-            formData.append("keynoteSpeaker", eventData.keynoteSpeaker);
-            formData.append("invitedSpeaker", eventData.invitedSpeaker);
-            formData.append("theme", eventData.theme);
-            formData.append("category", eventData.category);
+            formData.append("title", eventData.title || "");
+            formData.append("date", eventData.date || "");
+            formData.append("startTime", eventData.startTime || "");
+            formData.append("endTime", eventData.endTime || "");
+            formData.append("venue", eventData.venue || "");
+            formData.append("keynoteSpeaker", eventData.keynoteSpeaker || "");
+            formData.append("invitedSpeaker", eventData.invitedSpeaker || "");
+            formData.append("theme", eventData.theme || "");
+            formData.append("category", eventData.category || "");
             formData.append("zoomLink", eventData.zoomLink || "");
             
             if (eventData.keynoteImage instanceof File) {
@@ -225,7 +225,7 @@ export default function AdminEditEvent() {
             if (eventData.invitedImage instanceof File) {
                 formData.append("invitedImage", eventData.invitedImage);
             }
-
+    
             // Always create a new published event
             const response = await axios.post("/api/events", formData, { headers });
             

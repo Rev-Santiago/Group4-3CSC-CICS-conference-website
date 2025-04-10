@@ -174,6 +174,7 @@ router.delete("/drafts/:id", authenticateToken, async (req, res) => {
 // EVENTS ROUTES
 // ==============================
 
+// Fix for the events POST endpoint in eventRoutes.js
 router.post("/events", authenticateToken, upload.fields([
   { name: "keynoteImage", maxCount: 1 },
   { name: "invitedImage", maxCount: 1 },
@@ -211,7 +212,7 @@ router.post("/events", authenticateToken, upload.fields([
       theme || "", 
       category || "", 
       keynoteImage || invitedImage || null,
-      userId
+      userId  // Make sure this value is included
     ];
 
     await db.execute(query, values);
