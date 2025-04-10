@@ -113,6 +113,8 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+
     const query = `
       UPDATE event_drafts
       SET event_date = ?, time_slot = ?, program = ?, venue = ?, online_room_link = ?, 
@@ -121,9 +123,17 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date, eventTime, title, venue, zoomLink || "",
-      `${keynoteSpeaker}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
-      theme, category, keynoteImage || invitedImage || null, id, req.user.id
+      date || null, 
+      eventTime, 
+      title || "", 
+      venue || "", 
+      zoomLink || "",
+      speaker,
+      theme || "", 
+      category || "", 
+      keynoteImage || invitedImage || null, 
+      id, 
+      req.user.id
     ];
 
     // Execute the query
@@ -182,6 +192,8 @@ router.post("/events", authenticateToken, upload.fields([
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+
     const query = `
       INSERT INTO events (
         event_date, time_slot, program, venue, online_room_link,
@@ -189,11 +201,16 @@ router.post("/events", authenticateToken, upload.fields([
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-
     const values = [
-      date, eventTime, title, venue, zoomLink || "",
-      `${keynoteSpeaker}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
-      theme, category, keynoteImage || invitedImage || null,
+      date || null, 
+      eventTime, 
+      title || "", 
+      venue || "", 
+      zoomLink || "",
+      speaker,
+      theme || "", 
+      category || "", 
+      keynoteImage || invitedImage || null,
       userId
     ];
 
@@ -201,7 +218,7 @@ router.post("/events", authenticateToken, upload.fields([
     res.status(200).json({ message: "Event published successfully." });
   } catch (err) {
     console.error("Error publishing event:", err);
-    res.status(500).json({ error: "Failed to publish event." });
+    res.status(500).json({ error: "Failed to publish event: " + err.message });
   }
 });
 
@@ -224,6 +241,8 @@ router.put("/events/:id", authenticateToken, upload.fields([
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+
     const query = `
       UPDATE events
       SET event_date = ?, time_slot = ?, program = ?, venue = ?, online_room_link = ?, 
@@ -232,9 +251,15 @@ router.put("/events/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date, eventTime, title, venue, zoomLink || "",
-      `${keynoteSpeaker}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
-      theme, category, keynoteImage || invitedImage || null,
+      date || null, 
+      eventTime, 
+      title || "", 
+      venue || "", 
+      zoomLink || "",
+      speaker,
+      theme || "", 
+      category || "", 
+      keynoteImage || invitedImage || null,
       id
     ];
 

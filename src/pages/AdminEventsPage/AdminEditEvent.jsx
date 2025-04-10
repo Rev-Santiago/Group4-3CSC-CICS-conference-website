@@ -4,7 +4,7 @@ import {
     Grid, TextField, MenuItem, Typography, Divider,
     IconButton, Select, Button, Box, Autocomplete,
 } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
 
 export default function AdminEditEvent() {
     const accountType = localStorage.getItem("accountType");
@@ -14,7 +14,7 @@ export default function AdminEditEvent() {
         title: "", date: "", startTime: "", endTime: "",
         venue: "", keynoteSpeaker: "", invitedSpeaker: "",
         theme: "", category: "", keynoteImage: null,
-        invitedImage: null
+        invitedImage: null, zoomLink: ""
     });
     
     // Fetch only drafts
@@ -95,7 +95,8 @@ export default function AdminEditEvent() {
                 theme: selected.theme || "",
                 category: selected.category || "",
                 keynoteImage: selected.photo_url || null,
-                invitedImage: null
+                invitedImage: null,
+                zoomLink: selected.online_room_link || ""
             });
         }
     };
@@ -121,6 +122,7 @@ export default function AdminEditEvent() {
             formData.append("invitedSpeaker", eventData.invitedSpeaker);
             formData.append("theme", eventData.theme);
             formData.append("category", eventData.category);
+            formData.append("zoomLink", eventData.zoomLink || "");
             
             if (eventData.keynoteImage instanceof File) {
                 formData.append("keynoteImage", eventData.keynoteImage);
@@ -148,12 +150,48 @@ export default function AdminEditEvent() {
                     title: "", date: "", startTime: "", endTime: "",
                     venue: "", keynoteSpeaker: "", invitedSpeaker: "",
                     theme: "", category: "", keynoteImage: null,
-                    invitedImage: null
+                    invitedImage: null, zoomLink: ""
                 });
             }
         } catch (err) {
             console.error("Error saving draft:", err.response?.data || err.message);
             alert("Failed to save draft.");
+        }
+    };
+
+    // Delete a draft
+    const handleDelete = async () => {
+        if (!selectedDraftId) {
+            alert("Please select a draft to delete.");
+            return;
+        }
+
+        if (!window.confirm("Are you sure you want to delete this draft?")) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem("authToken");
+            if (!token) return;
+            
+            const headers = { Authorization: `Bearer ${token}` };
+            
+            await axios.delete(`/api/drafts/${selectedDraftId}`, { headers });
+            
+            alert("Draft deleted successfully.");
+            fetchDrafts(); // Refresh the drafts list
+            
+            // Clear the form
+            setSelectedDraftId("");
+            setEventData({
+                title: "", date: "", startTime: "", endTime: "",
+                venue: "", keynoteSpeaker: "", invitedSpeaker: "",
+                theme: "", category: "", keynoteImage: null,
+                invitedImage: null, zoomLink: ""
+            });
+        } catch (err) {
+            console.error("Error deleting draft:", err.response?.data || err.message);
+            alert("Failed to delete draft.");
         }
     };
 
@@ -178,6 +216,7 @@ export default function AdminEditEvent() {
             formData.append("invitedSpeaker", eventData.invitedSpeaker);
             formData.append("theme", eventData.theme);
             formData.append("category", eventData.category);
+            formData.append("zoomLink", eventData.zoomLink || "");
             
             if (eventData.keynoteImage instanceof File) {
                 formData.append("keynoteImage", eventData.keynoteImage);
@@ -204,12 +243,12 @@ export default function AdminEditEvent() {
                 title: "", date: "", startTime: "", endTime: "",
                 venue: "", keynoteSpeaker: "", invitedSpeaker: "",
                 theme: "", category: "", keynoteImage: null,
-                invitedImage: null
+                invitedImage: null, zoomLink: ""
             });
             
         } catch (err) {
             console.error("Error publishing event:", err.response?.data || err.message);
-            alert("Failed to publish event.");
+            alert("Failed to publish event: " + (err.response?.data?.error || err.message));
         }
     };
 
@@ -278,6 +317,10 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 <Grid item xs={12}>
+                    <TextField fullWidth size="small" label="Zoom Link (Optional)" name="zoomLink" variant="outlined" value={eventData.zoomLink || ""} onChange={handleChange} />
+                </Grid>
+
+                <Grid item xs={12}>
                     <Typography variant="subtitle1">Speaker(s):</Typography>
                 </Grid>
 
@@ -322,6 +365,10 @@ export default function AdminEditEvent() {
                         options={categoryOptions}
                         value={eventData.category}
                         onChange={handleCategoryChange}
+                        inputValue={eventData.category}
+                        onInputChange={(e, newValue) => {
+                            setEventData(prev => ({ ...prev, category: newValue }));
+                        }}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -333,12 +380,34 @@ export default function AdminEditEvent() {
                     />
                 </Grid>
 
-                {/* Save/Publish Buttons */}
+                {/* Save/Publish/Delete Buttons */}
                 <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
                     <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
                     
                     {accountType === "super_admin" && (
-                        <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
+                        <>
+                            <Button 
+                                onClick={handlePublish} 
+                                variant="contained" 
+                                sx={{ 
+                                    backgroundColor: "#B7152F", 
+                                    color: "white", 
+                                    "&:hover": { backgroundColor: "#B7152F" }, 
+                                }}
+                            >
+                                Publish
+                            </Button>
+                            {selectedDraftId && (
+                                <Button 
+                                    onClick={handleDelete} 
+                                    variant="outlined" 
+                                    color="error"
+                                    startIcon={<Delete />}
+                                >
+                                    Delete
+                                </Button>
+                            )}
+                        </>
                     )}
                 </Grid>
             </Grid>
