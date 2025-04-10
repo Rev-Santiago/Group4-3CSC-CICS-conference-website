@@ -23,35 +23,30 @@ export default function AdminEditEvent() {
         try {
             const token = localStorage.getItem("authToken");
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
             const [eventsRes, draftsRes] = await Promise.all([
                 axios.get("/api/events", { headers }),
                 axios.get("/api/drafts", { headers })
             ]);
     
-            // Debugging the responses
-            console.log("Events Response:", eventsRes.data);  // Log the entire events response
-            console.log("Drafts Response:", draftsRes.data);  // Log the entire drafts response
-    
-            // Ensure the response contains the 'events' array
-            const events = eventsRes.data?.events || [];
+            const published = eventsRes.data?.events || [];
             const drafts = draftsRes.data?.drafts || [];
     
-            // If the response structure is different, handle it accordingly
-            const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
-            const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+            const uniqueDrafts = drafts;
+
+            const eventsWithStatus = published.map(e => ({ ...e, status: "Published" }));
+            const draftsWithStatus = uniqueDrafts.map(d => ({ ...d, status: "Draft" }));
     
-            setEvents([...eventsWithStatus, ...draftsWithStatus]);  // Update the events state
+            const combined = [...eventsWithStatus, ...draftsWithStatus];
+            setEvents(combined);
         } catch (err) {
             console.error("Error fetching events:", err);
         }
     };
     
-    
-    
     useEffect(() => {
         fetchEvents();
     }, []);
-    
 
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
     const [customCategories, setCustomCategories] = useState([]);
@@ -166,7 +161,7 @@ export default function AdminEditEvent() {
 
             // Include the event ID if we're editing an existing event
             if (selectedEventId) formData.append("id", selectedEventId);
-            await axios.post("/api/events", formData); // publish route
+            await axios.post("/api/events/events", formData); // publish route
             alert("Event published!");
         } catch (err) {
             console.error("Error publishing event:", err);
@@ -190,26 +185,42 @@ export default function AdminEditEvent() {
             <Grid container spacing={3} className="mt-3">
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Select an Existing Event</Typography>
+                    
+                    {/* Published Events Dropdown */}
+                    <Typography variant="subtitle2">Published Events</Typography>
                     <Select
-                        fullWidth
-                        size="small"
-                        value={selectedEventId}
-                        onChange={handleEventSelection}
-                        displayEmpty
-                        sx={{ mt: 2 }}
+                        fullWidth size="small" value={selectedEventId}
+                        onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
                     >
-                        <MenuItem value="" disabled>Select an event</MenuItem>
-                        {events.length > 0 ? (
-                            events.map((event) => (
+                        <MenuItem value="" disabled>Select a published event</MenuItem>
+                        {events.filter(event => event.status === "Published").length > 0 ? (
+                            events.filter(event => event.status === "Published").map((event) => (
                                 <MenuItem key={event.id} value={event.id}>
-                                    {event.program} ({event.status === "Draft" ? "Draft" : "Published"})
+                                    {event.program} ({event.status})
                                 </MenuItem>
                             ))
                         ) : (
-                            <MenuItem disabled>No events found</MenuItem>
+                            <MenuItem disabled>No published events found</MenuItem>
                         )}
                     </Select>
 
+                    {/* Draft Events Dropdown */}
+                    <Typography variant="subtitle2" sx={{ mt: 3 }}>Draft Events</Typography>
+                    <Select
+                        fullWidth size="small" value={selectedEventId}
+                        onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
+                    >
+                        <MenuItem value="" disabled>Select a draft event</MenuItem>
+                        {events.filter(event => event.status === "Draft").length > 0 ? (
+                            events.filter(event => event.status === "Draft").map((event) => (
+                                <MenuItem key={event.id} value={event.id}>
+                                    {event.program} ({event.status})
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem disabled>No draft events found</MenuItem>
+                        )}
+                    </Select>
                 </Grid>
 
                 <Grid item xs={12}>
@@ -229,7 +240,7 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
-                        options={options} // from [...new Set([...defaultVenues, ...customVenues])]
+                        options={options} // from [...new Set([...defaultVenues, ...customVenues])]}
                         value={eventData.venue}
                         onChange={handleVenueChange}
                         renderInput={(params) => (
@@ -290,17 +301,10 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish Buttons */}
-                {accountType === "super_admin" && (
-                    <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                        <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
-                        <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
-                        {selectedEventId && (
-                            <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
-                                Status: {isPublished ? "Published" : "Draft"}
-                            </Typography>
-                        )}
-                    </Grid>
-                )}
+                <Grid item xs={12} className="flex justify-end gap-2">
+                    <Button variant="contained" onClick={handleSave}>Save as Draft</Button>
+                    <Button variant="contained" onClick={handlePublish}>Publish Event</Button>
+                </Grid>
             </Grid>
         </Box>
     );

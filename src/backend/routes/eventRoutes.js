@@ -176,6 +176,7 @@ router.post("/events", authenticateToken, upload.fields([
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+
     const values = [
       date, eventTime, title, venue, zoomLink || "",
       `${keynoteSpeaker}${invitedSpeaker ? `, ${invitedSpeaker}` : ""}`,
