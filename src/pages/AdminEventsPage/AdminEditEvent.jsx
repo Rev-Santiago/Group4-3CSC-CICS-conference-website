@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-    Grid, TextField, MenuItem, Typography, 
+    Grid, TextField, MenuItem, Typography, Divider,
     IconButton, Select, Button, Box, Autocomplete,
-    Snackbar, Alert
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
@@ -15,55 +14,46 @@ export default function AdminEditEvent() {
         title: "", date: "", startTime: "", endTime: "",
         venue: "", keynoteSpeaker: "", invitedSpeaker: "",
         theme: "", category: "", keynoteImage: null,
-        invitedImage: null, zoomLink: ""
+        invitedImage: null
     });
     const [isPublished, setIsPublished] = useState(false);
-    const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+    const [userType, setUserType] = useState(""); // This should come from the auth context or API
     
     // Fetch events and drafts
     const fetchEvents = async () => {
-        try {
-            const token = localStorage.getItem("authToken");
-            const headers = { Authorization: `Bearer ${token}` };
-    
-            // Make parallel requests to both endpoints
-            const [eventsRes, draftsRes] = await Promise.all([
-                axios.get("http://localhost:5000/api/events", { headers }),
-                axios.get("http://localhost:5000/api/drafts", { headers })
-            ]);
-    
-            const published = eventsRes.data.events || [];
-            const drafts = draftsRes.data.drafts || [];
-    
-            // Mark each event with its status
-            const eventsWithStatus = published.map(e => ({ ...e, status: "Published" }));
-            const draftsWithStatus = drafts.map(d => ({ ...d, status: "Draft" }));
-    
-            // Combine both arrays
-            const combined = [...eventsWithStatus, ...draftsWithStatus];
-            setEvents(combined);
-            console.log("Combined events:", combined);
-        } catch (err) {
-            console.error("Error fetching events:", err);
-            setNotification({
-                open: true,
-                message: `Error fetching events: ${err.message}`,
-                severity: "error"
-            });
-        }
-    };
+    try {
+        const token = localStorage.getItem("authToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const [eventsRes, draftsRes] = await Promise.all([
+            axios.get("/api/events", { headers }),
+            axios.get("/api/drafts", { headers })
+        ]);
+
+        // Check if the response data contains the expected arrays
+        const events = eventsRes.data?.events || [];
+        const drafts = draftsRes.data?.drafts || [];
+
+        console.log("Events Response:", events);  // Debug log
+        console.log("Drafts Response:", drafts);  // Debug log
+
+        const eventsWithStatus = events.map((e) => ({ ...e, status: "Published" }));
+        const draftsWithStatus = drafts.map((d) => ({ ...d, status: "Draft" }));
+        
+        setEvents([...eventsWithStatus, ...draftsWithStatus]);  // Update events state
+    } catch (err) {
+        console.error("Error fetching events:", err);
+    }
+};
+
     
     useEffect(() => {
         fetchEvents();
     }, []);
+    
 
     const defaultCategories = ["Workshop", "Seminar", "Keynote"];
     const [customCategories, setCustomCategories] = useState([]);
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
-
-    const defaultVenues = ["Cafeteria", "Auditorium"];
-    const [customVenues, setCustomVenues] = useState([]);
-    const venueOptions = [...new Set([...defaultVenues, ...customVenues])];
 
     const handleCategoryChange = (e, newValue) => {
         if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
@@ -72,6 +62,10 @@ export default function AdminEditEvent() {
         setEventData({ ...eventData, category: newValue });
     };
 
+    const defaultVenues = ["Cafeteria", "Auditorium"];
+    const [customVenues, setCustomVenues] = useState([]);
+    const options = [...new Set([...defaultVenues, ...customVenues])];
+
     const handleVenueChange = (e, newValue) => {
         if (newValue && !defaultVenues.includes(newValue) && !customVenues.includes(newValue)) {
             setCustomVenues([...customVenues, newValue]);
@@ -79,121 +73,84 @@ export default function AdminEditEvent() {
         setEventData({ ...eventData, venue: newValue });
     };
 
+    useEffect(() => {
+        console.log(events);  // Add this to verify that events are being fetched and set correctly.
+    }, [events]);
+
     // Handle field changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setEventData(prev => ({ ...prev, [name]: value }));
+        setEventData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleFileChange = (e) => {
         const { name, files } = e.target;
-        setEventData(prev => ({ ...prev, [name]: files[0] }));
-    };
-
-    const convertTo24Hour = (time) => {
-        if (!time) return "";
-        const [h, mPart] = time.split(":");
-        if (!mPart) return "";
-        
-        let hour = parseInt(h, 10);
-        const [min, period] = mPart.split(" ");
-        if (!period) return time; // Already in 24h format
-        
-        if (period === "PM" && hour < 12) hour += 12;
-        if (period === "AM" && hour === 12) hour = 0;
-        return `${String(hour).padStart(2, "0")}:${min}`;
+        setEventData((prev) => ({ ...prev, [name]: files[0] }));
     };
 
     const handleEventSelection = (e) => {
         const id = e.target.value;
         setSelectedEventId(id);
 
-        // Find the selected event
-        const selected = events.find(event => event.id === parseInt(id) || event.id === id);
-        
+        // Find the selected event based on the id
+        const selected = events.find(event => event.id === id);
+
         if (selected) {
-            console.log("Selected event:", selected);
-            let startTime = "", endTime = "";
-            
-            // Parse time slot if available
-            if (selected.time_slot && selected.time_slot.includes(" - ")) {
-                const [start, end] = selected.time_slot.split(" - ");
-                startTime = convertTo24Hour(start);
-                endTime = convertTo24Hour(end);
-            }
+            const [start, end] = (selected.time_slot || "").split(" - ");
 
-            // Parse speaker data
-            let keynoteSpeaker = "", invitedSpeaker = "";
-            if (selected.speaker) {
-                const speakers = selected.speaker.split(",");
-                keynoteSpeaker = speakers[0]?.trim() || "";
-                invitedSpeaker = speakers[1]?.trim() || "";
-            }
+            // Check if the selected event is a draft or published event
+            if (selected.status === "Draft") {
+                const draftSelected = events.find(draft => draft.id === id && draft.status === "Draft");
 
-            setEventData({
-                title: selected.program || "",
-                date: selected.event_date ? selected.event_date.split("T")[0] : "",
-                startTime,
-                endTime,
-                venue: selected.venue || "",
-                keynoteSpeaker,
-                invitedSpeaker,
-                theme: selected.theme || "",
-                category: selected.category || "",
-                keynoteImage: null, // Cannot restore file objects
-                invitedImage: null, // Cannot restore file objects
-                zoomLink: selected.online_room_link || ""
-            });
-            
+                if (draftSelected) {
+                    setEventData({
+                        title: draftSelected.program || "",
+                        date: draftSelected.event_date ? draftSelected.event_date.split("T")[0] : "",
+                        startTime: start ? convertTo24Hour(start) : "",
+                        endTime: end ? convertTo24Hour(end) : "",
+                        venue: draftSelected.venue || "",
+                        keynoteSpeaker: draftSelected.speaker?.split(",")[0] || "",
+                        invitedSpeaker: draftSelected.speaker?.split(",")[1] || "",
+                        theme: draftSelected.theme || "",
+                        category: draftSelected.category || "",
+                        keynoteImage: draftSelected.keynoteImage || null,
+                        invitedImage: draftSelected.invitedImage || null
+                    });
+                }
+            } else {
+                setEventData({
+                    title: selected.program || "",
+                    date: selected.event_date ? selected.event_date.split("T")[0] : "",
+                    startTime: start ? convertTo24Hour(start) : "",
+                    endTime: end ? convertTo24Hour(end) : "",
+                    venue: selected.venue || "",
+                    keynoteSpeaker: selected.speaker?.split(",")[0] || "",
+                    invitedSpeaker: selected.speaker?.split(",")[1] || "",
+                    theme: selected.theme || "",
+                    category: selected.category || "",
+                    keynoteImage: selected.keynoteImage || null,
+                    invitedImage: selected.invitedImage || null
+                });
+            }
             setIsPublished(selected.status === "Published");
         }
-    };
-
-    const getAuthToken = () => {
-        return localStorage.getItem('authToken');
     };
 
     // Save/update as draft
     const handleSave = async () => {
         try {
             const formData = new FormData();
-            Object.entries(eventData).forEach(([key, value]) => {
-                if (value) formData.append(key, value);
-            });
+            for (const key in eventData) {
+                if (eventData[key]) formData.append(key, eventData[key]);
+            }
 
-            const url = selectedEventId ? 
-                `http://localhost:5000/api/drafts/${selectedEventId}` : 
-                "http://localhost:5000/api/drafts";
-                
-            const method = selectedEventId ? "PUT" : "POST";
-            
-            const res = await fetch(url, {
-                method,
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
-                }
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to save draft");
-
-            setNotification({
-                open: true,
-                message: "📝 Draft saved successfully!",
-                severity: "success"
-            });
-            
-            // Refresh event list
-            fetchEvents();
-            
+            // Include the event ID if we're editing an existing event
+            if (selectedEventId) formData.append("id", selectedEventId);
+            await axios.post("/api/events/draft", formData);
+            alert("Event saved as draft.");
         } catch (err) {
             console.error("Error saving draft:", err);
-            setNotification({
-                open: true,
-                message: `❌ Error: ${err.message}`,
-                severity: "error"
-            });
+            alert("Failed to save.");
         }
     };
 
@@ -201,48 +158,29 @@ export default function AdminEditEvent() {
     const handlePublish = async () => {
         try {
             const formData = new FormData();
-            Object.entries(eventData).forEach(([key, value]) => {
-                if (value) formData.append(key, value);
-            });
+            for (const key in eventData) {
+                if (eventData[key]) formData.append(key, eventData[key]);
+            }
 
-            const url = isPublished && selectedEventId ? 
-                `http://localhost:5000/api/events/${selectedEventId}` : 
-                "http://localhost:5000/api/events";
-                
-            const method = isPublished && selectedEventId ? "PUT" : "POST";
-            
-            const res = await fetch(url, {
-                method,
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
-                }
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to publish event");
-
-            setNotification({
-                open: true,
-                message: "✅ Event published successfully!",
-                severity: "success"
-            });
-            
-            // Refresh event list
-            fetchEvents();
-            
+            // Include the event ID if we're editing an existing event
+            if (selectedEventId) formData.append("id", selectedEventId);
+            await axios.post("/api/events", formData); // publish route
+            alert("Event published!");
         } catch (err) {
             console.error("Error publishing event:", err);
-            setNotification({
-                open: true,
-                message: `❌ Error: ${err.message}`,
-                severity: "error"
-            });
+            alert("Publish failed.");
         }
     };
 
-    const handleCloseNotification = () => {
-        setNotification(prev => ({ ...prev, open: false }));
+    // Helper to convert AM/PM time string to 24h format
+    const convertTo24Hour = (time) => {
+        if (!time) return "";
+        const [h, mPart] = time.split(":");
+        let hour = parseInt(h, 10);
+        const [min, period] = mPart.split(" ");
+        if (period === "PM" && hour < 12) hour += 12;
+        if (period === "AM" && hour === 12) hour = 0;
+        return `${String(hour).padStart(2, "0")}:${min}`;
     };
 
     return (
@@ -250,40 +188,19 @@ export default function AdminEditEvent() {
             <Grid container spacing={3} className="mt-3">
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Select an Existing Event</Typography>
-                    
-                    {/* Published Events Dropdown */}
-                    <Typography variant="subtitle2">Published Events</Typography>
                     <Select
                         fullWidth size="small" value={selectedEventId}
                         onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
                     >
-                        <MenuItem value="" disabled>Select a published event</MenuItem>
-                        {events.filter(event => event.status === "Published").length > 0 ? (
-                            events.filter(event => event.status === "Published").map((event) => (
+                        <MenuItem value="" disabled>Select an event</MenuItem>
+                        {events.length > 0 ? (
+                            events.map((event) => (
                                 <MenuItem key={event.id} value={event.id}>
-                                    {event.program || "Unnamed Event"} (Published)
+                                    {event.program} ({event.status === "Draft" && !events.find(e => e.id === event.id && e.status === "Published") ? "Draft" : "Published"})
                                 </MenuItem>
                             ))
                         ) : (
-                            <MenuItem disabled>No published events found</MenuItem>
-                        )}
-                    </Select>
-
-                    {/* Draft Events Dropdown */}
-                    <Typography variant="subtitle2" sx={{ mt: 3 }}>Draft Events</Typography>
-                    <Select
-                        fullWidth size="small" value={selectedEventId}
-                        onChange={handleEventSelection} displayEmpty sx={{ mt: 2 }}
-                    >
-                        <MenuItem value="" disabled>Select a draft event</MenuItem>
-                        {events.filter(event => event.status === "Draft").length > 0 ? (
-                            events.filter(event => event.status === "Draft").map((event) => (
-                                <MenuItem key={event.id} value={event.id}>
-                                    {event.program || "Unnamed Event"} (Draft)
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem disabled>No draft events found</MenuItem>
+                            <MenuItem disabled>No events found</MenuItem>
                         )}
                     </Select>
                 </Grid>
@@ -305,7 +222,7 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
-                        options={venueOptions}
+                        options={options} // from [...new Set([...defaultVenues, ...customVenues])]
                         value={eventData.venue}
                         onChange={handleVenueChange}
                         renderInput={(params) => (
@@ -320,10 +237,6 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Zoom Link" name="zoomLink" value={eventData.zoomLink} onChange={handleChange} />
-                </Grid>
-
-                <Grid item xs={12}>
                     <Typography variant="subtitle1">Speaker(s):</Typography>
                 </Grid>
 
@@ -332,10 +245,7 @@ export default function AdminEditEvent() {
                     <IconButton><Add /></IconButton>
                 </Grid>
                 <Grid item xs={12}>
-                    <Button variant="outlined" component="label">
-                        Upload Keynote Image
-                        <input type="file" name="keynoteImage" hidden onChange={handleFileChange} />
-                    </Button>
+                    <TextField fullWidth size="small" label="Upload Keynote Image" type="file" name="keynoteImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
                     {eventData.keynoteImage && <Typography variant="body2">{eventData.keynoteImage.name}</Typography>}
                 </Grid>
 
@@ -344,10 +254,7 @@ export default function AdminEditEvent() {
                     <IconButton><Add /></IconButton>
                 </Grid>
                 <Grid item xs={12}>
-                    <Button variant="outlined" component="label">
-                        Upload Invited Image
-                        <input type="file" name="invitedImage" hidden onChange={handleFileChange} />
-                    </Button>
+                    <TextField fullWidth size="small" label="Upload Invited Image" type="file" name="invitedImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
                     {eventData.invitedImage && <Typography variant="body2">{eventData.invitedImage.name}</Typography>}
                 </Grid>
 
@@ -361,7 +268,7 @@ export default function AdminEditEvent() {
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
-                        options={categoryOptions}
+                        options={categoryOptions} // from [...new Set([...defaultCategories, ...customCategories])]
                         value={eventData.category}
                         onChange={handleCategoryChange}
                         renderInput={(params) => (
@@ -376,24 +283,18 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish Buttons */}
-                <Grid item xs={12} className="flex justify-end gap-2">
-                    <Button variant="contained" color="warning" onClick={handleSave}>Save as Draft</Button>
-                    {accountType === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handlePublish}>Publish Event</Button>
-                    )}
-                </Grid>
+                {accountType === "super_admin" && (
+                    <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                        <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
+                        <Button onClick={handlePublish} variant="contained" sx={{ backgroundColor: "#B7152F", color: "white", "&:hover": { backgroundColor: "#B7152F" }, }}>Publish</Button>
+                        {selectedEventId && (
+                            <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
+                                Status: {isPublished ? "Published" : "Draft"}
+                            </Typography>
+                        )}
+                    </Grid>
+                )}
             </Grid>
-
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={6000}
-                onClose={handleCloseNotification}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert onClose={handleCloseNotification} severity={notification.severity}>
-                    {notification.message}
-                </Alert>
-            </Snackbar>
         </Box>
     );
 }
