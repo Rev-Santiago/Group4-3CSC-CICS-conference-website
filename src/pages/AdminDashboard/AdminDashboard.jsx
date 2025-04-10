@@ -39,28 +39,30 @@ export default function AdminDashboard() {
     fetchAdminData();
   }, [navigate]);
 
-  // Fetch screenshots from backend
   useEffect(() => {
-    async function fetchScreenshots() {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/screenshots`);
-        if (!response.ok) throw new Error("Failed to fetch screenshots");
+  async function fetchScreenshots() {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/screenshots`);
+      if (!response.ok) throw new Error("Failed to fetch screenshots");
 
-        const data = await response.json();
-        console.log("Screenshots data:", data);
-        const screenshotsWithUrl = {};
-        Object.entries(data).forEach(([key, filename]) => {
-          screenshotsWithUrl[key] = `${BACKEND_URL}/uploads/screenshots/${filename}`;
-        });
-setScreenshots(screenshotsWithUrl);
+      const data = await response.json();
+      console.log("Screenshots data:", data);
 
-      } catch (error) {
-        console.error("Error fetching screenshots:", error);
+      // 👇 Build full URLs from filenames
+      const screenshotsWithUrls = {};
+      for (const [key, filename] of Object.entries(data)) {
+        screenshotsWithUrls[key] = `${BACKEND_URL}/screenshots/${filename}`;
       }
-    }
 
-    fetchScreenshots();
-  }, []);
+      setScreenshots(screenshotsWithUrls);
+    } catch (error) {
+      console.error("Error fetching screenshots:", error);
+    }
+  }
+
+  fetchScreenshots();
+}, [BACKEND_URL]);
+
 
   const pages = ["Home", "Call For Papers", "Contacts", "Partners", "Committee", "Event History", "Registration & Fees", "Publication", "Schedule", "Venue", "Keynote Speakers", "Invited Speakers"];
 
