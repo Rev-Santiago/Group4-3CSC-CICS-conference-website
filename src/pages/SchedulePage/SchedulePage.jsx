@@ -35,11 +35,14 @@ const SchedulePage = () => {
     };
 
     const scrollToDate = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    };
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+                console.warn("Element not found:", id);
+            }
+        }, 100);
 
     const handleAddToCalendar = (event) => {
         if (!event || !event.time || !event.program || !event.date) {
