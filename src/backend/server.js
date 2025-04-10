@@ -66,6 +66,7 @@ app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")))
 
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
+app.use("/screenshots", express.static("screenshots"));
 app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
 app.use("/api", eventRoutes);
