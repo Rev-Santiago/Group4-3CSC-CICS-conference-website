@@ -1,4 +1,3 @@
-// Updated src/pages/AdminUserManagementPage/AdminUserManagementPage.jsx
 import React, { useState, useEffect } from "react";
 import { 
     IconButton, 
@@ -337,7 +336,6 @@ export default function AdminUserManagementPage() {
                                 </svg>
                             </span>
                         </div>
-                        <button className="border px-4 py-2 rounded-md text-sm font-medium">Filters</button>
                         <button 
                             onClick={openAddUserDialog}
                             className="bg-customRed text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -351,14 +349,10 @@ export default function AdminUserManagementPage() {
                 <div className="w-full overflow-x-auto rounded-lg">
                     <div className="min-w-[768px]">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 px-4 py-2 bg-customRed border border-b-0 text-sm font-medium text-white">
-                            <div className="col-span-1">
-                                <input type="checkbox" />
-                            </div>
-                            <div className="col-span-3">User name</div>
-                            <div className="col-span-4">Access</div>
-                            <div className="col-span-2">Last active</div>
-                            <div className="col-span-1">Date added</div>
+                        <div className="grid grid-cols-10 px-4 py-2 bg-customRed border border-b-0 text-sm font-medium text-white">
+                            <div className="col-span-4">User name</div>
+                            <div className="col-span-3">Roles</div>
+                            <div className="col-span-2">Date added</div>
                             <div className="col-span-1"></div>
                         </div>
 
@@ -370,26 +364,20 @@ export default function AdminUserManagementPage() {
                         ) : (
                             /* Table Rows */
                             filteredUsers.map((user, idx) => (
-                                <div key={user.id || idx} className="grid grid-cols-12 items-center px-4 py-3 border border-t-0 hover:bg-gray-50">
-                                    <div className="col-span-1">
-                                        <input type="checkbox" />
-                                    </div>
-                                    <div className="col-span-3 flex items-center gap-3">
+                                <div key={user.id || idx} className="grid grid-cols-10 items-center px-4 py-3 border border-t-0 hover:bg-gray-50">
+                                    <div className="col-span-4 flex items-center gap-3">
                                         <img src="/avatar-placeholder.png" alt="avatar" className="w-8 h-8 rounded-full" />
                                         <div>
                                             <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
                                             <div className="text-sm text-gray-500">{user.email}</div>
                                         </div>
                                     </div>
-                                    <div className="col-span-4 flex gap-2 flex-wrap">
+                                    <div className="col-span-3">
                                         <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
                                             {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
                                         </span>
-                                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Event Management</span>
-                                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Page Edit</span>
                                     </div>
-                                    <div className="col-span-2 text-sm text-gray-700">-</div>
-                                    <div className="col-span-1 text-sm text-gray-700">{formatDate(user.date_added)}</div>
+                                    <div className="col-span-2 text-sm text-gray-700">{formatDate(user.date_added)}</div>
                                     <div className="col-span-1 flex justify-end">
                                         <IconButton onClick={(e) => handleMenuOpen(e, user)} size="small">
                                             <MoreVert />
