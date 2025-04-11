@@ -1,4 +1,4 @@
-// Updated src/pages/AdminPublicationsPage/AdminEditPublication.jsx
+// src/pages/AdminPublicationsPage/AdminEditPublication.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -15,15 +15,13 @@ import {
 } from "@mui/material";
 
 export default function AdminEditPublication() {
-    const [publications, setPublications] = useState([]);
     const [drafts, setDrafts] = useState([]);
-    const [selectedPublicationId, setSelectedPublicationId] = useState("");
+    const [selectedDraftId, setSelectedDraftId] = useState("");
     const [publicationData, setPublicationData] = useState({
         title: "", 
         date: "", 
         link: ""
     });
-    const [isPublished, setIsPublished] = useState(false);
     const [loading, setLoading] = useState(false);
     const [fetchingData, setFetchingData] = useState(false);
     const [notification, setNotification] = useState({ 
@@ -36,59 +34,47 @@ export default function AdminEditPublication() {
     // Get the base URL
     const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
 
-    const fetchData = async () => {
+    const fetchDrafts = async () => {
         setFetchingData(true);
         try {
             const token = getAuthToken();
+            
+            if (!token) {
+                console.error("No auth token found");
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
             const headers = { Authorization: `Bearer ${token}` };
             
-            console.log("Using token:", token ? "Token exists" : "No token");
-            
-            // Fetch published publications
-            console.log("Fetching publications...");
-            const publicationsResponse = await axios.get(`${baseUrl}/api/publications-admin`, { headers });
-            console.log("Publications response:", publicationsResponse.data);
-            
-            // Fetch drafts
             console.log("Fetching drafts...");
             const draftsResponse = await axios.get(`${baseUrl}/api/publications/drafts`, { headers });
             console.log("Drafts response:", draftsResponse.data);
-            
-            // Format publications
-            const formattedPublications = publicationsResponse.data.publications.map(pub => ({
-                id: pub.id,
-                title: pub.publication_description,
-                date: pub.publication_date.split('T')[0],
-                link: pub.publication_link || "",
-                status: "Published"
-            }));
             
             // Format drafts
             const formattedDrafts = draftsResponse.data.drafts?.map(draft => ({
                 id: draft.id,
                 title: draft.publication_description,
                 date: draft.publication_date.split('T')[0],
-                link: draft.publication_link || "",
-                status: "Draft"
+                link: draft.publication_link || ""
             })) || [];
             
-            setPublications(formattedPublications);
             setDrafts(formattedDrafts);
         } catch (err) {
-            console.error("Error fetching publications:", err);
+            console.error("Error fetching drafts:", err);
             // Log more detailed error information
             if (err.response) {
                 console.error("Response data:", err.response.data);
                 console.error("Response status:", err.response.status);
-            } else if (err.request) {
-                console.error("Request was made but no response received");
-            } else {
-                console.error("Error message:", err.message);
             }
             
             setNotification({
                 open: true,
-                message: "Failed to load publications. Check console for details.",
+                message: "Failed to load drafts. Check console for details.",
                 severity: "error"
             });
         } finally {
@@ -96,9 +82,9 @@ export default function AdminEditPublication() {
         }
     };
 
-    // Fetch publications and drafts on component mount
+    // Fetch drafts on component mount
     useEffect(() => {
-        fetchData();
+        fetchDrafts();
     }, []);
 
     // Handle field changes
@@ -116,13 +102,12 @@ export default function AdminEditPublication() {
         return localStorage.getItem('authToken');
     };
 
-    const handlePublicationSelection = (e) => {
+    const handleDraftSelection = (e) => {
         const id = e.target.value;
-        setSelectedPublicationId(id);
+        setSelectedDraftId(id);
 
-        // Find from either publications or drafts
-        const allItems = [...publications, ...drafts];
-        const selected = allItems.find(item => item.id === id);
+        // Find the selected draft
+        const selected = drafts.find(draft => draft.id === id);
 
         if (selected) {
             setPublicationData({
@@ -130,8 +115,6 @@ export default function AdminEditPublication() {
                 date: selected.date || "",
                 link: selected.link || ""
             });
-            
-            setIsPublished(selected.status === "Published");
         }
     };
     
@@ -163,9 +146,9 @@ export default function AdminEditPublication() {
             const token = getAuthToken();
             console.log("Using token for save draft:", token ? "Token exists" : "No token");
             
-            // Always use /api/publications/drafts endpoint
+            // Include ID for existing draft to update, or null for new draft
             const response = await axios.post(`${baseUrl}/api/publications/drafts`, {
-                id: !isPublished ? selectedPublicationId : null, // Only include ID if it's already a draft
+                id: selectedDraftId || null,
                 title: publicationData.title,
                 date: publicationData.date,
                 link: publicationData.link
@@ -181,8 +164,8 @@ export default function AdminEditPublication() {
                 severity: "success"
             });
             
-            // Refresh the data without page reload
-            fetchData();
+            // Refresh drafts
+            fetchDrafts();
         } catch (err) {
             console.error("Error saving draft:", err);
             // Log more detailed error information
@@ -210,39 +193,42 @@ export default function AdminEditPublication() {
             const token = getAuthToken();
             console.log("Using token for publish:", token ? "Token exists" : "No token");
             
-            // If editing published content, use PUT
-            // If publishing a draft or creating new, use POST
-            let response;
-            if (isPublished) {
-                console.log(`Updating publication ${selectedPublicationId}...`);
-                response = await axios.put(`${baseUrl}/api/publications/${selectedPublicationId}`, {
-                    title: publicationData.title,
-                    date: publicationData.date,
-                    link: publicationData.link,
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else {
-                console.log("Creating new publication...");
-                response = await axios.post(`${baseUrl}/api/publications`, {
-                    title: publicationData.title,
-                    date: publicationData.date,
-                    link: publicationData.link,
-                }, {
+            // First, publish the draft
+            console.log("Creating new publication...");
+            const response = await axios.post(`${baseUrl}/api/publications`, {
+                title: publicationData.title,
+                date: publicationData.date,
+                link: publicationData.link,
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            console.log("Publish response:", response.data);
+            
+            // If successful, delete the draft since it's now published
+            if (selectedDraftId) {
+                console.log(`Deleting draft ${selectedDraftId} after publishing...`);
+                await axios.delete(`${baseUrl}/api/publications/drafts/${selectedDraftId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }
             
-            console.log("Publish response:", response.data);
-            
             setNotification({
                 open: true,
-                message: isPublished ? "Publication updated successfully" : "Publication published successfully",
+                message: "Publication published successfully",
                 severity: "success"
             });
             
-            // Refresh the data without page reload
-            fetchData();
+            // Reset form and selection
+            setSelectedDraftId("");
+            setPublicationData({
+                title: "",
+                date: "",
+                link: ""
+            });
+            
+            // Refresh drafts
+            fetchDrafts();
         } catch (err) {
             console.error("Error publishing:", err);
             // Log more detailed error information
@@ -261,44 +247,91 @@ export default function AdminEditPublication() {
         }
     };
     
+    // Delete a draft
+    const handleDelete = async () => {
+        if (!selectedDraftId) {
+            setNotification({
+                open: true,
+                message: "Please select a draft to delete",
+                severity: "warning"
+            });
+            return;
+        }
+
+        if (!window.confirm("Are you sure you want to delete this draft?")) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const token = getAuthToken();
+            console.log(`Deleting draft ${selectedDraftId}...`);
+            
+            await axios.delete(`${baseUrl}/api/publications/drafts/${selectedDraftId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            setNotification({
+                open: true,
+                message: "Draft deleted successfully",
+                severity: "success"
+            });
+            
+            // Reset form and selection
+            setSelectedDraftId("");
+            setPublicationData({
+                title: "",
+                date: "",
+                link: ""
+            });
+            
+            // Refresh drafts
+            fetchDrafts();
+        } catch (err) {
+            console.error("Error deleting draft:", err);
+            
+            setNotification({
+                open: true,
+                message: err.response?.data?.error || "Failed to delete draft",
+                severity: "error"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     const handleCloseNotification = () => {
         setNotification(prev => ({ ...prev, open: false }));
     };
-
-    // Combine publications and drafts for the dropdown
-    const allItems = [
-        ...publications.map(pub => ({ ...pub, displayStatus: "Published" })),
-        ...drafts.map(draft => ({ ...draft, displayStatus: "Draft" }))
-    ];
 
     return (
         <Box className="p-4">
             <Grid container spacing={3} className="mt-3">
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Select an Existing Publication</Typography>
+                    <Typography variant="subtitle1">Select an Existing Draft</Typography>
                     <Select
                         fullWidth 
                         size="small" 
-                        value={selectedPublicationId}
-                        onChange={handlePublicationSelection} 
+                        value={selectedDraftId}
+                        onChange={handleDraftSelection} 
                         displayEmpty 
                         sx={{ mt: 2 }}
                         disabled={fetchingData}
                     >
-                        <MenuItem value="" disabled>{fetchingData ? 'Loading...' : 'Select a publication'}</MenuItem>
-                        {allItems.length > 0 ? (
-                            allItems.map((item) => (
-                                <MenuItem key={`${item.id}-${item.displayStatus}`} value={item.id}>
-                                    {item.title} ({item.displayStatus})
+                        <MenuItem value="" disabled>{fetchingData ? 'Loading...' : 'Select a draft'}</MenuItem>
+                        {drafts.length > 0 ? (
+                            drafts.map((draft) => (
+                                <MenuItem key={draft.id} value={draft.id}>
+                                    {draft.title}
                                 </MenuItem>
                             ))
                         ) : (
-                            <MenuItem disabled>No publications found</MenuItem>
+                            <MenuItem disabled>No drafts found</MenuItem>
                         )}
                     </Select>
                 </Grid>
 
-                {selectedPublicationId && (
+                {selectedDraftId && (
                     <>
                         <Grid item xs={12}>
                             <Typography variant="subtitle1">Publication Details:</Typography>
@@ -341,7 +374,7 @@ export default function AdminEditPublication() {
                             />
                         </Grid>
 
-                        {/* Save/Publish Buttons */}
+                        {/* Save/Publish/Delete Buttons */}
                         <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
                             <Button 
                                 onClick={handleSaveDraft} 
@@ -361,14 +394,16 @@ export default function AdminEditPublication() {
                                     "&:hover": { backgroundColor: "#930E24" }
                                 }}
                             >
-                                {loading ? <CircularProgress size={24} /> : (isPublished ? "Update" : "Publish")}
+                                {loading ? <CircularProgress size={24} color="inherit" /> : "Publish"}
                             </Button>
-                            
-                            {selectedPublicationId && (
-                                <Typography sx={{ ml: 3, mt: 1 }} variant="body2" color={isPublished ? "green" : "orange"}>
-                                    Status: {isPublished ? "Published" : "Draft"}
-                                </Typography>
-                            )}
+                            <Button 
+                                onClick={handleDelete} 
+                                variant="outlined"
+                                color="error"
+                                disabled={loading}
+                            >
+                                {loading ? <CircularProgress size={24} /> : "Delete"}
+                            </Button>
                         </Grid>
                     </>
                 )}
