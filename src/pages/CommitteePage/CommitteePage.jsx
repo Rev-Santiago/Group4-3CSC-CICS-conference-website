@@ -45,7 +45,7 @@ const CommitteePage = () => {
     return (
         <section className="committee">
             <div className="container mx-auto pb-10">
-                <h1 className="text-3xl font-bold my-6">Organizing Committee</h1>
+                <h1 className="text-3xl font-bold mb-6">Organizing Committee</h1>
                 
                 <p className="text-gray-700 mb-8">
                     The CICS 2025 conference is organized by an international team of experts from academia and industry,
