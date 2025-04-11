@@ -78,6 +78,9 @@ export default function LoginPage() {
         }
     };
     
+    const handleForgotPassword = () => {
+        navigate("/forgot-password");
+    };
 
     return (
         <div className="flex justify-center items-center">
@@ -105,10 +108,10 @@ export default function LoginPage() {
                         className="flex justify-center"
                         sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                         onChange={(token) => setCaptchaVerified(token)}
-                        />
+                    />
                     <Typography
                         className="text-blue-700 mt-4 cursor-pointer pt-3 hover:underline"
-                        onClick={() => navigate("")}
+                        onClick={handleForgotPassword}
                     >
                         Forgot Password?
                     </Typography>
