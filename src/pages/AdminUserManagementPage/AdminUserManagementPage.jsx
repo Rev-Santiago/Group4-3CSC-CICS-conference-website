@@ -366,7 +366,6 @@ export default function AdminUserManagementPage() {
                             filteredUsers.map((user, idx) => (
                                 <div key={user.id || idx} className="grid grid-cols-10 items-center px-4 py-3 border border-t-0 hover:bg-gray-50">
                                     <div className="col-span-4 flex items-center gap-3">
-                                        <img src="/avatar-placeholder.png" alt="avatar" className="w-8 h-8 rounded-full" />
                                         <div>
                                             <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
                                             <div className="text-sm text-gray-500">{user.email}</div>
