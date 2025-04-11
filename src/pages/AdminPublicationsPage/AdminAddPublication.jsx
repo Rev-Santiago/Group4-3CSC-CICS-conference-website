@@ -5,27 +5,61 @@ import {
     Typography,
     Button,
     Box,
+    Snackbar,
+    Alert
 } from "@mui/material";
+import axios from "axios";
 
 export default function AdminAddPublication({ currentUser }) {
-    const [eventData, setEventData] = useState({
+    const [publicationData, setPublicationData] = useState({
         title: "",
         date: "",
-        Link: "",
+        link: ""
     });
+    const [notification, setNotification] = useState({ 
+        open: false, 
+        message: "", 
+        severity: "success" 
+    });
+    const [loading, setLoading] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setEventData((prev) => ({ ...prev, [name]: value }));
+        setPublicationData((prev) => ({ ...prev, [name]: value }));
+        
+        // Clear errors when field is updated
+        if (formErrors[name]) {
+            setFormErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
+    const validateForm = () => {
+        const errors = {};
+        
+        if (!publicationData.title.trim()) {
+            errors.title = "Title is required";
+        }
+        
+        if (!publicationData.date) {
+            errors.date = "Date is required";
+        }
+        
+        if (publicationData.link && !/^(http|https):\/\/[^ "]+$/.test(publicationData.link)) {
+            errors.link = "Please enter a valid URL (start with http:// or https://)";
+        }
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     const resetForm = () => {
-        setEventData({
+        setPublicationData({
             title: "",
             date: "",
-            Link: "",
+            link: ""
         });
+        setFormErrors({});
     };
 
     const getAuthToken = () => {
@@ -33,79 +67,94 @@ export default function AdminAddPublication({ currentUser }) {
     };
 
     const handleSaveDraft = async () => {
-        const formData = new FormData();
-        Object.entries(eventData).forEach(([key, value]) => {
-            if (value) formData.append(key, value);
-        });
-
+        if (!validateForm()) return;
+        
+        setLoading(true);
         try {
-            const res = await fetch("http://localhost:5000/api/drafts", {
-                method: "POST",
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
-                }
+            const token = getAuthToken();
+            console.log("Using token:", token);
+            
+            const response = await axios.post("/api/publications/drafts", {
+                title: publicationData.title,
+                date: publicationData.date,
+                link: publicationData.link
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            
+            console.log("Draft saved:", response.data);
+            
             setNotification({
                 open: true,
-                message: "📝 Draft saved successfully!",
+                message: "Draft saved successfully!",
                 severity: "success"
             });
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Error saving draft:", error);
+            
+            // More detailed error logging
+            if (error.response) {
+                console.error("Response data:", error.response.data);
+                console.error("Response status:", error.response.status);
+            }
+            
             setNotification({
                 open: true,
-                message: `❌ Error: ${err.message || "Failed to save draft"}`,
+                message: error.response?.data?.error || "Failed to save draft",
                 severity: "error"
             });
+        } finally {
+            setLoading(false);
         }
     };
 
     const handlePublish = async () => {
-        const formData = new FormData();
-        Object.entries(eventData).forEach(([key, value]) => {
-            if (value) formData.append(key, value);
-        });
-
+        if (!validateForm()) return;
+        
+        setLoading(true);
         try {
-            for (let pair of formData.entries()) {
-                console.log(`${pair[0]}: ${pair[1]}`);
-            }
-            const res = await fetch("http://localhost:5000/api/events", {
-                method: "POST",
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
-                }
+            const token = getAuthToken();
+            console.log("Using token:", token);
+            
+            const response = await axios.post("/api/publications", {
+                title: publicationData.title,
+                date: publicationData.date,
+                link: publicationData.link
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to publish event");
-
+            
+            console.log("Publication published:", response.data);
+            
             setNotification({
                 open: true,
-                message: "✅ Event published successfully!",
+                message: "Publication published successfully!",
                 severity: "success"
             });
-
+            
             resetForm();
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Error publishing:", error);
+            
+            // More detailed error logging
+            if (error.response) {
+                console.error("Response data:", error.response.data);
+                console.error("Response status:", error.response.status);
+            }
+            
             setNotification({
                 open: true,
-                message: `❌ Error: ${err.message || "Failed to publish event"}`,
+                message: error.response?.data?.error || "Failed to publish",
                 severity: "error"
             });
+        } finally {
+            setLoading(false);
         }
     };
 
-    const accountType = localStorage.getItem("accountType");
-    const handleOpenDetails = () => setDetailsOpen(true);
-    const handleCloseDetails = () => setDetailsOpen(false);
-    const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
+    const handleCloseNotification = () => {
+        setNotification(prev => ({ ...prev, open: false }));
+    };
 
     return (
         <Box className="p-4">
@@ -114,22 +163,78 @@ export default function AdminAddPublication({ currentUser }) {
             </Grid>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Title" name="title" onChange={handleChange} sx={{ mt: 2 }} />
+                    <TextField 
+                        fullWidth 
+                        size="small" 
+                        label="Title" 
+                        name="title" 
+                        value={publicationData.title}
+                        onChange={handleChange} 
+                        sx={{ mt: 2 }}
+                        error={!!formErrors.title}
+                        helperText={formErrors.title} 
+                    />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Date" type="date" name="date" InputLabelProps={{ shrink: true }} onChange={handleChange} />
+                    <TextField 
+                        fullWidth 
+                        size="small" 
+                        label="Date" 
+                        type="date" 
+                        name="date" 
+                        value={publicationData.date}
+                        InputLabelProps={{ shrink: true }} 
+                        onChange={handleChange}
+                        error={!!formErrors.date}
+                        helperText={formErrors.date} 
+                    />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Insert Link" name="Link" onChange={handleChange} />
+                    <TextField 
+                        fullWidth 
+                        size="small" 
+                        label="Insert Link" 
+                        name="link"
+                        value={publicationData.link} 
+                        onChange={handleChange}
+                        error={!!formErrors.link}
+                        helperText={formErrors.link || "Optional: Include http:// or https://"} 
+                    />
                 </Grid>
                 <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                    <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
-                    <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
-                    {currentUser?.account_type === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handleSubmit}>Publish</Button>
-                    )}
+                    <Button 
+                        variant="outlined" 
+                        onClick={handleSaveDraft}
+                        disabled={loading}
+                    >
+                        Save Draft
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        color="error" 
+                        onClick={handlePublish}
+                        disabled={loading}
+                        sx={{ backgroundColor: "#B7152F", "&:hover": { backgroundColor: "#930E24" } }}
+                    >
+                        Publish
+                    </Button>
                 </Grid>
             </Grid>
+
+            {/* Notification */}
+            <Snackbar 
+                open={notification.open} 
+                autoHideDuration={6000} 
+                onClose={handleCloseNotification}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={handleCloseNotification} 
+                    severity={notification.severity}
+                >
+                    {notification.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

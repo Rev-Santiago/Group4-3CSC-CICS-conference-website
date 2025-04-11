@@ -28,7 +28,6 @@ export default function AdminUserManagementPage() {
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', title: '', message: '' });
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [search, setSearch] = useState('');
-    const [currentUserRole, setCurrentUserRole] = useState('');
     
     // New state for add user dialog
     const [addUserDialog, setAddUserDialog] = useState(false);
@@ -52,19 +51,8 @@ export default function AdminUserManagementPage() {
 
     // Load users on component mount
     useEffect(() => {
-        fetchCurrentUserRole();
         fetchUsers();
     }, []);
-
-    const fetchCurrentUserRole = async () => {
-        try {
-            const token = localStorage.getItem('authToken');
-            const role = localStorage.getItem('accountType');
-            setCurrentUserRole(role);
-        } catch (error) {
-            console.error('Error fetching user role:', error);
-        }
-    };
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -310,11 +298,6 @@ export default function AdminUserManagementPage() {
         (user.name && user.name.toLowerCase().includes(search.toLowerCase()))
     );
 
-    // Get role display name
-    const getRoleDisplayName = (accountType) => {
-        return accountType === 'super_admin' ? 'Super Admin' : 'Admin';
-    };
-
     return (
         <section>
             {/* Page Header */}
@@ -324,9 +307,7 @@ export default function AdminUserManagementPage() {
                         <h1 className="text-xl font-semibold text-gray-900">User Management Overview</h1>
                         <p className="text-sm text-gray-500 mt-1">View, edit, and manage all users in the system.</p>
                     </div>
-                    <span className="text-sm text-gray-600 font-medium">
-                        Role: {getRoleDisplayName(currentUserRole)}
-                    </span>
+                    <span className="text-sm text-gray-600 font-medium">Role: Super Admin</span>
                 </div>
             </div>
 
@@ -371,8 +352,7 @@ export default function AdminUserManagementPage() {
                                 <input type="checkbox" />
                             </div>
                             <div className="col-span-3">User name</div>
-                            <div className="col-span-2">Role</div>
-                            <div className="col-span-2">Access</div>
+                            <div className="col-span-4">Access</div>
                             <div className="col-span-2">Last active</div>
                             <div className="col-span-1">Date added</div>
                             <div className="col-span-1"></div>
@@ -391,28 +371,18 @@ export default function AdminUserManagementPage() {
                                         <input type="checkbox" />
                                     </div>
                                     <div className="col-span-3 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                            <span className="text-sm font-medium">
-                                                {(user.name || user.email.split('@')[0]).charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
+                                        <img src="/avatar-placeholder.png" alt="avatar" className="w-8 h-8 rounded-full" />
                                         <div>
                                             <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
                                             <div className="text-sm text-gray-500">{user.email}</div>
                                         </div>
                                     </div>
-                                    <div className="col-span-2">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            user.account_type === 'super_admin' 
-                                                ? 'bg-green-100 text-green-700' 
-                                                : 'bg-blue-100 text-blue-700'
-                                        }`}>
-                                            {getRoleDisplayName(user.account_type)}
+                                    <div className="col-span-4 flex gap-2 flex-wrap">
+                                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                            {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
                                         </span>
-                                    </div>
-                                    <div className="col-span-2 flex gap-2 flex-wrap">
-                                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Event Management</span>
-                                        <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Page Edit</span>
+                                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Event Management</span>
+                                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Page Edit</span>
                                     </div>
                                     <div className="col-span-2 text-sm text-gray-700">-</div>
                                     <div className="col-span-1 text-sm text-gray-700">{formatDate(user.date_added)}</div>
@@ -432,7 +402,7 @@ export default function AdminUserManagementPage() {
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                         <button
                             key={n}
-                            className={`w-8 h-8 text-sm font-medium ${n === 1 ? 'bg-customRed text-white' : 'text-gray-700 border'} rounded-md hover:bg-gray-100`}
+                            className="w-8 h-8 text-sm font-medium text-gray-700 border rounded-md hover:bg-gray-100"
                         >
                             {n}
                         </button>
@@ -497,7 +467,7 @@ export default function AdminUserManagementPage() {
             >
                 <DialogTitle 
                     sx={{ 
-                        backgroundColor: '#B7152F', 
+                        backgroundColor: 'customRed', 
                         color: 'white',
                         borderTopLeftRadius: '8px',
                         borderTopRightRadius: '8px',
@@ -562,20 +532,20 @@ export default function AdminUserManagementPage() {
                             sx: { borderRadius: '6px' }
                         }}
                     />
-                    <FormControl fullWidth sx={{ mb: 2 }} error={!!formErrors.account_type}>
-                        <InputLabel id="account-type-label">Role</InputLabel>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel id="account-type-label">Account Type</InputLabel>
                         <Select
                             labelId="account-type-label"
                             name="account_type"
                             value={newUser.account_type}
-                            label="Role"
+                            label="Account Type"
                             onChange={handleInputChange}
                             sx={{ borderRadius: '6px' }}
                         >
                             <MenuItem value="admin">Admin</MenuItem>
                             <MenuItem value="super_admin">Super Admin</MenuItem>
                         </Select>
-                        <FormHelperText>{formErrors.account_type || "Choose the user's role in the system"}</FormHelperText>
+                        <FormHelperText>Choose the user's role in the system</FormHelperText>
                     </FormControl>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -593,11 +563,11 @@ export default function AdminUserManagementPage() {
                         onClick={handleSubmitNewUser} 
                         variant="contained"
                         sx={{ 
-                            backgroundColor: '#B7152F', 
-                            '&:hover': { backgroundColor: '#941126' },
+                            backgroundColor: '#d41c1c', 
+                            '&:hover': { backgroundColor: '#b01818' },
                             borderRadius: '6px',
                             px: 3,
-                            boxShadow: '0 2px 8px rgba(183,21,47,0.3)'
+                            boxShadow: '0 2px 8px rgba(212,28,28,0.3)'
                         }}
                     >
                         Create User
