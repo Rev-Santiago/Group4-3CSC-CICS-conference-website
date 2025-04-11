@@ -46,6 +46,7 @@ const AdminEventsPage = () => {
                                     fullWidth
                                     variant={activeButton === action ? "contained" : "outlined"}
                                     sx={{
+                                        marginY: "4px",
                                         backgroundColor: activeButton === action ? "#B7152F" : "transparent",
                                         color: activeButton === action ? "white" : "inherit",
                                         borderColor: activeButton === action ? "#B7152F" : "black", // Set outline to black
