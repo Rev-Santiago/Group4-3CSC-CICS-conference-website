@@ -54,6 +54,16 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper function to validate date format
+const isValidDate = (dateString) => {
+  if (!dateString) return false;
+  if (dateString.trim() === "") return false;
+  
+  // Check if it's a valid date
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
+};
+
 // Utility: Format time to AM/PM
 const formatTime = (time) => {
   if (!time) return "";
@@ -87,8 +97,12 @@ router.post("/drafts", authenticateToken, upload.fields([
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
+    
     const values = [
-      date || null,
+      eventDate,
       eventTime,
       title || "",
       venue || "",
@@ -99,6 +113,8 @@ router.post("/drafts", authenticateToken, upload.fields([
       keynoteImage || invitedImage || null,
       userId
     ];
+    
+    console.log("Draft values:", values); // Debug log
 
     // Execute the query
     await db.execute(query, values);
@@ -122,6 +138,9 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       UPDATE event_drafts
@@ -131,7 +150,7 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 
@@ -201,12 +220,17 @@ router.post("/events", authenticateToken, upload.fields([
     }
 
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
+    console.log("Request body:", { title, date, startTime, endTime, venue }); // Debug
+    
     const eventTime = startTime && endTime ? `${formatTime(startTime)} - ${formatTime(endTime)}` : "";
 
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       INSERT INTO events (
@@ -216,7 +240,7 @@ router.post("/events", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 
@@ -260,6 +284,9 @@ router.put("/events/:id", authenticateToken, upload.fields([
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       UPDATE events
@@ -269,7 +296,7 @@ router.put("/events/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 

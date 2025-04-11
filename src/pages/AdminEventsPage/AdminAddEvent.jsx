@@ -1,5 +1,5 @@
 // src/pages/AdminEventsPage/AdminAddEvent.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import {
     Grid,
@@ -36,10 +36,42 @@ export default function AdminAddEvent({ currentUser }) {
     });
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
+    const [userInfo, setUserInfo] = useState(null);
 
     const [customCategories, setCustomCategories] = useState([]);
-    const defaultCategories = ["Workshop", "Seminar", "Keynote"];
+    const defaultCategories = ["Workshop", "Seminar", "Keynote", "Conference"];
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
+
+    // Fetch user info on component mount
+    useEffect(() => {
+        const verifyToken = async () => {
+            try {
+                const token = getAuthToken();
+                if (!token) return;
+                
+                const response = await fetch(`${BACKEND_URL}/api/verify-token`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Token verification failed');
+                
+                const data = await response.json();
+                console.log("User verification:", data);
+                setUserInfo(data.user);
+            } catch (err) {
+                console.error("Token verification error:", err);
+                setNotification({
+                    open: true,
+                    message: `Authentication error: ${err.message}`,
+                    severity: "error"
+                });
+            }
+        };
+        
+        verifyToken();
+    }, []);
 
     const handleCategoryChange = (e, newValue) => {
         if (newValue && !defaultCategories.includes(newValue) && !customCategories.includes(newValue)) {
@@ -97,14 +129,25 @@ export default function AdminAddEvent({ currentUser }) {
         });
     
         try {
+            const token = getAuthToken();
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            console.log("Saving draft with token", token.substring(0, 10) + "...");
+            
             const res = await fetch(`${BACKEND_URL}/api/drafts`, {
                 method: "POST",
                 body: formData,
                 headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
+                    Authorization: `Bearer ${token}`
                 }
             });
-            
             
             // Check if response is HTML (a sign of error page)
             if (res.headers.get("content-type")?.includes("text/html")) {
@@ -131,17 +174,73 @@ export default function AdminAddEvent({ currentUser }) {
     };
     
     const handlePublish = async () => {
-        const formData = new FormData();
-        Object.entries(eventData).forEach(([key, value]) => {
-            if (value) formData.append(key, value);
-        });
-    
         try {
+            // Validate form data
+            if (!eventData.title || eventData.title.trim() === "") {
+                setNotification({
+                    open: true,
+                    message: "Event title is required",
+                    severity: "warning"
+                });
+                return;
+            }
+            
+            // Ensure we have a valid date - if not, use current date
+            const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const useDate = eventData.date && eventData.date.trim() !== "" 
+                ? eventData.date 
+                : currentDate;
+                
+            const formData = new FormData();
+            
+            // Set fields manually, ensuring required fields have values
+            formData.append("title", eventData.title || "Untitled Event");
+            formData.append("date", useDate);
+            formData.append("startTime", eventData.startTime || "");
+            formData.append("endTime", eventData.endTime || "");
+            formData.append("venue", eventData.venue || "");
+            formData.append("keynoteSpeaker", eventData.keynoteSpeaker || "");
+            formData.append("invitedSpeaker", eventData.invitedSpeaker || "");
+            formData.append("theme", eventData.theme || "");
+            formData.append("category", eventData.category || "");
+            formData.append("zoomLink", eventData.zoomLink || "");
+            
+            // Add files only if they exist
+            if (eventData.keynoteImage) formData.append("keynoteImage", eventData.keynoteImage);
+            if (eventData.invitedImage) formData.append("invitedImage", eventData.invitedImage);
+            
+            console.log("Publishing event with date:", useDate);
+            
+            const token = getAuthToken();
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            // First verify the token
+            const verifyRes = await fetch(`${BACKEND_URL}/api/verify-token`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            if (!verifyRes.ok) {
+                const verifyData = await verifyRes.json();
+                throw new Error(`Token verification failed: ${verifyData.error || "Unknown error"}`);
+            }
+            
+            const verifyData = await verifyRes.json();
+            console.log("Token verification before publish:", verifyData);
+    
             const res = await fetch(`${BACKEND_URL}/api/events`, {
                 method: "POST",
                 body: formData,
                 headers: {
-                    Authorization: `Bearer ${getAuthToken()}`
+                    Authorization: `Bearer ${token}`
                 }
             });
     
@@ -211,7 +310,7 @@ export default function AdminAddEvent({ currentUser }) {
 
                 <Grid item xs={12} className="flex items-center gap-2">
                     <TextField fullWidth size="small" label="Keynote Speaker" name="keynoteSpeaker" value={eventData.keynoteSpeaker} onChange={handleChange} />
-                    <IconButton color="black">
+                    <IconButton color="inherit">
                         <Add />
                     </IconButton>
                 </Grid>
@@ -226,7 +325,7 @@ export default function AdminAddEvent({ currentUser }) {
 
                 <Grid item xs={12} className="flex items-center gap-2">
                     <TextField fullWidth size="small" label="Invited Speaker" name="invitedSpeaker" value={eventData.invitedSpeaker} onChange={handleChange} />
-                    <IconButton color="black">
+                    <IconButton color="inherit">
                         <Add />
                     </IconButton>
                 </Grid>
@@ -262,8 +361,12 @@ export default function AdminAddEvent({ currentUser }) {
                 <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
                     <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
                     <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
-                    {currentUser?.account_type === "super_admin" && (
-                        <Button variant="contained" color="error" onClick={handlePublish}>Publish</Button>
+                    {accountType === "super_admin" && (
+                        <Button variant="contained" sx={{ 
+                            backgroundColor: "#B7152F", 
+                            color: "white", 
+                            "&:hover": { backgroundColor: "#930E24" },
+                        }} onClick={handlePublish}>Publish</Button>
                     )}
                 </Grid>
             </Grid>

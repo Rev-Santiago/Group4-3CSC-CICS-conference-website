@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import {
     Grid, TextField, MenuItem, Typography, Divider,
-    IconButton, Select, Button, Box, Autocomplete,
+    IconButton, Select, Button, Box, Autocomplete, Snackbar, Alert,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 
@@ -16,12 +16,20 @@ export default function AdminEditEvent() {
         theme: "", category: "", keynoteImage: null,
         invitedImage: null, zoomLink: ""
     });
+    const [notification, setNotification] = useState({ 
+        open: false, 
+        message: "", 
+        severity: "success" 
+    });
     
     // Fetch only drafts
     const fetchDrafts = async () => {
         try {
             const token = localStorage.getItem("authToken");
-            if (!token) return;
+            if (!token) {
+                console.error("No auth token found");
+                return;
+            }
             
             const headers = { Authorization: `Bearer ${token}` };
             
@@ -40,7 +48,7 @@ export default function AdminEditEvent() {
         fetchDrafts();
     }, []);
     
-    const defaultCategories = ["Workshop", "Seminar", "Keynote"];
+    const defaultCategories = ["Workshop", "Seminar", "Keynote", "Conference"];
     const [customCategories, setCustomCategories] = useState([]);
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
 
@@ -71,6 +79,10 @@ export default function AdminEditEvent() {
     const handleFileChange = (e) => {
         const { name, files } = e.target;
         setEventData((prev) => ({ ...prev, [name]: files[0] }));
+    };
+
+    const handleCloseNotification = () => {
+        setNotification({ ...notification, open: false });
     };
 
     const handleDraftSelection = (e) => {
@@ -105,7 +117,14 @@ export default function AdminEditEvent() {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem("authToken");
-            if (!token) return;
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
             
             const headers = { 
                 Authorization: `Bearer ${token}`,
@@ -141,7 +160,12 @@ export default function AdminEditEvent() {
                 response = await axios.post("/api/drafts", formData, { headers });
             }
             
-            alert("Event saved as draft.");
+            setNotification({
+                open: true,
+                message: "Event saved as draft successfully!",
+                severity: "success"
+            });
+            
             fetchDrafts(); // Refresh the drafts list
             
             // Clear form if creating a new draft
@@ -155,14 +179,22 @@ export default function AdminEditEvent() {
             }
         } catch (err) {
             console.error("Error saving draft:", err.response?.data || err.message);
-            alert("Failed to save draft.");
+            setNotification({
+                open: true,
+                message: `Failed to save draft: ${err.response?.data?.error || err.message}`,
+                severity: "error"
+            });
         }
     };
 
     // Delete a draft
     const handleDelete = async () => {
         if (!selectedDraftId) {
-            alert("Please select a draft to delete.");
+            setNotification({
+                open: true,
+                message: "Please select a draft to delete",
+                severity: "warning"
+            });
             return;
         }
 
@@ -172,13 +204,25 @@ export default function AdminEditEvent() {
 
         try {
             const token = localStorage.getItem("authToken");
-            if (!token) return;
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
             
             const headers = { Authorization: `Bearer ${token}` };
             
             await axios.delete(`/api/drafts/${selectedDraftId}`, { headers });
             
-            alert("Draft deleted successfully.");
+            setNotification({
+                open: true,
+                message: "Draft deleted successfully!",
+                severity: "success"
+            });
+            
             fetchDrafts(); // Refresh the drafts list
             
             // Clear the form
@@ -191,15 +235,45 @@ export default function AdminEditEvent() {
             });
         } catch (err) {
             console.error("Error deleting draft:", err.response?.data || err.message);
-            alert("Failed to delete draft.");
+            setNotification({
+                open: true,
+                message: `Failed to delete draft: ${err.response?.data?.error || err.message}`,
+                severity: "error"
+            });
         }
     };
 
     // Publish final event
     const handlePublish = async () => {
         try {
+            // Validate form data
+            if (!eventData.title || eventData.title.trim() === "") {
+                setNotification({
+                    open: true,
+                    message: "Event title is required",
+                    severity: "warning"
+                });
+                return;
+            }
+            
+            // Ensure we have a valid date - if not, use current date
+            const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const useDate = eventData.date && eventData.date.trim() !== "" 
+                ? eventData.date 
+                : currentDate;
+                
             const token = localStorage.getItem("authToken");
-            if (!token) return;
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            console.log("Publishing with token:", token.substring(0, 10) + "..."); // Log partial token for debugging
+            console.log("Using date:", useDate); // Log the date being used
             
             const headers = { 
                 Authorization: `Bearer ${token}`,
@@ -207,8 +281,8 @@ export default function AdminEditEvent() {
             };
     
             const formData = new FormData();
-            formData.append("title", eventData.title || "");
-            formData.append("date", eventData.date || "");
+            formData.append("title", eventData.title || "Untitled Event");
+            formData.append("date", useDate);
             formData.append("startTime", eventData.startTime || "");
             formData.append("endTime", eventData.endTime || "");
             formData.append("venue", eventData.venue || "");
@@ -226,10 +300,18 @@ export default function AdminEditEvent() {
                 formData.append("invitedImage", eventData.invitedImage);
             }
     
+            // Verify token before publishing
+            const verifyResponse = await axios.get("/api/verify-token", { headers });
+            console.log("Token verification:", verifyResponse.data);
+            
             // Always create a new published event
             const response = await axios.post("/api/events", formData, { headers });
             
-            alert("Event published successfully!");
+            setNotification({
+                open: true,
+                message: "Event published successfully!",
+                severity: "success"
+            });
             
             // Delete the draft after publishing (as it's no longer a draft)
             if (selectedDraftId) {
@@ -247,8 +329,12 @@ export default function AdminEditEvent() {
             });
             
         } catch (err) {
-            console.error("Error publishing event:", err.response?.data || err.message);
-            alert("Failed to publish event: " + (err.response?.data?.error || err.message));
+            console.error("Error publishing event:", err);
+            setNotification({
+                open: true,
+                message: `Failed to publish event: ${err.response?.data?.error || err.message}`,
+                severity: "error"
+            });
         }
     };
 
@@ -411,6 +497,22 @@ export default function AdminEditEvent() {
                     )}
                 </Grid>
             </Grid>
+            
+            {/* Notification Snackbar */}
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
+                onClose={handleCloseNotification}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={handleCloseNotification} 
+                    severity={notification.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {notification.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }
