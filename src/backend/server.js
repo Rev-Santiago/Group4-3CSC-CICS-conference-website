@@ -309,18 +309,24 @@ app.get("/api/schedule", async (req, res) => {
 });
 
 
-// 📅 Admin Event Preview API
+// 📅 Admin Event Preview API (corrected)
 app.get("/api/admin_event_preview", async (req, res) => {
     try {
-        // Query to fetch events from the database
         const query = `
-            SELECT title, event_date AS date, time_slot AS time, venue, speakers, theme, category
+            SELECT 
+                program AS title,
+                event_date AS date,
+                time_slot AS time,
+                venue,
+                speaker AS speakers,
+                theme,
+                category
             FROM events
-            ORDER BY event_date DESC;  -- Adjust the query to match your data structure
+            ORDER BY event_date DESC;
         `;
+
         const [rows] = await db.query(query);
 
-        // Transform the result into the required format
         const eventList = rows.map(event => ({
             title: event.title,
             date: event.date,
@@ -331,14 +337,13 @@ app.get("/api/admin_event_preview", async (req, res) => {
             category: event.category,
         }));
 
-        // Respond with the formatted events
         res.json(eventList);
-
     } catch (error) {
         console.error("Error fetching event preview:", error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
 // Add this code to your server.js file, before the final app.listen line:
 
 // 🧪 Debug routes

@@ -18,14 +18,15 @@ const EMAIL_SECURE = process.env.EMAIL_SECURE === "true";
 
 // Configure email transporter (using a testing service here - use your own SMTP in production)
 const transporter = nodemailer.createTransport({
-    host: EMAIL_HOST,
-    port: EMAIL_PORT,
-    secure: EMAIL_SECURE,
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_SECURE === "true",
     auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
+
 
 // Create reset token and store in database
 router.post("/request-password-reset", async (req, res) => {
