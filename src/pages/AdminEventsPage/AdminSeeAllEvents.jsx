@@ -96,54 +96,74 @@ const AdminSeeAllEvent = () => {
     }
   };
 
-  const handleDelete = async () => {
-    handleMenuClose();
-    
-    if (!selectedEvent) return;
-    
-    // Check if the ID is a numeric ID (not a composite/artificial ID)
-    if (!selectedEvent.id || isNaN(parseInt(selectedEvent.id))) {
-      setNotification({
-        open: true,
-        message: "This event cannot be deleted directly. Please use the edit interface.",
-        severity: "warning"
-      });
-      return;
-    }
+// Updated handleDelete function for AdminSeeAllEvents.jsx
 
-    try {
+const handleDelete = async () => {
+  handleMenuClose();
+  
+  if (!selectedEvent) return;
+  
+  // Confirm before deletion
+  if (!window.confirm("Are you sure you want to delete this event?")) {
+      return;
+  }
+  
+  try {
       const token = localStorage.getItem("authToken");
       
-      // Confirm before deletion
-      if (!window.confirm("Are you sure you want to delete this event?")) {
-        return;
+      if (!token) {
+          setNotification({
+              open: true,
+              message: "Authentication error: No token found",
+              severity: "error"
+          });
+          return;
       }
       
+      // Set loading state
+      setLoading(true);
+      
+      // We need to use the proper ID to delete the event
+      // This is the issue - we're missing the ID in some cases
+      // Let's improve the code to handle both direct ID and composite ID cases
+      
+      if (!selectedEvent.id) {
+          setNotification({
+              open: true,
+              message: "Cannot delete this event - missing event ID",
+              severity: "error"
+          });
+          return;
+      }
+      
+      // Make the delete request
       await axios.delete(`${BACKEND_URL}/api/events/${selectedEvent.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` }
       });
 
       // Remove from list and update UI
       setEvents(prevEvents => prevEvents.filter(event => event.id !== selectedEvent.id));
       
       setNotification({
-        open: true,
-        message: "Event deleted successfully",
-        severity: "success"
+          open: true,
+          message: "Event deleted successfully",
+          severity: "success"
       });
       
       // Refresh the list after deletion
       fetchEvents();
       
-    } catch (error) {
+  } catch (error) {
       console.error("Error deleting event:", error);
       setNotification({
-        open: true,
-        message: error.response?.data?.error || "Failed to delete event. Check console for details.",
-        severity: "error"
+          open: true,
+          message: error.response?.data?.error || "Failed to delete event. Check console for details.",
+          severity: "error"
       });
-    }
-  };
+  } finally {
+      setLoading(false);
+  }
+};
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);

@@ -249,50 +249,64 @@ export default function AdminEditPublication() {
     };
     
     // Delete a draft
-    const handleDelete = async () => {
-        if (!selectedDraftId) {
+// Updated handleDelete function for AdminEditPublication.jsx
+
+const handleDelete = async () => {
+    if (!selectedDraftId) {
+        setNotification({
+            open: true,
+            message: "Please select a draft to delete",
+            severity: "warning"
+        });
+        return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this draft?")) {
+        return;
+    }
+    
+    setLoading(true);
+    try {
+        const token = getAuthToken();
+        if (!token) {
             setNotification({
                 open: true,
-                message: "Please select a draft to delete",
-                severity: "warning"
+                message: "Authentication error: No token found",
+                severity: "error"
             });
             return;
         }
-
-        if (!window.confirm("Are you sure you want to delete this draft?")) {
-            return;
-        }
-
+        
+        // Use the correct URL format for the delete endpoint
+        const response = await axios.delete(`${baseUrl}/api/publications/drafts/${selectedDraftId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
         setNotification({
             open: true,
-            message: "To enable draft deletion, a backend API endpoint needs to be created. Currently, this functionality is not available.",
-            severity: "info"
+            message: "Draft deleted successfully!",
+            severity: "success"
         });
         
-        /* 
-        NOTE: Your backend doesn't have a dedicated API endpoint to delete drafts by ID.
-        You would need to add a route like:
-        
-        router.delete("/publications/drafts/:id", authenticateToken, async (req, res) => {
-            try {
-                const draftId = req.params.id;
-                await db.execute(
-                    `DELETE FROM publication_drafts WHERE id = ?`,
-                    [draftId]
-                );
-                res.json({ message: "Draft deleted successfully" });
-            } catch (error) {
-                console.error("Error deleting draft:", error);
-                res.status(500).json({ error: "Internal server error" });
-            }
-        });
-        
-        For now, we'll handle this gracefully by showing a notification.
-        */
-
-        // Reset selection but keep the form data in case the user wants to try again
+        // Refresh drafts and reset selection
+        fetchDrafts();
         setSelectedDraftId("");
-    };
+        setPublicationData({
+            title: "",
+            date: "",
+            link: ""
+        });
+    } catch (err) {
+        console.error("Error deleting draft:", err);
+        setNotification({
+            open: true,
+            message: err.response?.data?.error || "Failed to delete draft",
+            severity: "error"
+        });
+    } finally {
+        setLoading(false);
+    }
+};
     
     const handleCloseNotification = () => {
         setNotification(prev => ({ ...prev, open: false }));
