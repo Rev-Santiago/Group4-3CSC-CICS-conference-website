@@ -1,5 +1,5 @@
 import React from "react";
-import cicsLogoSmall from '../../assets/cics-seal.png'
+import logoPlaceholder from '../../assets/logo-placeholder.jpg'
 
 const partners = [
     {
@@ -49,7 +49,7 @@ const PartnersPage = () => {
                     {/* Logo */}
                     <div className="w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 bg-gray-100 p-2 rounded-md shadow-md flex items-center justify-center">
                         <img
-                            src="https://shop.raceya.fit/wp-content/uploads/2020/11/logo-placeholder.jpg"
+                            src={logoPlaceholder}
                             alt={`${partner.name} Logo`}
                             className="max-w-full max-h-full object-contain"
                         />
