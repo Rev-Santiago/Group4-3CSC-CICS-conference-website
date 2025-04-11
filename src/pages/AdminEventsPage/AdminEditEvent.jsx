@@ -11,10 +11,16 @@ export default function AdminEditEvent() {
     const [drafts, setDrafts] = useState([]);
     const [selectedDraftId, setSelectedDraftId] = useState("");
     const [eventData, setEventData] = useState({
-        title: "", date: "", startTime: "", endTime: "",
-        venue: "", keynoteSpeaker: "", invitedSpeaker: "",
-        theme: "", category: "", keynoteImage: null,
-        invitedImage: null, zoomLink: ""
+        title: "", 
+        date: "", 
+        startTime: "", 
+        endTime: "",
+        venue: "", 
+        keynoteSpeakers: [{ name: "" }],
+        invitedSpeakers: [{ name: "" }],
+        theme: "", 
+        category: "", 
+        zoomLink: ""
     });
     const [notification, setNotification] = useState({ 
         open: false, 
@@ -76,9 +82,50 @@ export default function AdminEditEvent() {
         setEventData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e) => {
-        const { name, files } = e.target;
-        setEventData((prev) => ({ ...prev, [name]: files[0] }));
+    // Handle keynote speaker name change
+    const handleKeynoteSpeakerChange = (index, value) => {
+        const updatedSpeakers = [...eventData.keynoteSpeakers];
+        updatedSpeakers[index] = { ...updatedSpeakers[index], name: value };
+        setEventData({ ...eventData, keynoteSpeakers: updatedSpeakers });
+    };
+
+    // Handle invited speaker name change
+    const handleInvitedSpeakerChange = (index, value) => {
+        const updatedSpeakers = [...eventData.invitedSpeakers];
+        updatedSpeakers[index] = { ...updatedSpeakers[index], name: value };
+        setEventData({ ...eventData, invitedSpeakers: updatedSpeakers });
+    };
+
+    // Handle adding keynote speaker
+    const handleAddKeynoteSpeaker = () => {
+        setEventData({
+            ...eventData,
+            keynoteSpeakers: [...eventData.keynoteSpeakers, { name: "" }]
+        });
+    };
+
+    // Handle adding invited speaker
+    const handleAddInvitedSpeaker = () => {
+        setEventData({
+            ...eventData,
+            invitedSpeakers: [...eventData.invitedSpeakers, { name: "" }]
+        });
+    };
+
+    // Handle removing keynote speaker
+    const handleRemoveKeynoteSpeaker = (index) => {
+        if (eventData.keynoteSpeakers.length > 1) {
+            const updatedSpeakers = eventData.keynoteSpeakers.filter((_, i) => i !== index);
+            setEventData({ ...eventData, keynoteSpeakers: updatedSpeakers });
+        }
+    };
+
+    // Handle removing invited speaker
+    const handleRemoveInvitedSpeaker = (index) => {
+        if (eventData.invitedSpeakers.length > 1) {
+            const updatedSpeakers = eventData.invitedSpeakers.filter((_, i) => i !== index);
+            setEventData({ ...eventData, invitedSpeakers: updatedSpeakers });
+        }
     };
 
     const handleCloseNotification = () => {
@@ -95,6 +142,32 @@ export default function AdminEditEvent() {
         if (selected) {
             const [start, end] = (selected.time_slot || "").split(" - ");
 
+            // Parse speaker data if available
+            let keynoteSpeakers = [{ name: "" }];
+            let invitedSpeakers = [{ name: "" }];
+
+            if (selected.speaker) {
+                const speakers = selected.speaker.split(',').map(s => s.trim());
+                
+                if (speakers.length > 0) {
+                    keynoteSpeakers = speakers
+                        .filter((_, i) => i === 0 || i % 2 === 0)
+                        .map(name => ({ name }));
+                    
+                    invitedSpeakers = speakers
+                        .filter((_, i) => i % 2 === 1)
+                        .map(name => ({ name }));
+                }
+                
+                // Ensure at least one empty speaker in each array
+                if (keynoteSpeakers.length === 0) {
+                    keynoteSpeakers = [{ name: "" }];
+                }
+                if (invitedSpeakers.length === 0) {
+                    invitedSpeakers = [{ name: "" }];
+                }
+            }
+
             // Populate fields based on the selected draft
             setEventData({
                 title: selected.program || "",
@@ -102,12 +175,10 @@ export default function AdminEditEvent() {
                 startTime: start ? convertTo24Hour(start) : "",
                 endTime: end ? convertTo24Hour(end) : "",
                 venue: selected.venue || "",
-                keynoteSpeaker: selected.speaker?.split(",")[0]?.trim() || "",
-                invitedSpeaker: selected.speaker?.split(",")[1]?.trim() || "",
+                keynoteSpeakers,
+                invitedSpeakers,
                 theme: selected.theme || "",
                 category: selected.category || "",
-                keynoteImage: selected.photo_url || null,
-                invitedImage: null,
                 zoomLink: selected.online_room_link || ""
             });
         }
@@ -137,19 +208,20 @@ export default function AdminEditEvent() {
             formData.append("startTime", eventData.startTime);
             formData.append("endTime", eventData.endTime);
             formData.append("venue", eventData.venue);
-            formData.append("keynoteSpeaker", eventData.keynoteSpeaker);
-            formData.append("invitedSpeaker", eventData.invitedSpeaker);
             formData.append("theme", eventData.theme);
             formData.append("category", eventData.category);
             formData.append("zoomLink", eventData.zoomLink || "");
             
-            if (eventData.keynoteImage instanceof File) {
-                formData.append("keynoteImage", eventData.keynoteImage);
-            }
+            // Add speakers data
+            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
+            eventData.keynoteSpeakers.forEach((speaker, index) => {
+                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
+            });
             
-            if (eventData.invitedImage instanceof File) {
-                formData.append("invitedImage", eventData.invitedImage);
-            }
+            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
+            eventData.invitedSpeakers.forEach((speaker, index) => {
+                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
+            });
 
             let response;
             // If editing an existing draft
@@ -171,10 +243,16 @@ export default function AdminEditEvent() {
             // Clear form if creating a new draft
             if (!selectedDraftId) {
                 setEventData({
-                    title: "", date: "", startTime: "", endTime: "",
-                    venue: "", keynoteSpeaker: "", invitedSpeaker: "",
-                    theme: "", category: "", keynoteImage: null,
-                    invitedImage: null, zoomLink: ""
+                    title: "", 
+                    date: "", 
+                    startTime: "", 
+                    endTime: "",
+                    venue: "", 
+                    keynoteSpeakers: [{ name: "" }],
+                    invitedSpeakers: [{ name: "" }],
+                    theme: "", 
+                    category: "", 
+                    zoomLink: ""
                 });
             }
         } catch (err) {
@@ -228,10 +306,16 @@ export default function AdminEditEvent() {
             // Clear the form
             setSelectedDraftId("");
             setEventData({
-                title: "", date: "", startTime: "", endTime: "",
-                venue: "", keynoteSpeaker: "", invitedSpeaker: "",
-                theme: "", category: "", keynoteImage: null,
-                invitedImage: null, zoomLink: ""
+                title: "", 
+                date: "", 
+                startTime: "", 
+                endTime: "",
+                venue: "", 
+                keynoteSpeakers: [{ name: "" }],
+                invitedSpeakers: [{ name: "" }],
+                theme: "", 
+                category: "", 
+                zoomLink: ""
             });
         } catch (err) {
             console.error("Error deleting draft:", err.response?.data || err.message);
@@ -286,19 +370,20 @@ export default function AdminEditEvent() {
             formData.append("startTime", eventData.startTime || "");
             formData.append("endTime", eventData.endTime || "");
             formData.append("venue", eventData.venue || "");
-            formData.append("keynoteSpeaker", eventData.keynoteSpeaker || "");
-            formData.append("invitedSpeaker", eventData.invitedSpeaker || "");
             formData.append("theme", eventData.theme || "");
             formData.append("category", eventData.category || "");
             formData.append("zoomLink", eventData.zoomLink || "");
             
-            if (eventData.keynoteImage instanceof File) {
-                formData.append("keynoteImage", eventData.keynoteImage);
-            }
+            // Add speakers data
+            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
+            eventData.keynoteSpeakers.forEach((speaker, index) => {
+                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
+            });
             
-            if (eventData.invitedImage instanceof File) {
-                formData.append("invitedImage", eventData.invitedImage);
-            }
+            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
+            eventData.invitedSpeakers.forEach((speaker, index) => {
+                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
+            });
     
             // Verify token before publishing
             const verifyResponse = await axios.get("/api/verify-token", { headers });
@@ -322,10 +407,16 @@ export default function AdminEditEvent() {
             fetchDrafts();
             setSelectedDraftId("");
             setEventData({
-                title: "", date: "", startTime: "", endTime: "",
-                venue: "", keynoteSpeaker: "", invitedSpeaker: "",
-                theme: "", category: "", keynoteImage: null,
-                invitedImage: null, zoomLink: ""
+                title: "", 
+                date: "", 
+                startTime: "", 
+                endTime: "",
+                venue: "", 
+                keynoteSpeakers: [{ name: "" }],
+                invitedSpeakers: [{ name: "" }],
+                theme: "", 
+                category: "", 
+                zoomLink: ""
             });
             
         } catch (err) {
@@ -407,36 +498,78 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Speaker(s):</Typography>
+                    <Typography variant="subtitle1">Keynote Speaker(s):</Typography>
                 </Grid>
 
-                <Grid item xs={12} className="flex items-center gap-2">
-                    <TextField fullWidth size="small" label="Keynote Speaker" name="keynoteSpeaker" variant="outlined" value={eventData.keynoteSpeaker} onChange={handleChange} />
-                    <IconButton><Add /></IconButton>
-                </Grid>
+                {eventData.keynoteSpeakers.map((speaker, index) => (
+                    <Grid container item xs={12} key={`keynote-${index}`} spacing={2}>
+                        <Grid item xs={10}>
+                            <TextField 
+                                fullWidth 
+                                size="small" 
+                                label={`Keynote Speaker ${index + 1}`} 
+                                variant="outlined" 
+                                value={speaker.name} 
+                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)} 
+                            />
+                        </Grid>
+                        <Grid item xs={2} className="flex items-center">
+                            <IconButton 
+                                color="primary" 
+                                onClick={handleAddKeynoteSpeaker}
+                                title="Add another keynote speaker"
+                            >
+                                <Add />
+                            </IconButton>
+                            {eventData.keynoteSpeakers.length > 1 && (
+                                <IconButton 
+                                    color="error" 
+                                    onClick={() => handleRemoveKeynoteSpeaker(index)}
+                                    title="Remove this keynote speaker"
+                                >
+                                    <Delete />
+                                </IconButton>
+                            )}
+                        </Grid>
+                    </Grid>
+                ))}
+
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Upload Keynote Image" type="file" name="keynoteImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
-                    {eventData.keynoteImage && typeof eventData.keynoteImage === 'string' && (
-                        <Typography variant="body2">Current image: {eventData.keynoteImage}</Typography>
-                    )}
-                    {eventData.keynoteImage instanceof File && (
-                        <Typography variant="body2">New image: {eventData.keynoteImage.name}</Typography>
-                    )}
+                    <Typography variant="subtitle1">Invited Speaker(s):</Typography>
                 </Grid>
 
-                <Grid item xs={12} className="flex items-center gap-2">
-                    <TextField fullWidth size="small" label="Invited Speaker" name="invitedSpeaker" variant="outlined" value={eventData.invitedSpeaker} onChange={handleChange} />
-                    <IconButton><Add /></IconButton>
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Upload Invited Image" type="file" name="invitedImage" onChange={handleFileChange} InputLabelProps={{ shrink: true }} />
-                    {eventData.invitedImage && typeof eventData.invitedImage === 'string' && (
-                        <Typography variant="body2">Current image: {eventData.invitedImage}</Typography>
-                    )}
-                    {eventData.invitedImage instanceof File && (
-                        <Typography variant="body2">New image: {eventData.invitedImage.name}</Typography>
-                    )}
-                </Grid>
+                {eventData.invitedSpeakers.map((speaker, index) => (
+                    <Grid container item xs={12} key={`invited-${index}`} spacing={2}>
+                        <Grid item xs={10}>
+                            <TextField 
+                                fullWidth 
+                                size="small" 
+                                label={`Invited Speaker ${index + 1}`} 
+                                variant="outlined" 
+                                value={speaker.name} 
+                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)} 
+                            />
+                        </Grid>
+                        <Grid item xs={2} className="flex items-center">
+                            <IconButton 
+                                color="primary" 
+                                onClick={handleAddInvitedSpeaker}
+                                title="Add another invited speaker"
+                            >
+                                <Add />
+                            </IconButton>
+                            {eventData.invitedSpeakers.length > 1 && (
+                                <IconButton 
+                                    color="error" 
+                                    onClick={() => handleRemoveInvitedSpeaker(index)}
+                                    title="Remove this invited speaker"
+                                >
+                                    <Delete />
+                                </IconButton>
+                            )}
+                        </Grid>
+                    </Grid>
+                ))}
 
                 <Grid item xs={12}>
                     <Typography variant="subtitle1">Event Classification:</Typography>
