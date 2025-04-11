@@ -250,3 +250,4 @@ export default function AdminAddPublication({ currentUser }) {
             </Snackbar>
         </Box>
     );
+}
