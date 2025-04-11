@@ -8,10 +8,15 @@ const PublicationPage = () => {
 
     const fetchPublications = async (page = 1) => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/publications?page=${page}&limit=5`);
-            setPublications(response.data.data);
-            setTotalPages(response.data.totalPages);
-            setCurrentPage(response.data.currentPage);
+            // Make sure to use the environment variable for the backend URL
+            const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+            const response = await fetch(`${BACKEND_URL}/api/publications?page=${page}&limit=5`);
+
+            const result = await response.json();
+
+            setPublications(result.data);
+            setTotalPages(result.totalPages);
+            setCurrentPage(result.currentPage);
         } catch (error) {
             console.error("Error fetching publications:", error);
         }

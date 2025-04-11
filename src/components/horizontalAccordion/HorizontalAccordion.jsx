@@ -15,7 +15,9 @@ import {
 import { Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
 
 // Constants
-const API_URL = "http://localhost:5000/api/publications";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const API_URL = `${BACKEND_URL}/api/publications`;
+
 const TRACKS = [
     {
         id: 1,

@@ -23,7 +23,7 @@ import WebIcon from '@mui/icons-material/Web';
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import cicsSeal from "../../assets/cics-seal.png";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../App";
 import Tooltip from "@mui/material/Tooltip";
 import Divider from "@mui/material/Divider";
@@ -124,10 +124,19 @@ export default function MiniDrawer({ children }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
   const { handleLogout } = useContext(AuthContext);
+  const [userRole, setUserRole] = useState('');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
   const navigate = useNavigate();
+
+  // Check user role on component mount
+  useEffect(() => {
+    const accountType = localStorage.getItem('accountType');
+    setUserRole(accountType);
+    setIsSuperAdmin(accountType === 'super_admin');
+  }, []);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -233,26 +242,11 @@ export default function MiniDrawer({ children }) {
               </Typography>
             </>
           )}
-          <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
-            {open ? (
-              <ListItemButton
-                onClick={() => navigate("/admin-dashboard/user-management")}
-                sx={{
-                  mx: 1,
-                  "&:hover": {
-                    backgroundColor: "#B7152F",
-                    color: "white",
-                    borderRadius: "10px",
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <GroupIcon />
-                </ListItemIcon>
-                <ListItemText primary="Users" />
-              </ListItemButton>
-            ) : (
-              <Tooltip title="Users" placement="right">
+          
+          {/* Show Users option only for super_admin users */}
+          {isSuperAdmin && (
+            <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
+              {open ? (
                 <ListItemButton
                   onClick={() => navigate("/admin-dashboard/user-management")}
                   sx={{
@@ -267,10 +261,29 @@ export default function MiniDrawer({ children }) {
                   <ListItemIcon>
                     <GroupIcon />
                   </ListItemIcon>
+                  <ListItemText primary="Users" />
                 </ListItemButton>
-              </Tooltip>
-            )}
-          </ListItem>
+              ) : (
+                <Tooltip title="Users" placement="right">
+                  <ListItemButton
+                    onClick={() => navigate("/admin-dashboard/user-management")}
+                    sx={{
+                      mx: 1,
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <GroupIcon />
+                    </ListItemIcon>
+                  </ListItemButton>
+                </Tooltip>
+              )}
+            </ListItem>
+          )}
 
           <ListItem disablePadding sx={{ display: "block" }}>
             {open ? (

@@ -38,13 +38,30 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
+  console.log("Auth header:", authHeader); // Debug log
+  console.log("Token:", token ? "Present (not shown for security)" : "Missing"); // Debug log
+
   if (!token) return res.status(403).json({ error: "Access denied." });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Invalid token." });
+    if (err) {
+      console.log("JWT verification error:", err); // Debug log
+      return res.status(403).json({ error: "Invalid token." });
+    }
+    console.log("Decoded user from token:", user); // Debug log
     req.user = user;
     next();
   });
+};
+
+// Helper function to validate date format
+const isValidDate = (dateString) => {
+  if (!dateString) return false;
+  if (dateString.trim() === "") return false;
+  
+  // Check if it's a valid date
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
 };
 
 // Utility: Format time to AM/PM
@@ -71,6 +88,7 @@ router.post("/drafts", authenticateToken, upload.fields([
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const userId = req.user.id;
+    console.log("Creating draft for user ID:", userId); // Debug log
 
     const query = `
       INSERT INTO event_drafts (
@@ -79,8 +97,12 @@ router.post("/drafts", authenticateToken, upload.fields([
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
+    
     const values = [
-      date || null,
+      eventDate,
       eventTime,
       title || "",
       venue || "",
@@ -91,6 +113,8 @@ router.post("/drafts", authenticateToken, upload.fields([
       keynoteImage || invitedImage || null,
       userId
     ];
+    
+    console.log("Draft values:", values); // Debug log
 
     // Execute the query
     await db.execute(query, values);
@@ -114,6 +138,9 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       UPDATE event_drafts
@@ -123,7 +150,7 @@ router.put("/drafts/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 
@@ -180,20 +207,30 @@ router.post("/events", authenticateToken, upload.fields([
   { name: "invitedImage", maxCount: 1 },
 ]), async (req, res) => {
   try {
+    console.log("User from request:", req.user); // Debug log
     const userId = req.user.id;
+    console.log("Publishing event for user ID:", userId); // Debug log
+    
+    // Verify user has super_admin rights
     const [userRows] = await db.query("SELECT account_type FROM users WHERE id = ?", [userId]);
+    console.log("User account info:", userRows[0]); // Debug log
 
     if (!userRows.length || userRows[0].account_type !== 'super_admin') {
       return res.status(403).json({ error: "Only super_admin can publish events" });
     }
 
     const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
+    console.log("Request body:", { title, date, startTime, endTime, venue }); // Debug
+    
     const eventTime = startTime && endTime ? `${formatTime(startTime)} - ${formatTime(endTime)}` : "";
 
     const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       INSERT INTO events (
@@ -203,7 +240,7 @@ router.post("/events", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 
@@ -214,6 +251,9 @@ router.post("/events", authenticateToken, upload.fields([
       keynoteImage || invitedImage || null,
       userId
     ];
+
+    console.log("SQL Query:", query); // Debug log
+    console.log("SQL Values:", values); // Debug log
 
     await db.execute(query, values);
     res.status(200).json({ message: "Event published successfully." });
@@ -244,6 +284,9 @@ router.put("/events/:id", authenticateToken, upload.fields([
     const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
     const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
 
     const query = `
       UPDATE events
@@ -253,7 +296,7 @@ router.put("/events/:id", authenticateToken, upload.fields([
     `;
 
     const values = [
-      date || null, 
+      eventDate, 
       eventTime, 
       title || "", 
       venue || "", 
@@ -301,6 +344,16 @@ router.delete("/events/:id", authenticateToken, async (req, res) => {
     console.error("Error deleting event:", err);
     res.status(500).json({ error: "Failed to delete event." });
   }
+});
+
+// Debug endpoint to verify tokens
+router.get("/verify-token", authenticateToken, (req, res) => {
+  res.json({ 
+    message: "Token is valid", 
+    user: req.user,
+    userId: req.user.id,
+    timestamp: new Date().toISOString()
+  });
 });
 
 export default router;

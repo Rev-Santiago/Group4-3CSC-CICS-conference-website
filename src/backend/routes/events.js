@@ -36,8 +36,7 @@ router.post(
         startTime,
         endTime,
         venue,
-        keynoteSpeaker,
-        invitedSpeaker,
+        photo_url,
         theme,
         category,
         zoomLink,
@@ -71,19 +70,21 @@ router.post(
         INSERT INTO events (
           event_date, time_slot, program, venue, online_room_link,
           speaker, theme, category, photo_url
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-
+      
       const values = [
-        date,
+        eventDate,
         eventTime,
-        title,
-        venue,
+        title || "",
+        venue || "",
         zoomLink || "",
-        combinedSpeakers,
-        theme,
-        category,
-        photoUrl,
+        speaker,
+        theme || "",
+        category || "",
+        keynoteImage,
+        invitedImage,
+        userId
       ];
 
       await db.execute(query, values);

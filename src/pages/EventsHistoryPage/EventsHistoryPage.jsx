@@ -6,6 +6,7 @@ const EventsHistoryPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const limit = 1;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     fetchEvents();
@@ -13,7 +14,7 @@ const EventsHistoryPage = () => {
 
   const fetchEvents = () => {
     setIsLoading(true);
-    fetch(`http://localhost:5000/api/events-history?page=${currentPage}&limit=${limit}`)
+     fetch(`${BACKEND_URL}/api/events-history?page=${currentPage}&limit=${limit}`)
       .then((res) => res.json())
       .then((data) => {
         setEvents(data.data || []);

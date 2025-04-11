@@ -273,38 +273,42 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
-            SELECT event_date, time_slot, program, venue, online_room_link, speaker, category
+            SELECT event_date, time_slot, program, venue, online_room_link  
             FROM events 
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
         `;
         const [rows] = await db.execute(query);
 
-        // Group events by date
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program, venue, online_room_link, speaker, category } = event;
-            const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
-            if (!acc[dateKey]) {
-                acc[dateKey] = { date: dateKey, events: [] };
-            }
-            acc[dateKey].events.push({
-                time: time_slot,
-                program,
-                venue,
-                online_room_link,
-                speaker,
-                category
-            });
+            try {
+                const { event_date, time_slot, program, venue, online_room_link, category } = event;
+                const dateKey = event_date.toISOString().split("T")[0];
 
+                if (!acc[dateKey]) {
+                    acc[dateKey] = { date: dateKey, events: [] };
+                }
+
+                acc[dateKey].events.push({
+                    time: time_slot,
+                    program: program || "Untitled",
+                    venue: venue || "TBA",
+                    online_room_link: online_room_link || "",
+                    category: category || ""
+                });
+            } catch (innerErr) {
+                console.error("Error processing event:", event, innerErr);
+            }
             return acc;
         }, {});
 
         res.json({ data: Object.values(groupedData) });
     } catch (error) {
-        console.error("Error fetching schedule:", error);
+        console.error("🔥 Schedule route error:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 // 📅 Admin Event Preview API
 app.get("/api/admin_event_preview", async (req, res) => {
@@ -335,6 +339,39 @@ app.get("/api/admin_event_preview", async (req, res) => {
         console.error("Error fetching event preview:", error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
+});
+// Add this code to your server.js file, before the final app.listen line:
+
+// 🧪 Debug routes
+app.get("/api/debug/token", authenticateToken, (req, res) => {
+    try {
+        res.json({
+            message: "Token debug information",
+            user: req.user,
+            userId: req.user.id,
+            tokenPresent: !!req.headers.authorization,
+            headers: {
+                authorization: req.headers.authorization ? "Present (not shown for security)" : "Missing",
+                contentType: req.headers["content-type"],
+            },
+            serverTime: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({
+            error: "Error in debug endpoint",
+            message: err.message,
+            stack: process.env.NODE_ENV === "production" ? null : err.stack
+        });
+    }
+});
+
+app.get("/api/debug/env", (req, res) => {
+    res.json({
+        environment: process.env.NODE_ENV || "not set",
+        jwtSecret: process.env.JWT_SECRET ? "Set (not shown)" : "Not set",
+        serverVersion: "1.0.0",
+        time: new Date().toISOString()
+    });
 });
 
 app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
