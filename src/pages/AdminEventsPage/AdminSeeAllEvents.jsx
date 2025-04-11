@@ -1,98 +1,141 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, Menu, MenuItem
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, IconButton, Menu, MenuItem, TextField, Box, Pagination, Typography
 } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 
-const eventList = ["Event A", "Event B", "Event C"];
-const events = [
-    {
-        title: "Tech Conference 2024",
-        date: "2024-07-15",
-        time: "10:00 AM",
-        venue: "Auditorium",
-        speakers: "John Doe, Jane Smith",
-        theme: "Future of AI",
-        category: "Conference"
-    },
-    {
-        title: "Business Workshop",
-        date: "2024-08-20",
-        time: "2:00 PM",
-        venue: "Meeting Hall",
-        speakers: "Alice Johnson",
-        theme: "Leadership & Growth",
-        category: "Workshop"
-    }
-];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 const AdminSeeAllEvent = () => {
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [selectedEvent, setSelectedEvent] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 6;
 
-    const handleMenuOpen = (event, eventData) => {
-        setAnchorEl(event.currentTarget);
-        setSelectedEvent(eventData);
+  const handleMenuOpen = (event, eventData) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedEvent(eventData);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedEvent(null);
+  };
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) return;
+
+        const response = await axios.get(`${BACKEND_URL}/api/admin_event_preview`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setEvents(response.data || []);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
     };
 
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setSelectedEvent(null);
-    };
+    fetchEvents();
+  }, []);
 
-    return (
-        <TableContainer component={Paper} sx={{
-            mt: 3,
-            width: "100%",
-            overflowX: "auto",
-            maxWidth: "100vw"
-        }}>
-            <Table sx={{ minWidth: 800 }}>
-                <TableHead>
-                    <TableRow sx={{ backgroundColor: "#B7152F" }}>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Title</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Date</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Time</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Venue</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Speakers</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Theme</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid #000" }}>Category</TableCell>
-                        <TableCell sx={{ color: "white", fontWeight: "bold" }}></TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {events.map((event, index) => (
-                        <TableRow key={index}>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.title}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.date}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.time}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.venue}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.speakers}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.theme}</TableCell>
-                            <TableCell sx={{ borderRight: "1px solid #000" }}>{event.category}</TableCell>
-                            <TableCell>
-                                <IconButton onClick={(e) => handleMenuOpen(e, event)} size="small">
-                                    <MoreVert />
-                                </IconButton>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-            {/* MoreVert Dropdown Menu */}
-            <Menu PaperProps={{
-                sx: { boxShadow: 3 },
-            }}
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-            >
-                <MenuItem onClick={() => { console.log("Edit", selectedEvent); handleMenuClose(); }}>Edit</MenuItem>
-                <MenuItem onClick={() => { console.log("Delete", selectedEvent); handleMenuClose(); }}>Delete</MenuItem>
-            </Menu>
-        </TableContainer>
-    );
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(search.toLowerCase()) ||
+    event.date?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const paginatedEvents = filteredEvents.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
+  return (
+    <Box mt={3}>
+      <Typography variant="h6" mb={2}>All Events Overview</Typography>
+
+      <TextField
+        fullWidth
+        placeholder="Search by title or date..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1); // reset to first page
+        }}
+        sx={{ mb: 2 }}
+      />
+
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 1000 }}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#B7152F" }}>
+              {["Title", "Date", "Time", "Venue", "Speakers", "Theme", "Category", ""].map((head, idx) => (
+                <TableCell
+                  key={idx}
+                  sx={{ color: "white", fontWeight: "bold", borderRight: idx !== 7 ? "1px solid #eee" : "" }}
+                >
+                  {head}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {paginatedEvents.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center">No events found</TableCell>
+              </TableRow>
+            ) : (
+              paginatedEvents.map((event, index) => (
+                <TableRow key={index}>
+                  <TableCell>{event.title}</TableCell>
+                  <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{event.time}</TableCell>
+                  <TableCell>{event.venue}</TableCell>
+                  <TableCell>{event.speakers}</TableCell>
+                  <TableCell>{event.theme}</TableCell>
+                  <TableCell>{event.category}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={(e) => handleMenuOpen(e, event)} size="small">
+                      <MoreVert />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Pagination */}
+      {filteredEvents.length > rowsPerPage && (
+        <Box mt={2} display="flex" justifyContent="center">
+          <Pagination
+            count={Math.ceil(filteredEvents.length / rowsPerPage)}
+            page={page}
+            onChange={(e, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
+
+      {/* MoreVert Dropdown Menu */}
+      <Menu
+        PaperProps={{ sx: { boxShadow: 3 } }}
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => { console.log("Edit", selectedEvent); handleMenuClose(); }}>Edit</MenuItem>
+        <MenuItem onClick={() => { console.log("Delete", selectedEvent); handleMenuClose(); }}>Delete</MenuItem>
+      </Menu>
+    </Box>
+  );
 };
 
 export default AdminSeeAllEvent;
