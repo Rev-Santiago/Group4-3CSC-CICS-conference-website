@@ -8,15 +8,10 @@ const PublicationPage = () => {
 
     const fetchPublications = async (page = 1) => {
         try {
-            // Make sure to use the environment variable for the backend URL
-            const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-            const response = await fetch(`${BACKEND_URL}/api/publications?page=${page}&limit=5`);
-
-            const result = await response.json();
-
-            setPublications(result.data);
-            setTotalPages(result.totalPages);
-            setCurrentPage(result.currentPage);
+            const response = await axios.get(`http://localhost:5000/api/publications?page=${page}&limit=5`);
+            setPublications(response.data.data);
+            setTotalPages(response.data.totalPages);
+            setCurrentPage(response.data.currentPage);
         } catch (error) {
             console.error("Error fetching publications:", error);
         }
@@ -36,48 +31,63 @@ const PublicationPage = () => {
 
     return (
         <section className="container mx-auto pb-10">
-            <h1 className="text-3xl">Submission Link</h1>
+            <h1 className="text-3xl my-6 font-semibold">Submission Link</h1>
 
             {/* Submission Button */}
             <div className="my-4">
-            <p className="text-gray-700">
-               Submit your papers at:
-            </p>
-                <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed">
+                <p className="text-gray-700">
+                    Submit your papers at:
+                </p>
+                <button
+                    onClick={() => window.open("https://edas.info/login.php?rurl=aHR0cHM6Ly9lZGFzLmluZm8vTjMyMjgxP2M9MzIyODE=", "_blank")}
+                    className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed"
+                >
                     EDAS Submission Link for CICS
                 </button>
             </div>
-            <h2 className="text-2xl mb-4">Publication</h2>
+
+            <h2 className="text-2xl mb-4 mt-8">Publication</h2>
 
             <h3 className="text-xl text-customRed mb-2">Conference Proceedings</h3>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 mb-6">
                 Accepted and peer-reviewed conference papers will be published as part of the IET Conference Proceedings.
+                The proceedings will be submitted for indexing in major academic databases including IEEE Xplore, Scopus,
+                and Web of Science. Authors of selected high-quality papers may be invited to extend their work for
+                publication in special issues of renowned international journals.
             </p>
 
-            <h3 className="text-xl text-center mb-4">Previous Conference Publications</h3>
-            <div className="w-full overflow-x-auto">
-                <table className="w-full table-fixed border-collapse border border-black">
+            <h3 className="text-xl text-center mb-6 font-semibold">Previous Conference Publications</h3>
+
+            <div className="w-full overflow-x-auto shadow-md mb-6">
+                <table className="w-full border-collapse border-2 border-black">
                     <thead>
                         <tr className="bg-customRed text-white">
-                            <th className="py-2 px-4 border border-black w-1/4">Date</th>
-                            <th className="py-2 px-4 border border-black w-3/4">Description</th>
+                            <th className="py-3 px-4 border-2 border-black w-1/4 text-left font-semibold">Date</th>
+                            <th className="py-3 px-4 border-2 border-black w-3/4 text-left font-semibold">Description</th>
                         </tr>
                     </thead>
                     <tbody>
                         {publications.length > 0 ? (
                             publications.map((pub, index) => (
-                                <tr key={index} className="border border-black">
-                                    <td className="py-2 px-4 border border-black text-center min-h-[50px]">
-                                        {new Date(pub.publication_date).toLocaleDateString()}
+                                <tr
+                                    key={index}
+                                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                                >
+                                    <td className="py-4 px-4 border-2 border-black min-h-[50px]">
+                                        {new Date(pub.publication_date).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
                                     </td>
-                                    <td className="py-2 px-4 border border-black text-center min-h-[50px] hover:underline text-blue-800">
+                                    <td className="py-4 px-4 border-2 border-black min-h-[50px] hover:underline text-blue-700">
                                         {pub.publication_description}
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="2" className="py-2 px-4 border border-black text-center min-h-[50px]">
+                                <td colSpan="2" className="py-4 px-4 border-2 border-black text-center min-h-[50px]">
                                     No publications available.
                                 </td>
                             </tr>
@@ -87,7 +97,7 @@ const PublicationPage = () => {
             </div>
 
             {/* Pagination Controls */}
-            <div className="mt-4 flex justify-center space-x-4">
+            <div className="mt-6 flex justify-center space-x-4">
                 <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}

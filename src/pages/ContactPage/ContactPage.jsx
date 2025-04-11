@@ -4,7 +4,7 @@ const ContactPage = () => {
     return (
         <section className="contact">
                 <div className="container mx-auto text-customRed pb-10">
-                    <h1 className="text-3xl">Contact</h1>
+                    <h1 className="text-3xl font-semibold">Contact</h1>
 
                     {/* Main Contact */}
                     <section className="mt-8">

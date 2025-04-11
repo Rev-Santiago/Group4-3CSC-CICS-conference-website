@@ -5,14 +5,17 @@ const CallForPapersPage = () => {
         <section className="call-for-paper">
             <div className="container mx-auto pb-6 text-gray-900">
 
-                <h1 className="text-3xl">Submission Link</h1>
+                <h1 className="text-3xl font-semibold">Submission Link</h1>
 
                 {/* Submission Button */}
                 <div className="mt-4">
                     <p className="text-gray-700">
                         Submit your papers at:
                     </p>
-                    <button className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed">
+                    <button
+                        onClick={() => window.open("https://edas.info/login.php?rurl=aHR0cHM6Ly9lZGFzLmluZm8vTjMyMjgxP2M9MzIyODE=", "_blank")}
+                        className="bg-customRed text-white py-2 px-6 rounded-md shadow-md hover:bg-customDarkRed"
+                    >
                         EDAS Submission Link for CICS
                     </button>
                 </div>

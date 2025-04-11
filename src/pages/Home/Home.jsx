@@ -11,7 +11,7 @@ function Home() {
         <div className="landing-page">
           <section className="hero relative container mx-auto">
             <div>
-              <h1 className="text-3xl text-customRed text-center pb-5 -md:mt-3">Welcome to UST CICS Conference Website</h1>
+              <h1 className="text-3xl text-customRed text-center pb-5 -md:mt-3 font-semibold">Welcome to UST CICS Conference Website</h1>
             </div>
             {/* Image Carousel */}
             <div className="carousel pb-5">

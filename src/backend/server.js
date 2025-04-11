@@ -16,6 +16,7 @@ import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 import process from "process";
 import eventRoutes from "./routes/eventRoutes.js";
+import searchRouter from "./routes/search.js";
 
 const app = express();
 app.set('trust proxy', 1); 
@@ -70,7 +71,7 @@ app.use("/screenshots", express.static("screenshots"));
 app.use("/uploads", express.static("uploads"));
 app.use("/api", eventsRouter);
 app.use("/api", eventRoutes);
-
+app.use("/api", searchRouter);
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({
