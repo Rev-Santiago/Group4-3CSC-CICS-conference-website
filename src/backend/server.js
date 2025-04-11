@@ -269,7 +269,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
-            SELECT event_date, time_slot, program, venue, online_room_link  
+            SELECT event_date, time_slot, program, venue, online_room_link, category  
             FROM events 
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
@@ -283,10 +283,11 @@ app.get("/api/schedule", async (req, res) => {
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
-            acc[dateKey].events.push({ 
+           acc[dateKey].events.push({ 
                 time: time_slot, 
                 program, 
                 venue, 
+                category, // <-- THIS!
                 online_room_link 
             });
 
