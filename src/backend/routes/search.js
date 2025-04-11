@@ -11,13 +11,26 @@ const data = [
     { title: "Venue/Announcements", content: "Sed volutpat erat ac venenatis pellentesque." },
 ];
 
-// Search endpoint
+// Search endpoint with logging
 router.get('/search', (req, res) => {
-    const query = req.query.query.toLowerCase();
+    console.log('Search endpoint hit with query:', req.query);
+    
+    const query = req.query.query?.toLowerCase() || '';
+    
+    if (!query) {
+        console.log('Empty search query received');
+        return res.json([]);
+    }
+    
+    console.log('Searching for:', query);
+    
     const results = data.filter(item =>
         item.title.toLowerCase().includes(query) ||
         item.content.toLowerCase().includes(query)
     );
+    
+    console.log(`Found ${results.length} results`);
+    
     res.json(results);
 });
 

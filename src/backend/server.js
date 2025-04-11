@@ -33,12 +33,16 @@ app.use(express.json());
 // ✅ Helmet with CSP to allow reCAPTCHA
 
 // ✅ CORS Configuration
+// Updated CORS Configuration
 app.use(cors({
-    origin: "https://cics-conference-website.onrender.com",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],  // Ensure OPTIONS is allowed
+    origin: [
+        "https://cics-conference-website.onrender.com", 
+        "http://localhost:3000",  // React development server
+        "http://localhost:5173"   // Vite development server
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
 }));
-
 
 app.use(
     helmet({

@@ -68,7 +68,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="rounded-3xl min-h-screen flex flex-col items-center px-4 ">
-      <h1 className="text-4xl font-bold text-center mt-10  ">
+      <h1 className="text-3xl font-bold text-center mt-10  ">
         Page Preview
       </h1>
       <div className="w-[90%] border-black  border-b  mb-5 pb-2" />

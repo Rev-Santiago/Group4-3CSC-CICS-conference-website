@@ -13,6 +13,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 export default function PageCardComponent({ title, lastEdited, screenshotUrl }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [open, setOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1); // Add state for zoom level
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -27,37 +28,30 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
     handleMenuClose();
   };
 
-  const generateScreenshotUrl = (title) => {
-    return `/screenshots/${title
-      .toLowerCase()
-      .replace(/ & /g, "-")
-      .replace(/\s+/g, "-")}.png`;
+  const handleZoomIn = () => {
+    setZoomLevel((prev) => Math.min(prev + 0.2, 3)); // Limit the zoom to 3x
   };
-
-  const fallbackUrl = generateScreenshotUrl(title);
-  const imageUrl = screenshotUrl || fallbackUrl;
-
+  
+  const handleZoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.2, 1)); // Limit the zoom to 1x (no zoom out further)
+  };
+  
   return (
     <div className="flex justify-center">
-      <div className="border shadow-lg rounded-md p-4 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
-        {/* Screenshot or Spinner */}
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-full h-40 object-cover rounded-md cursor-pointer"
-          onClick={() => setOpen(true)}
-          onError={(e) => {
-            e.target.style.display = "none";
-            const fallback = e.target.parentNode.querySelector(".spinner");
-            if (fallback) fallback.style.display = "flex";
-          }}
-        />
-        <div
-          className="w-full h-40 flex justify-center items-center spinner"
-          style={{ display: "none" }}
-        >
-          <CircularProgress />
-        </div>
+      <div className="border shadow-lg rounded-md p-6 relative bg-white w-full sm:w-[300px] md:w-[320px] lg:w-[350px]">
+        {/* Show CircularProgress if screenshotUrl is null */}
+        {screenshotUrl ? (
+          <img
+            src={screenshotUrl}
+            alt={title}
+            className="w-full h-60 object-cover rounded-md cursor-pointer"
+            onClick={() => setOpen(true)}
+          />
+        ) : (
+          <div className="w-full h-40 flex justify-center items-center">
+            <CircularProgress />
+          </div>
+        )}
 
         {/* Title + Options */}
         <div className="flex justify-between items-center mt-2">
@@ -68,24 +62,56 @@ export default function PageCardComponent({ title, lastEdited, screenshotUrl }) 
             {title}
           </h2>
 
+          {/* 
           <IconButton aria-label="settings" onClick={handleMenuOpen}>
             <MoreVertIcon />
-          </IconButton>
+          </IconButton> */}
         </div>
-        <p className="text-sm text-gray-500">Last edited: {lastEdited}</p>
-        <button className="bg-customRed text-white p-2 w-full mt-2 rounded-md">
-          Publish
+        {/* <p className="text-sm text-gray-500">Last edited: {lastEdited}</p> */}
+        <button className="bg-customRed text-white p-2 w-full mt-2 rounded-md" onClick={() => setOpen(true)}>
+          Preview Page
         </button>
 
-        {/* Modal Preview */}
-        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" scroll="paper">
+        {/* 🔹 Scrollable Image Preview Modal */}
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          fullWidth
+          maxWidth="md"
+          scroll="paper"
+          sx={{ maxHeight: "700px", overflowY: "auto" }}
+        >
           <DialogTitle className="text-center font-semibold">{title}</DialogTitle>
-          <DialogContent dividers className="flex justify-center items-center ">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full h-200 object-cover"
-            />
+
+          {/* Zoom Controls */}
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <button
+              onClick={handleZoomOut}
+              className="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700"
+            >
+              -
+            </button>
+            <button
+              onClick={handleZoomIn}
+              className="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700"
+            >
+              +
+            </button>
+          </div>
+
+          <DialogContent dividers className="flex justify-center items-center" sx={{ overflow: "visible" }}>
+            <div className="relative w-full h-full overflow-auto">  
+              <img
+                src={screenshotUrl}
+                alt={title}
+                className="object-contain w-full h-full"
+                style={{
+                  transform: `scale(${zoomLevel})`, 
+                  transition: "transform 0.3s ease", 
+                  transformOrigin: "center center",  
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
 
