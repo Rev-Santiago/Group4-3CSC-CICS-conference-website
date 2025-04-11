@@ -13,6 +13,7 @@ import icsRoute from "./routes/icsRoute.js";
 import screenshotRouter from "./routes/screenShot.js";
 import eventsRouter from "./routes/events.js";
 import userRoutes from "./routes/userRoutes.js";
+import publicationRoutes from "./routes/publicationRoutes.js";
 
 
 
@@ -245,6 +246,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 });
 
 app.use("/api", authenticateToken, userRoutes);
+app.use("/api", authenticateToken, publicationRoutes);
 
 
 // 📅 Fetch Event Schedule Dynamically
