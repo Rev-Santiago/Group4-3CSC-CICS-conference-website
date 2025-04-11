@@ -1,22 +1,39 @@
-// routes/userRoutes.js
+// Updated routes/userRoutes.js file
+
 import express from "express";
 import db from "../db.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import process from "process";
 
 const router = express.Router();
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) return res.status(403).json({ error: "Access denied." });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: "Invalid token." });
+        req.user = user;
+        next();
+    });
+};
 
 router.get("/test", (req, res) => {
     res.json({ message: "API is working!" });
 });
 
-router.get("/users", async (req, res) => {
+router.get("/users", authenticateToken, async (req, res) => {
     try {
         console.log("Request to get users received. User:", req.user);
         
-        // Add database prefix to match your SELECT * FROM conference_db.users format
+        // FIXED: Removed database prefix to match the format in other working routes
         const [users] = await db.query(
             `SELECT id, email, account_type, created_at 
-             FROM conference_db.users ORDER BY created_at DESC`
+             FROM users ORDER BY created_at DESC`
         );
         
         console.log("Users found:", users);
@@ -38,13 +55,14 @@ router.get("/users", async (req, res) => {
 });
 
 // Create new user (super_admin only)
-router.post("/users", async (req, res) => {
+router.post("/users", authenticateToken, async (req, res) => {
     try {
         const { email, password, account_type } = req.body;
         
         // Verify current user is super_admin
+        // FIXED: Removed database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            "SELECT account_type FROM users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -62,8 +80,9 @@ router.post("/users", async (req, res) => {
         }
         
         // Check if email already exists
+        // FIXED: Removed database prefix
         const [existingUser] = await db.query(
-            "SELECT id FROM conference_db.users WHERE email = ?",
+            "SELECT id FROM users WHERE email = ?",
             [email]
         );
         
@@ -77,8 +96,9 @@ router.post("/users", async (req, res) => {
         console.log("Attempting to create user:", { email, account_type: account_type || 'admin' });
         
         try {
+            // FIXED: Removed database prefix
             await db.execute(
-                "INSERT INTO conference_db.users (email, password, account_type, created_at) VALUES (?, ?, ?, NOW())",
+                "INSERT INTO users (email, password, account_type, created_at) VALUES (?, ?, ?, NOW())",
                 [email, hashedPassword, account_type || 'admin'] // Default to 'admin' if not specified
             );
             console.log("User created successfully");
@@ -95,13 +115,14 @@ router.post("/users", async (req, res) => {
 });
 
 // Promote user to super_admin
-router.post("/users/:id/promote", async (req, res) => {
+router.post("/users/:id/promote", authenticateToken, async (req, res) => {
     const userId = req.params.id;
     
     try {
         // Verify current user is super_admin before allowing promotion
+        // FIXED: Removed database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            "SELECT account_type FROM users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -109,8 +130,9 @@ router.post("/users/:id/promote", async (req, res) => {
             return res.status(403).json({ error: "Only Super Admins can promote users" });
         }
         
+        // FIXED: Removed database prefix
         await db.execute(
-            "UPDATE conference_db.users SET account_type = 'super_admin' WHERE id = ?",
+            "UPDATE users SET account_type = 'super_admin' WHERE id = ?",
             [userId]
         );
         
@@ -122,13 +144,14 @@ router.post("/users/:id/promote", async (req, res) => {
 });
 
 // Demote user from super_admin to regular admin
-router.post("/users/:id/demote", async (req, res) => {
+router.post("/users/:id/demote", authenticateToken, async (req, res) => {
     const userId = req.params.id;
     
     try {
         // Verify current user is super_admin before allowing demotion
+        // FIXED: Removed database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            "SELECT account_type FROM users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -141,8 +164,9 @@ router.post("/users/:id/demote", async (req, res) => {
             return res.status(400).json({ error: "You cannot demote yourself" });
         }
         
+        // FIXED: Removed database prefix
         await db.execute(
-            "UPDATE conference_db.users SET account_type = 'admin' WHERE id = ?",
+            "UPDATE users SET account_type = 'admin' WHERE id = ?",
             [userId]
         );
         
@@ -154,18 +178,19 @@ router.post("/users/:id/demote", async (req, res) => {
 });
 
 // Add at top of userRoutes.js routes
-router.get("/users-test", (req, res) => {
+router.get("/users-test", authenticateToken, (req, res) => {
     res.json({ message: "User routes are connected!", user: req.user });
 });
 
 // Remove user
-router.delete("/users/:id", async (req, res) => {
+router.delete("/users/:id", authenticateToken, async (req, res) => {
     const userId = req.params.id;
     
     try {
         // Verify current user is super_admin before allowing deletion
+        // FIXED: Removed database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            "SELECT account_type FROM users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -173,7 +198,8 @@ router.delete("/users/:id", async (req, res) => {
             return res.status(403).json({ error: "Only Super Admins can remove users" });
         }
         
-        await db.execute("DELETE FROM conference_db.users WHERE id = ?", [userId]);
+        // FIXED: Removed database prefix
+        await db.execute("DELETE FROM users WHERE id = ?", [userId]);
         res.json({ message: "User removed successfully" });
     } catch (error) {
         console.error("Error removing user:", error);

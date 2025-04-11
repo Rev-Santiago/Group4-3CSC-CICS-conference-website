@@ -1,3 +1,4 @@
+// Updated src/pages/AdminPublicationsPage/AdminEditPublication.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -32,23 +33,25 @@ export default function AdminEditPublication() {
     });
     const [formErrors, setFormErrors] = useState({});
 
+    // Get the base URL
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
+
     const fetchData = async () => {
         setFetchingData(true);
         try {
             const token = getAuthToken();
             const headers = { Authorization: `Bearer ${token}` };
             
-            console.log("Using token:", token);
-            console.log("Headers:", headers);
+            console.log("Using token:", token ? "Token exists" : "No token");
             
             // Fetch published publications
             console.log("Fetching publications...");
-            const publicationsResponse = await axios.get("/api/publications-admin", { headers });
+            const publicationsResponse = await axios.get(`${baseUrl}/api/publications-admin`, { headers });
             console.log("Publications response:", publicationsResponse.data);
             
             // Fetch drafts
             console.log("Fetching drafts...");
-            const draftsResponse = await axios.get("/api/publications/drafts", { headers });
+            const draftsResponse = await axios.get(`${baseUrl}/api/publications/drafts`, { headers });
             console.log("Drafts response:", draftsResponse.data);
             
             // Format publications
@@ -158,10 +161,10 @@ export default function AdminEditPublication() {
         setLoading(true);
         try {
             const token = getAuthToken();
-            console.log("Using token for save draft:", token);
+            console.log("Using token for save draft:", token ? "Token exists" : "No token");
             
             // Always use /api/publications/drafts endpoint
-            const response = await axios.post("/api/publications/drafts", {
+            const response = await axios.post(`${baseUrl}/api/publications/drafts`, {
                 id: !isPublished ? selectedPublicationId : null, // Only include ID if it's already a draft
                 title: publicationData.title,
                 date: publicationData.date,
@@ -205,14 +208,14 @@ export default function AdminEditPublication() {
         setLoading(true);
         try {
             const token = getAuthToken();
-            console.log("Using token for publish:", token);
+            console.log("Using token for publish:", token ? "Token exists" : "No token");
             
             // If editing published content, use PUT
             // If publishing a draft or creating new, use POST
             let response;
             if (isPublished) {
                 console.log(`Updating publication ${selectedPublicationId}...`);
-                response = await axios.put(`/api/publications/${selectedPublicationId}`, {
+                response = await axios.put(`${baseUrl}/api/publications/${selectedPublicationId}`, {
                     title: publicationData.title,
                     date: publicationData.date,
                     link: publicationData.link,
@@ -221,7 +224,7 @@ export default function AdminEditPublication() {
                 });
             } else {
                 console.log("Creating new publication...");
-                response = await axios.post("/api/publications", {
+                response = await axios.post(`${baseUrl}/api/publications`, {
                     title: publicationData.title,
                     date: publicationData.date,
                     link: publicationData.link,

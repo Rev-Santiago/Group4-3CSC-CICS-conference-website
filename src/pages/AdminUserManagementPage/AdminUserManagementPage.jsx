@@ -1,3 +1,4 @@
+// Updated src/pages/AdminUserManagementPage/AdminUserManagementPage.jsx
 import React, { useState, useEffect } from "react";
 import { 
     IconButton, 
@@ -39,6 +40,9 @@ export default function AdminUserManagementPage() {
     });
     const [formErrors, setFormErrors] = useState({});
 
+    // Get the base URL
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
+
     // Menu handling
     const handleMenuOpen = (event, user) => {
         setAnchorEl(event.currentTarget);
@@ -58,9 +62,9 @@ export default function AdminUserManagementPage() {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
-            console.log("Using token:", token);
+            console.log("Using token:", token ? "Token exists" : "No token");
             
-            const response = await axios.get('/api/users', {
+            const response = await axios.get(`${baseUrl}/api/users`, {
                 headers: { 
                     'Authorization': `Bearer ${token}`
                 }
@@ -83,7 +87,7 @@ export default function AdminUserManagementPage() {
         
         try {
             const token = localStorage.getItem('authToken');
-            await axios.post(`/api/users/${selectedUser.id}/promote`, {}, {
+            await axios.post(`${baseUrl}/api/users/${selectedUser.id}/promote`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -103,7 +107,7 @@ export default function AdminUserManagementPage() {
         
         try {
             const token = localStorage.getItem('authToken');
-            await axios.post(`/api/users/${selectedUser.id}/demote`, {}, {
+            await axios.post(`${baseUrl}/api/users/${selectedUser.id}/demote`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -123,7 +127,7 @@ export default function AdminUserManagementPage() {
         
         try {
             const token = localStorage.getItem('authToken');
-            await axios.delete(`/api/users/${selectedUser.id}`, {
+            await axios.delete(`${baseUrl}/api/users/${selectedUser.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -256,9 +260,9 @@ export default function AdminUserManagementPage() {
         
         try {
             const token = localStorage.getItem('authToken');
-            console.log("Sending request with token:", token);
+            console.log("Sending request with token:", token ? "Token exists" : "No token");
             
-            const response = await axios.post('/api/users', {
+            const response = await axios.post(`${baseUrl}/api/users`, {
                 email: newUser.email,
                 password: newUser.password,
                 account_type: newUser.account_type

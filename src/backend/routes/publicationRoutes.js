@@ -1,8 +1,25 @@
-// routes/publicationRoutes.js
+// Updated routes/publicationRoutes.js file
+
 import express from "express";
 import db from "../db.js";
+import jwt from "jsonwebtoken";
+import process from "process";
 
 const router = express.Router();
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) return res.status(403).json({ error: "Access denied." });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: "Invalid token." });
+        req.user = user;
+        next();
+    });
+};
 
 // Test route to verify connection
 router.get("/publications-test", (req, res) => {
@@ -10,7 +27,7 @@ router.get("/publications-test", (req, res) => {
 });
 
 // Get all publications with pagination
-router.get("/publications-admin", async (req, res) => {
+router.get("/publications-admin", authenticateToken, async (req, res) => {
     try {
         console.log("Request to get publications received. User:", req.user);
         
@@ -58,7 +75,7 @@ router.get("/publications-admin", async (req, res) => {
 });
 
 // Get all publication drafts - specific route before parameter routes
-router.get("/publications/drafts", async (req, res) => {
+router.get("/publications/drafts", authenticateToken, async (req, res) => {
     try {
         console.log("Request to get publication drafts received. User:", req.user);
         
@@ -99,7 +116,7 @@ router.get("/publications/drafts", async (req, res) => {
 });
 
 // Save as draft functionality - specific route before parameter routes
-router.post("/publications/drafts", async (req, res) => {
+router.post("/publications/drafts", authenticateToken, async (req, res) => {
     try {
         const { title, date, link, id } = req.body;
         
@@ -194,7 +211,7 @@ router.get("/publications/latest", async (req, res) => {
 });
 
 // Create a new publication
-router.post("/publications", async (req, res) => {
+router.post("/publications", authenticateToken, async (req, res) => {
     try {
         const { title, date, link } = req.body;
         
@@ -234,7 +251,7 @@ router.post("/publications", async (req, res) => {
 });
 
 // Get a specific publication by ID - parameter route after specific routes
-router.get("/publications/:id", async (req, res) => {
+router.get("/publications/:id", authenticateToken, async (req, res) => {
     try {
         const publicationId = req.params.id;
         
@@ -258,7 +275,7 @@ router.get("/publications/:id", async (req, res) => {
 });
 
 // Update a publication
-router.put("/publications/:id", async (req, res) => {
+router.put("/publications/:id", authenticateToken, async (req, res) => {
     try {
         const publicationId = req.params.id;
         const { title, date, link } = req.body;
@@ -306,7 +323,7 @@ router.put("/publications/:id", async (req, res) => {
 });
 
 // Delete a publication - parameter route after specific routes
-router.delete("/publications/:id", async (req, res) => {
+router.delete("/publications/:id", authenticateToken, async (req, res) => {
     try {
         const publicationId = req.params.id;
         

@@ -18,6 +18,7 @@ import process from "process";
 import eventRoutes from "./routes/eventRoutes.js";
 import searchRouter from "./routes/search.js";
 import userRoutes from "./routes/userRoutes.js";
+import publicationRoutes from "./routes/publicationRoutes.js";
 
 const app = express();
 app.set('trust proxy', 1);
@@ -78,6 +79,7 @@ app.use("/api", eventsRouter);
 app.use("/api", eventRoutes);
 app.use("/api", searchRouter);
 app.use("/api", userRoutes);
+app.use("/api", publicationRoutes);
 
 // ✅ Rate Limiting for Login
 const loginLimiter = rateLimit({

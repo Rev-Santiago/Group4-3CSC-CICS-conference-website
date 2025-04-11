@@ -1,3 +1,4 @@
+// Updated src/pages/AdminPublicationsPage/AdminAddPublication.jsx
 import { useState } from "react";
 import {
     Grid,
@@ -72,9 +73,16 @@ export default function AdminAddPublication({ currentUser }) {
         setLoading(true);
         try {
             const token = getAuthToken();
-            console.log("Using token:", token);
             
-            const response = await axios.post("/api/publications/drafts", {
+            // Add debugging logs to trace the request
+            console.log("Saving draft with token:", token ? "Token exists" : "No token");
+            
+            // Get the base URL
+            const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
+            const apiUrl = `${baseUrl}/api/publications/drafts`;
+            console.log("API URL:", apiUrl);
+
+            const response = await axios.post(apiUrl, {
                 title: publicationData.title,
                 date: publicationData.date,
                 link: publicationData.link
@@ -114,9 +122,14 @@ export default function AdminAddPublication({ currentUser }) {
         setLoading(true);
         try {
             const token = getAuthToken();
-            console.log("Using token:", token);
+            console.log("Using token:", token ? "Token exists" : "No token");
             
-            const response = await axios.post("/api/publications", {
+            // Get the base URL
+            const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
+            const apiUrl = `${baseUrl}/api/publications`;
+            console.log("API URL:", apiUrl);
+            
+            const response = await axios.post(apiUrl, {
                 title: publicationData.title,
                 date: publicationData.date,
                 link: publicationData.link
@@ -237,4 +250,3 @@ export default function AdminAddPublication({ currentUser }) {
             </Snackbar>
         </Box>
     );
-}
