@@ -73,16 +73,6 @@ const EventsHistoryPage = () => {
                           <p className="text-gray-800 font-medium">{item.program}</p>
                           {item.speaker && <p className="text-gray-700 mt-1">Speaker: {item.speaker}</p>}
                           {item.category && <p className="text-gray-600 mt-1 italic">Category: {item.category}</p>}
-                          {item.online_room_link && (
-                            <a 
-                              href={item.online_room_link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 mt-2 inline-block"
-                            >
-                              Online Room Link
-                            </a>
-                          )}
                         </td>
                         <td className="py-4 px-4 border-2 border-black min-h-[50px]">{item.venue}</td>
                       </tr>
