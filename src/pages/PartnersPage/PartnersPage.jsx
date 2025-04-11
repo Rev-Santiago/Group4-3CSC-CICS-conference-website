@@ -8,7 +8,7 @@ const partners = [
         location: "Silicon Valley, USA",
         description: "TechInnovate Solutions is a leading technology company specializing in cloud computing infrastructure and enterprise software solutions. With a global presence in over 30 countries, they have been instrumental in supporting academic research through their University Relations Program. For CICS 2025, they're providing cloud credits, technical resources, and sponsoring the Best Paper Award.",
         partnership: "Primary Technology Sponsor",
-        logo: cicsLogoSmall,
+        logo: logoPlaceholder,
     },
     {
         name: "Global Research Institute",
@@ -16,7 +16,7 @@ const partners = [
         location: "London, UK",
         description: "The Global Research Institute is an internationally recognized research organization dedicated to advancing computer science and information technology. Their collaboration with universities worldwide has resulted in numerous breakthrough publications. For this conference, they're providing access to their research databases and co-organizing the AI and Machine Learning track.",
         partnership: "Research Collaborator",
-        logo: cicsLogoSmall,
+        logo: logoPlaceholder,
     },
     {
         name: "NextGen Systems",
@@ -24,7 +24,7 @@ const partners = [
         location: "Tokyo, Japan",
         description: "NextGen Systems is an innovative hardware manufacturer focused on high-performance computing solutions and advanced networking infrastructure. Their contributions to open-source hardware design have transformed the computing landscape. As a sponsor of CICS 2025, they're providing demonstration equipment for workshops and funding the student travel grants program.",
         partnership: "Workshop Sponsor & Equipment Provider",
-        logo: cicsLogoSmall,
+        logo: logoPlaceholder,
     },
 ];
 
