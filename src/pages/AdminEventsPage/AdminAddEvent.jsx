@@ -17,7 +17,7 @@ import {
     Snackbar,
     Autocomplete,
 } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
 
 export default function AdminAddEvent({ currentUser }) {
     const [eventData, setEventData] = useState({
@@ -26,12 +26,10 @@ export default function AdminAddEvent({ currentUser }) {
         startTime: "",
         endTime: "",
         venue: "",
-        keynoteSpeaker: "",
-        invitedSpeaker: "",
+        keynoteSpeakers: [{ name: "" }],
+        invitedSpeakers: [{ name: "" }],
         theme: "",
         category: "",
-        keynoteImage: null,
-        invitedImage: null,
         zoomLink: "",
     });
     const [detailsOpen, setDetailsOpen] = useState(false);
@@ -96,9 +94,50 @@ export default function AdminAddEvent({ currentUser }) {
         setEventData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e) => {
-        const { name, files } = e.target;
-        setEventData((prev) => ({ ...prev, [name]: files[0] }));
+    // Handle keynote speaker name change
+    const handleKeynoteSpeakerChange = (index, value) => {
+        const updatedSpeakers = [...eventData.keynoteSpeakers];
+        updatedSpeakers[index] = { ...updatedSpeakers[index], name: value };
+        setEventData({ ...eventData, keynoteSpeakers: updatedSpeakers });
+    };
+
+    // Handle invited speaker name change
+    const handleInvitedSpeakerChange = (index, value) => {
+        const updatedSpeakers = [...eventData.invitedSpeakers];
+        updatedSpeakers[index] = { ...updatedSpeakers[index], name: value };
+        setEventData({ ...eventData, invitedSpeakers: updatedSpeakers });
+    };
+
+    // Handle adding keynote speaker
+    const handleAddKeynoteSpeaker = () => {
+        setEventData({
+            ...eventData,
+            keynoteSpeakers: [...eventData.keynoteSpeakers, { name: "" }]
+        });
+    };
+
+    // Handle adding invited speaker
+    const handleAddInvitedSpeaker = () => {
+        setEventData({
+            ...eventData,
+            invitedSpeakers: [...eventData.invitedSpeakers, { name: "" }]
+        });
+    };
+
+    // Handle removing keynote speaker
+    const handleRemoveKeynoteSpeaker = (index) => {
+        if (eventData.keynoteSpeakers.length > 1) {
+            const updatedSpeakers = eventData.keynoteSpeakers.filter((_, i) => i !== index);
+            setEventData({ ...eventData, keynoteSpeakers: updatedSpeakers });
+        }
+    };
+
+    // Handle removing invited speaker
+    const handleRemoveInvitedSpeaker = (index) => {
+        if (eventData.invitedSpeakers.length > 1) {
+            const updatedSpeakers = eventData.invitedSpeakers.filter((_, i) => i !== index);
+            setEventData({ ...eventData, invitedSpeakers: updatedSpeakers });
+        }
     };
 
     const resetForm = () => {
@@ -108,12 +147,10 @@ export default function AdminAddEvent({ currentUser }) {
             startTime: "",
             endTime: "",
             venue: "",
-            keynoteSpeaker: "",
-            invitedSpeaker: "",
+            keynoteSpeakers: [{ name: "" }],
+            invitedSpeakers: [{ name: "" }],
             theme: "",
             category: "",
-            keynoteImage: null,
-            invitedImage: null,
             zoomLink: "",
         });
     };
@@ -124,8 +161,24 @@ export default function AdminAddEvent({ currentUser }) {
 
     const handleSaveDraft = async () => {
         const formData = new FormData();
-        Object.entries(eventData).forEach(([key, value]) => {
-            if (value) formData.append(key, value);
+        formData.append("title", eventData.title);
+        formData.append("date", eventData.date);
+        formData.append("startTime", eventData.startTime);
+        formData.append("endTime", eventData.endTime);
+        formData.append("venue", eventData.venue);
+        formData.append("theme", eventData.theme);
+        formData.append("category", eventData.category);
+        formData.append("zoomLink", eventData.zoomLink || "");
+        
+        // Add speakers data
+        formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
+        eventData.keynoteSpeakers.forEach((speaker, index) => {
+            formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
+        });
+        
+        formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
+        eventData.invitedSpeakers.forEach((speaker, index) => {
+            formData.append(`invitedSpeaker_${index}`, speaker.name || "");
         });
     
         try {
@@ -199,15 +252,20 @@ export default function AdminAddEvent({ currentUser }) {
             formData.append("startTime", eventData.startTime || "");
             formData.append("endTime", eventData.endTime || "");
             formData.append("venue", eventData.venue || "");
-            formData.append("keynoteSpeaker", eventData.keynoteSpeaker || "");
-            formData.append("invitedSpeaker", eventData.invitedSpeaker || "");
             formData.append("theme", eventData.theme || "");
             formData.append("category", eventData.category || "");
             formData.append("zoomLink", eventData.zoomLink || "");
             
-            // Add files only if they exist
-            if (eventData.keynoteImage) formData.append("keynoteImage", eventData.keynoteImage);
-            if (eventData.invitedImage) formData.append("invitedImage", eventData.invitedImage);
+            // Add speakers data
+            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
+            eventData.keynoteSpeakers.forEach((speaker, index) => {
+                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
+            });
+            
+            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
+            eventData.invitedSpeakers.forEach((speaker, index) => {
+                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
+            });
             
             console.log("Publishing event with date:", useDate);
             
@@ -305,40 +363,80 @@ export default function AdminAddEvent({ currentUser }) {
                 </Grid>
 
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Speaker(s):</Typography>
+                    <Typography variant="subtitle1">Keynote Speaker(s):</Typography>
                 </Grid>
 
-                <Grid item xs={12} className="flex items-center gap-2">
-                    <TextField fullWidth size="small" label="Keynote Speaker" name="keynoteSpeaker" value={eventData.keynoteSpeaker} onChange={handleChange} />
-                    <IconButton color="inherit">
-                        <Add />
-                    </IconButton>
+                {eventData.keynoteSpeakers.map((speaker, index) => (
+                    <Grid container item xs={12} key={`keynote-${index}`} spacing={1}>
+                        <Grid item xs={10} className="flex items-center">
+                            <TextField 
+                                fullWidth 
+                                size="small" 
+                                label={`Keynote Speaker ${index + 1}`} 
+                                value={speaker.name} 
+                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)} 
+                            />
+                        </Grid>
+                        <Grid item xs={2} className="flex items-center">
+                            <IconButton 
+                                color="primary" 
+                                onClick={handleAddKeynoteSpeaker}
+                                title="Add another keynote speaker"
+                                sx={{ mr: 1 }}
+                            >
+                                <Add />
+                            </IconButton>
+                            {eventData.keynoteSpeakers.length > 1 && (
+                                <IconButton 
+                                    color="error" 
+                                    onClick={() => handleRemoveKeynoteSpeaker(index)}
+                                    title="Remove this keynote speaker"
+                                >
+                                    <Delete />
+                                </IconButton>
+                            )}
+                        </Grid>
+                    </Grid>
+                ))}
+
+                <Grid item xs={12} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1">Invited Speaker(s):</Typography>
                 </Grid>
 
-                <Grid item xs={12}>
-                    <Button variant="outlined" component="label">
-                        Upload Keynote Image
-                        <input type="file" name="keynoteImage" hidden onChange={handleFileChange} />
-                    </Button>
-                    {eventData.keynoteImage && <Typography>{eventData.keynoteImage.name}</Typography>}
-                </Grid>
+                {eventData.invitedSpeakers.map((speaker, index) => (
+                    <Grid container item xs={12} key={`invited-${index}`} spacing={1}>
+                        <Grid item xs={10} className="flex items-center">
+                            <TextField 
+                                fullWidth 
+                                size="small" 
+                                label={`Invited Speaker ${index + 1}`} 
+                                value={speaker.name} 
+                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)} 
+                            />
+                        </Grid>
+                        <Grid item xs={2} className="flex items-center">
+                            <IconButton 
+                                color="primary" 
+                                onClick={handleAddInvitedSpeaker}
+                                title="Add another invited speaker"
+                                sx={{ mr: 1 }}
+                            >
+                                <Add />
+                            </IconButton>
+                            {eventData.invitedSpeakers.length > 1 && (
+                                <IconButton 
+                                    color="error" 
+                                    onClick={() => handleRemoveInvitedSpeaker(index)}
+                                    title="Remove this invited speaker"
+                                >
+                                    <Delete />
+                                </IconButton>
+                            )}
+                        </Grid>
+                    </Grid>
+                ))}
 
-                <Grid item xs={12} className="flex items-center gap-2">
-                    <TextField fullWidth size="small" label="Invited Speaker" name="invitedSpeaker" value={eventData.invitedSpeaker} onChange={handleChange} />
-                    <IconButton color="inherit">
-                        <Add />
-                    </IconButton>
-                </Grid>
-
-                <Grid item xs={12}>
-                    <Button variant="outlined" component="label">
-                        Upload Invited Image
-                        <input type="file" name="invitedImage" hidden onChange={handleFileChange} />
-                    </Button>
-                    {eventData.invitedImage && <Typography>{eventData.invitedImage.name}</Typography>}
-                </Grid>
-
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ mt: 2 }}>
                     <Typography variant="subtitle1">Event Classification:</Typography>
                 </Grid>
 
@@ -374,8 +472,26 @@ export default function AdminAddEvent({ currentUser }) {
             <Dialog open={detailsOpen} onClose={handleCloseDetails} fullWidth>
                 <DialogTitle>Event Details Overview</DialogTitle>
                 <DialogContent>
-                    {Object.entries(eventData).map(([key, val]) => (
-                        <Typography key={key} variant="body2"><strong>{key}:</strong> {val?.name || val}</Typography>
+                    <Typography variant="body2"><strong>Title:</strong> {eventData.title}</Typography>
+                    <Typography variant="body2"><strong>Date:</strong> {eventData.date}</Typography>
+                    <Typography variant="body2"><strong>Time:</strong> {eventData.startTime} - {eventData.endTime}</Typography>
+                    <Typography variant="body2"><strong>Venue:</strong> {eventData.venue}</Typography>
+                    <Typography variant="body2"><strong>Zoom Link:</strong> {eventData.zoomLink}</Typography>
+                    <Typography variant="body2"><strong>Theme:</strong> {eventData.theme}</Typography>
+                    <Typography variant="body2"><strong>Category:</strong> {eventData.category}</Typography>
+                    
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}><strong>Keynote Speakers:</strong></Typography>
+                    {eventData.keynoteSpeakers.map((speaker, index) => (
+                        <Typography variant="body2" key={`k-${index}`}>
+                            - {speaker.name || "(Unnamed)"}
+                        </Typography>
+                    ))}
+                    
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}><strong>Invited Speakers:</strong></Typography>
+                    {eventData.invitedSpeakers.map((speaker, index) => (
+                        <Typography variant="body2" key={`i-${index}`}>
+                            - {speaker.name || "(Unnamed)"}
+                        </Typography>
                     ))}
                 </DialogContent>
                 <DialogActions>
