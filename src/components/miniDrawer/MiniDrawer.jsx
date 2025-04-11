@@ -117,7 +117,7 @@ const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin-dashboard" },
   { text: "Events", icon: <EventsIcon />, path: "events" },
   { text: "Publications", icon: <ArticleIcon />, path: "publications" },
-  { text: "Pages", icon: <WebIcon />, path: "pages" },
+  // { text: "Pages", icon: <WebIcon />, path: "pages" },
 ];
 
 export default function MiniDrawer({ children }) {
