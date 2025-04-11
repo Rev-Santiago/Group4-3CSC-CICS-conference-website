@@ -24,6 +24,8 @@ import RegisterPage from "../pages/RegisterPage/RegisterPage";
 import AdminAccountPage from "../pages/AdminAccountPage/AdminAccountPage";
 import AdminUserManagementPage from "../pages/AdminUserManagementPage/AdminUserManagementPage";
 import AdminPublicationPage from "../pages/AdminPublicationsPage/AdminPublicationsPage"
+import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword/ResetPassword";
 
 // ✅ Function to protect routes (redirects if not authenticated)
 function ProtectedRoute() {
@@ -59,7 +61,14 @@ const AdminLayout = () => {
             { path: "/invited-speakers", element: <InvitedSpeakersPage /> },
             { path: "/login", element: <LoginPage /> },
             { path: "/register", element: <RegisterPage /> },
-
+            {
+                path: "/forgot-password",
+                element: <ForgotPassword />,
+              },
+              {
+                path: "/reset-password/:token",
+                element: <ResetPassword />,
+              },
             {
                 path: "/admin-dashboard",
                 element: <ProtectedRoute />,
