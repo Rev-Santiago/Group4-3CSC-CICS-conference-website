@@ -19,6 +19,7 @@ import eventRoutes from "./routes/eventRoutes.js";
 import searchRouter from "./routes/search.js";
 import userRoutes from "./routes/userRoutes.js";
 import publicationRoutes from "./routes/publicationRoutes.js";
+import passwordResetRoutes from "./routes/passwordResetRoutes.js";
 
 const app = express();
 app.set('trust proxy', 1);
@@ -70,7 +71,7 @@ app.use(
 
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
-
+app.use("/api", passwordResetRoutes);
 app.use("/api", icsRoute);
 app.use("/api", screenshotRouter);
 app.use("/screenshots", express.static("screenshots"));
