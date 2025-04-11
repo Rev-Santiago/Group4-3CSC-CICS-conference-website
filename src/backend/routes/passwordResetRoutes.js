@@ -7,13 +7,14 @@ import nodemailer from "nodemailer";
 const router = express.Router();
 
 // Get environment variables using import.meta.env
-const EMAIL_HOST = import.meta.env.VITE_EMAIL_HOST || "smtp.ethereal.email";
-const EMAIL_PORT = import.meta.env.VITE_EMAIL_PORT || 587;
-const EMAIL_SECURE = import.meta.env.VITE_EMAIL_SECURE === "true" ? true : false;
-const EMAIL_USER = import.meta.env.VITE_EMAIL_USER;
-const EMAIL_PASS = import.meta.env.VITE_EMAIL_PASS;
-const EMAIL_FROM = import.meta.env.VITE_EMAIL_FROM || '"Admin" <admin@example.com>';
-const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || 'https://cics-conference-website.onrender.com';
+const EMAIL_HOST = process.env.EMAIL_HOST || "smtp.ethereal.email";
+const EMAIL_PORT = process.env.EMAIL_PORT || 587;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_FROM = process.env.EMAIL_FROM || '"Admin" <admin@example.com>';
+const FRONTEND_URL = process.env.EMAIL_FROM || 'https://cics-conference-website.onrender.com';
+const EMAIL_SECURE = process.env.EMAIL_SECURE === "true";
+
 
 // Configure email transporter (using a testing service here - use your own SMTP in production)
 const transporter = nodemailer.createTransport({
