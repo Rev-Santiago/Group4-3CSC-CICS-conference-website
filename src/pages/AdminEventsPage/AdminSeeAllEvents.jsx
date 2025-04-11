@@ -54,13 +54,13 @@ const AdminSeeAllEvent = () => {
 
       // Transform the data to match our table structure
       const formattedEvents = [];
-      
+
       if (response.data && response.data.data) {
         response.data.data.forEach(dayData => {
           dayData.events.forEach(event => {
             formattedEvents.push({
               // Only use a numeric ID if it exists in the data
-              id: event.id || null, 
+              id: event.id || null,
               // Include date + time as a composite identifier
               dateTime: `${dayData.date}-${event.time}`,
               program: event.program,
@@ -74,16 +74,16 @@ const AdminSeeAllEvent = () => {
           });
         });
       }
-      
+
       setEvents(formattedEvents);
-      
+
       // Set total pages
       if (response.data && response.data.totalPages) {
         setTotalPages(response.data.totalPages);
       } else {
         setTotalPages(Math.ceil(formattedEvents.length / rowsPerPage));
       }
-      
+
     } catch (error) {
       console.error("Error fetching events:", error);
       setNotification({
@@ -96,74 +96,63 @@ const AdminSeeAllEvent = () => {
     }
   };
 
-// Updated handleDelete function for AdminSeeAllEvents.jsx
+  const handleDelete = async () => {
+    handleMenuClose();
 
-const handleDelete = async () => {
-  handleMenuClose();
-  
-  if (!selectedEvent) return;
-  
-  // Confirm before deletion
-  if (!window.confirm("Are you sure you want to delete this event?")) {
+    if (!selectedEvent) return;
+
+    // Confirm before deletion
+    if (!window.confirm("Are you sure you want to delete this event?")) {
       return;
-  }
-  
-  try {
+    }
+
+    try {
       const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-          setNotification({
-              open: true,
-              message: "Authentication error: No token found",
-              severity: "error"
-          });
-          return;
-      }
-      
-      // Set loading state
-      setLoading(true);
-      
-      // We need to use the proper ID to delete the event
-      // This is the issue - we're missing the ID in some cases
-      // Let's improve the code to handle both direct ID and composite ID cases
-      
-      if (!selectedEvent.id) {
-          setNotification({
-              open: true,
-              message: "Cannot delete this event - missing event ID",
-              severity: "error"
-          });
-          return;
-      }
-      
-      // Make the delete request
-      await axios.delete(`${BACKEND_URL}/api/events/${selectedEvent.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+
+      // Use a new endpoint specifically for deleting events by date and time
+      await axios.delete(`${BACKEND_URL}/api/events-by-criteria`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: {
+          program: selectedEvent.program,
+          date: selectedEvent.date,
+          time: selectedEvent.time
+        }
       });
 
-      // Remove from list and update UI
-      setEvents(prevEvents => prevEvents.filter(event => event.id !== selectedEvent.id));
-      
+      // Remove from list
+      setEvents(prevEvents => prevEvents.filter(event =>
+        !(event.date === selectedEvent.date &&
+          event.time === selectedEvent.time &&
+          event.program === selectedEvent.program)
+      ));
+
       setNotification({
-          open: true,
-          message: "Event deleted successfully",
-          severity: "success"
+        open: true,
+        message: "Event deleted successfully",
+        severity: "success"
       });
-      
-      // Refresh the list after deletion
-      fetchEvents();
-      
-  } catch (error) {
+
+    } catch (error) {
       console.error("Error deleting event:", error);
-      setNotification({
+
+      // Check if this is a "not implemented" error
+      if (error.response?.status === 404 ||
+        error.response?.status === 501 ||
+        error.response?.data?.error?.includes("not implemented")) {
+        setNotification({
           open: true,
-          message: error.response?.data?.error || "Failed to delete event. Check console for details.",
+          message: "Event deletion by criteria is not implemented. Please use the edit interface to delete events.",
+          severity: "info"
+        });
+      } else {
+        setNotification({
+          open: true,
+          message: error.response?.data?.error || "Failed to delete event",
           severity: "error"
-      });
-  } finally {
-      setLoading(false);
-  }
-};
+        });
+      }
+    }
+  };
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
@@ -179,7 +168,7 @@ const handleDelete = async () => {
   };
 
   const filteredEvents = events.filter(event =>
-    (event.program?.toLowerCase().includes(search.toLowerCase()) ||
+  (event.program?.toLowerCase().includes(search.toLowerCase()) ||
     event.date?.toLowerCase().includes(search.toLowerCase()) ||
     event.speaker?.toLowerCase().includes(search.toLowerCase()))
   );
@@ -245,7 +234,6 @@ const handleDelete = async () => {
               <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Speaker</TableCell>
               <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Category</TableCell>
               <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Link</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", width: "70px" }}></TableCell>
             </TableRow>
           </TableHead>
 
@@ -256,25 +244,22 @@ const handleDelete = async () => {
                   {event.date ? new Date(event.date).toLocaleDateString() : "N/A"}
                 </TableCell>
                 <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.time || "N/A"}</TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.program || "N/A"}</TableCell>
+                <TableCell sx={{ borderRight: "1px solid #eee", fontSize: "0.75rem" }}>
+                  {event.program || "N/A"}
+                </TableCell>
                 <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.venue || "N/A"}</TableCell>
                 <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.speaker || "N/A"}</TableCell>
                 <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.category || "N/A"}</TableCell>
                 <TableCell sx={{ borderRight: "1px solid #eee" }}>
                   {event.online_room_link ? (
-                    <Button 
-                      startIcon={<LinkIcon />} 
-                      size="small" 
+                    <Button
+                      startIcon={<LinkIcon />}
+                      size="small"
                       onClick={() => window.open(event.online_room_link, '_blank')}
                     >
                       Join
                     </Button>
                   ) : "None"}
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton onClick={(e) => handleMenuOpen(e, event)} size="small">
-                    <MoreVert />
-                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -285,11 +270,11 @@ const handleDelete = async () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <Box display="flex" justifyContent="center" mt={3}>
-          <Pagination 
-            count={totalPages} 
-            page={page} 
-            color="primary" 
-            onChange={handlePageChange} 
+          <Pagination
+            count={totalPages}
+            page={page}
+            color="primary"
+            onChange={handlePageChange}
           />
         </Box>
       )}
@@ -305,14 +290,14 @@ const handleDelete = async () => {
       </Menu>
 
       {/* Notification */}
-      <Snackbar 
-        open={notification.open} 
-        autoHideDuration={6000} 
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert 
-          onClose={handleCloseNotification} 
+        <Alert
+          onClose={handleCloseNotification}
           severity={notification.severity}
         >
           {notification.message}
