@@ -324,6 +324,7 @@ router.put("/publications/:id", authenticateToken, async (req, res) => {
 
 // Delete a publication - parameter route after specific routes
 // Delete a publication
+// Delete a publication
 router.delete("/publications/:id", authenticateToken, async (req, res) => {
     try {
         const publicationId = req.params.id;
@@ -362,7 +363,6 @@ router.delete("/publications/:id", authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 // Debug database connection and structure
 router.get("/debug-db", async (req, res) => {
     try {
