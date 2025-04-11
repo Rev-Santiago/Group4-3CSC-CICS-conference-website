@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function SearchResultPage() {
     const location = useLocation();
+    const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
     const searchQuery = queryParams.get('query');
     const [results, setResults] = useState([]);
@@ -25,6 +26,11 @@ function SearchResultPage() {
                 setResults(response.data);
             } catch (error) {
                 console.error("Error fetching search results:", error);
+                console.error("Error details:", {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status
+                });
                 setError("Failed to fetch search results. Please try again later.");
             } finally {
                 setIsLoading(false);
@@ -36,8 +42,43 @@ function SearchResultPage() {
         }
     }, [searchQuery]);
 
+    // Manual mapping for title to route redirection
+    const titleToRouteMap = {
+        "Welcome to UST CICS Conference Website": "/",
+        "Call For Papers/Tracks": "/call-for-papers",
+        "Call For Papers/Submission Guidelines": "/call-for-papers",
+        "Schedule/Announcements": "/schedule",
+        "Conference Partners": "/partners",
+        "Event History/Announcements": "/event-history",
+        "Registration and Fees/Conference Fees": "/registration-and-fees",
+        "Registration and Fees/Payment Guidelines": "/registration-and-fees",
+        "Registration and Fees/Presentation Video": "/registration-and-fees",
+        "Publication/Conference Proceedings": "/publication",
+        "Publication/Previous Conference Publications": "/publication",
+        "Schedule/Schedule Details": "/schedule",
+        "Venue/Announcements": "/venue",
+        "Venue/Venue Details": "/venue",
+        "Speakers/Keynote Speakers": "/keynote-speakers",
+        "Speakers/Invited Speakers": "/invited-speakers"
+    };
+
+    // Function to handle redirection when a result is clicked
+    const handleResultClick = (result) => {
+        // Look up the route in the mapping
+        const route = titleToRouteMap[result.title];
+        
+        if (route) {
+            console.log(`Navigating to: ${route} from title: ${result.title}`);
+            navigate(route);
+        } else {
+            console.warn(`No route mapping found for title: ${result.title}`);
+            // Default to home page if no mapping is found
+            navigate('/');
+        }
+    };
+
     return (
-        <div className="container mx-auto">
+        <div className="container mx-auto mb-8">
             <h1 className="text-2xl font-bold mb-6">Search results for "{searchQuery}"</h1>
             
             {isLoading && (
@@ -47,7 +88,7 @@ function SearchResultPage() {
             )}
             
             {error && (
-                <div className="text-red-600 bg-red-100 p-4 rounded mb-4">
+                <div className="text-red-600 bg-red-100 rounded mb-4">
                     {error}
                 </div>
             )}
@@ -59,16 +100,31 @@ function SearchResultPage() {
                 </div>
             )}
             
-            <div>
+            <div className="space-y-6">
                 {results.map((result, index) => (
-                    <div key={index} className="pb-4 mb-4">
-                        <a href="#" className="text-customRed text-lg font-semibold hover:underline">
-                            {index + 1}. {result.title}
+                    <div key={index} className="">
+                        <a 
+                            onClick={() => handleResultClick(result)}
+                            className="text-customRed text-lg font-semibold hover:underline cursor-pointer block"
+                        >
+                            {result.title}
                         </a>
-                        <p className="text-gray-700 mt-1">{result.content}</p>
-                        {index !== results.length - 1 && (
-                            <hr className="my-4 border-gray-300" />
+                        {result.content && (
+                            <p className="text-gray-700 mt-2">
+                                {result.content.length > 200 
+                                    ? `${result.content.substring(0, 200)}...` 
+                                    : result.content}
+                            </p>
                         )}
+                        <button 
+                            onClick={() => handleResultClick(result)}
+                            className="mt-3 text-sm text-customRed hover:text-red-800 font-medium flex items-center"
+                        >
+                            View details
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
                     </div>
                 ))}
             </div>

@@ -10,7 +10,7 @@ const SchedulePage = () => {
     const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [selectedDateLabel, setSelectedDateLabel] = useState("Jump to Date");
-    
+
     const dateDropdownRef = useRef(null);
     const categoryDropdownRef = useRef(null);
 
@@ -33,6 +33,7 @@ const SchedulePage = () => {
         };
     }, []);
 
+    // In the useEffect for fetching schedule data, ensure your data structure is processed correctly
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
@@ -42,8 +43,12 @@ const SchedulePage = () => {
                 if (result.data) {
                     const today = new Date().toISOString().split("T")[0];
                     const filteredData = result.data.filter(day => day.date >= today);
+
+                    // Log the data to debug what we're receiving
+                    console.log("Filtered schedule data:", filteredData);
+
                     setScheduleData(filteredData);
-                    
+
                     // Extract categories from all events
                     const allCategories = new Set();
                     filteredData.forEach(day => {
@@ -84,9 +89,9 @@ const SchedulePage = () => {
 
     useEffect(() => {
         if (categories.length === 0) {
-          setCategories(['Test Category 1', 'Test Category 2']);
+            setCategories(['Test Category 1', 'Test Category 2']);
         }
-      }, [categories]);
+    }, [categories]);
 
     const handleCategorySelect = (category) => {
         setSelectedCategory(category);
@@ -244,7 +249,7 @@ const SchedulePage = () => {
     const filteredScheduleData = selectedCategory
         ? scheduleData.map(day => ({
             ...day,
-            events: day.events.filter(event => 
+            events: day.events.filter(event =>
                 event.category && event.category.toLowerCase() === selectedCategory.toLowerCase()
             )
         })).filter(day => day.events.length > 0)
@@ -280,7 +285,7 @@ const SchedulePage = () => {
 
     return (
         <section className="container mx-auto pb-10">
-            <motion.h5 
+            <motion.h5
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
@@ -289,7 +294,7 @@ const SchedulePage = () => {
                 Announcements
             </motion.h5>
 
-            <motion.p 
+            <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -298,7 +303,7 @@ const SchedulePage = () => {
                 Schedule updates will be posted here and sent to registered participants via email.
             </motion.p>
 
-            <motion.h2 
+            <motion.h2
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
@@ -308,7 +313,7 @@ const SchedulePage = () => {
             </motion.h2>
 
             {!loading && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
@@ -346,7 +351,7 @@ const SchedulePage = () => {
                 </motion.div>
             )}
 
-            <motion.p 
+            <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
@@ -360,7 +365,7 @@ const SchedulePage = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-customRed"></div>
                 </div>
             ) : scheduleData.length === 0 ? (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="text-center py-12 bg-gray-50 rounded-lg shadow-sm"
@@ -373,9 +378,9 @@ const SchedulePage = () => {
                 </motion.div>
             ) : (
                 filteredScheduleData.map((day, index) => (
-                    <motion.div 
-                        key={index} 
-                        id={`date-${index}`} 
+                    <motion.div
+                        key={index}
+                        id={`date-${index}`}
                         className="mb-12"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -383,12 +388,12 @@ const SchedulePage = () => {
                     >
                         <div className="flex items-center justify-center mb-6">
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>
-                            <h6 className="text-xl text-center mx-4  px-4 py-2 bg-customRed text-white rounded-full">
+                            <h6 className="text-xl text-center mx-4  px-4 py-2 text-black rounded-full">
                                 {formatDate(day.date)}
                             </h6>
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>
                         </div>
-                        
+
                         <div className="overflow-x-auto shadow-lg ">
                             <table className="w-full border-collapse bg-white border border-black divide-y divide-black">
                                 <thead>
@@ -406,7 +411,7 @@ const SchedulePage = () => {
                                 </thead>
                                 <tbody className="divide-y divide-black">
                                     {sortEventsByTime(day.events).map((event, i) => (
-                                        <motion.tr 
+                                        <motion.tr
                                             key={i}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -419,10 +424,15 @@ const SchedulePage = () => {
                                             </td>
                                             <td className="px-6 py-2 whitespace-normal text-sm text-gray-900 border-r border-black">
                                                 <div>
-                                                    <p>{event.program}</p>
+                                                    <p className="font-medium">{event.program}</p>
+                                                    {event.speaker && (
+                                                        <p className="text-gray-600 mt-1">
+                                                            <span className="font-medium">Speaker:</span> {event.speaker}
+                                                        </p>
+                                                    )}
                                                     {event.category && (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-customRed bg-opacity-10 text-customRed mt-1">
-                                                            {event.category}
+                                                        <span className="text-gray-600 mt-1">
+                                                            <span className="font-medium">Theme: {event.category}</span>
                                                         </span>
                                                     )}
                                                 </div>

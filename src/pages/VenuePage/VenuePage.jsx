@@ -33,6 +33,26 @@ const VenuePage = () => {
         };
     }, []);
 
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/category`);
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            let categoryList = await response.json();
+
+            const cleaned = Array.from(
+                new Set(
+                    categoryList
+                        .filter(c => typeof c === 'string' && c.trim() !== '')
+                        .map(c => c.trim())
+                )
+            );
+
+            setCategories(cleaned);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
+
     const scrollToDate = (id, label) => {
         const el = document.getElementById(id);
         if (el) {
@@ -57,7 +77,7 @@ const VenuePage = () => {
                 }
                 const result = await response.json();
                 console.log("Fetched schedule data:", result);
-                
+
                 // Check if the expected data structure exists
                 if (result && result.data && Array.isArray(result.data)) {
                     setVenueData(result.data);
@@ -71,26 +91,6 @@ const VenuePage = () => {
             }
         };
 
-        const fetchCategories = async () => {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/category`);
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                let categoryList = await response.json();
-
-                const cleaned = Array.from(
-                    new Set(
-                        categoryList
-                            .filter(c => typeof c === 'string' && c.trim() !== '')
-                            .map(c => c.trim())
-                    )
-                );
-
-                setCategories(cleaned);
-            } catch (error) {
-                console.error("Error fetching categories:", error);
-            }
-        };
-
         fetchEvents();
         fetchCategories();
     }, [BACKEND_URL]); // ✅ dependency for environment changes
@@ -100,11 +100,13 @@ const VenuePage = () => {
         return new Date(dateString).toLocaleDateString("en-US", options);
     };
 
+
+    // Updated to filter by category field
     const filteredVenueData = selectedCategory
         ? venueData.map(day => ({
             ...day,
             events: day.events.filter(event =>
-                event.program.toLowerCase().includes(selectedCategory.toLowerCase())
+                event.category && event.category.toLowerCase() === selectedCategory.toLowerCase()
             )
         })).filter(day => day.events.length > 0)
         : venueData;
@@ -163,22 +165,22 @@ const VenuePage = () => {
         </div>
     );
 
-    // Event table component for better organization
+    // Updated Event table component with speaker column
     const EventTable = ({ events }) => (
         <div className="overflow-x-auto shadow-lg">
             <table className="w-full border-collapse bg-white border border-black">
                 <thead>
                     <tr>
-                        <th className="bg-customRed border border-black text-white px-6 py-3 text-left text-sm uppercase tracking-wider border-b-2 w-1/5">
+                        <th className="bg-customRed border border-black text-white px-6 py-2 text-left text-sm uppercase tracking-wider border-b-2 w-1/6">
                             Time
                         </th>
-                        <th className="bg-customRed border border-black text-white px-6 py-3 text-left text-sm uppercase tracking-wider border-b-2 w-2/5">
+                        <th className="bg-customRed border border-black text-white px-6 py-2 text-left text-sm uppercase tracking-wider border-b-2 w-2/6">
                             Programme
                         </th>
-                        <th className="bg-customRed border border-black text-white px-6 py-3 text-left text-sm uppercase tracking-wider border-b-2 w-1/5">
+                        <th className="bg-customRed border border-black text-white px-6 py-2 text-left text-sm uppercase tracking-wider border-b-2 w-1/6">
                             Venue
                         </th>
-                        <th className="bg-customRed border border-black text-white px-6 py-3 text-left text-sm uppercase tracking-wider border-b-2 w-1/5">
+                        <th className="bg-customRed border border-black text-white px-6 py-2 text-left text-sm uppercase tracking-wider border-b-2 w-1/6">
                             Online Room
                         </th>
                     </tr>
@@ -197,12 +199,24 @@ const VenuePage = () => {
                                 {event.time}
                             </td>
                             <td className="px-6 py-4 border border-black whitespace-normal text-sm text-gray-900">
-                                {event.program}
+                                <div>
+                                    <p className="font-medium"> Title: {event.program}</p>
+                                    {event.speaker && (
+                                        <p className="text-gray-600 mt-1">
+                                            <span className="font-medium">Speaker:</span> {event.speaker}
+                                        </p>
+                                    )}
+                                    {event.category && (
+                                        <span className="text-gray-600 mt-1">
+                                            <p className="font-medium"> Theme: {event.category}</p>
+                                        </span>
+                                    )}
+                                </div>
                             </td>
                             <td className="px-6 py-4 border border-black whitespace-nowrap text-sm text-gray-900">
                                 {event.venue || "TBA"}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <td className="px-6 py-4 border border-black whitespace-nowrap text-sm">
                                 {event.online_room_link ? (
                                     <a
                                         href={event.online_room_link}
@@ -335,7 +349,7 @@ const VenuePage = () => {
                     >
                         <div className="flex items-center justify-center mb-6">
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>
-                            <h6 className="text-xl text-center mx-4 px-4 py-2 bg-customRed text-white rounded-full">
+                            <h6 className="text-xl text-center mx-4 px-4 py-2  text-black rounded-full">
                                 {formatDate(day.date)}
                             </h6>
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>

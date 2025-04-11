@@ -20,7 +20,7 @@ import searchRouter from "./routes/search.js";
 import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
-app.set('trust proxy', 1); 
+app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 500;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
@@ -37,7 +37,7 @@ app.use(express.json());
 // Updated CORS Configuration
 app.use(cors({
     origin: [
-        "https://cics-conference-website.onrender.com", 
+        "https://cics-conference-website.onrender.com",
         "http://localhost:3000",  // React development server
         "http://localhost:5173"   // Vite development server
     ],
@@ -47,25 +47,25 @@ app.use(cors({
 
 app.use(
     helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "https://www.google.com",
-            "https://www.gstatic.com",
-            "'unsafe-inline'"
-          ],
-          connectSrc: [
-            "'self'",
-            "http://localhost:5000", // ✅ allow local fetch
-            "https://www.google.com"
-          ],
-          frameSrc: ["'self'", "https://www.google.com"]
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: [
+                    "'self'",
+                    "https://www.google.com",
+                    "https://www.gstatic.com",
+                    "'unsafe-inline'"
+                ],
+                connectSrc: [
+                    "'self'",
+                    "http://localhost:5000", // ✅ allow local fetch
+                    "https://www.google.com"
+                ],
+                frameSrc: ["'self'", "https://www.google.com"]
+            }
         }
-      }
     })
-  );
+);
 
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
@@ -172,20 +172,24 @@ app.get("/api/events-history", async (req, res) => {
 
         // Fetch schedules for the event dates
         const [scheduleRows] = await db.query(
-            `SELECT event_date, time_slot, program 
-             FROM events 
-             WHERE event_date IN (?) 
-             ORDER BY event_date DESC, time_slot ASC`,
+            `SELECT event_date, time_slot, program, speaker, venue, online_room_link, category
+     FROM events 
+     WHERE event_date IN (?) 
+     ORDER BY event_date DESC, time_slot ASC`,
             [eventDates]
         );
 
         const groupedEvents = eventDates.map(date => ({
             date: date.toISOString().split("T")[0],
-            schedule: scheduleRows
+            events: scheduleRows
                 .filter(event => event.event_date.toISOString().split("T")[0] === date.toISOString().split("T")[0])
                 .map(event => ({
                     time: event.time_slot,
-                    program: event.program.split(" | ")
+                    program: event.program,
+                    speaker: event.speaker,
+                    venue: event.venue,
+                    online_room_link: event.online_room_link,
+                    category: event.category
                 }))
         }));
 
@@ -269,7 +273,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
-            SELECT event_date, time_slot, program, venue, online_room_link  
+            SELECT event_date, time_slot, program, venue, online_room_link, speaker, category
             FROM events 
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
@@ -278,16 +282,18 @@ app.get("/api/schedule", async (req, res) => {
 
         // Group events by date
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program, venue, online_room_link } = event;
+            const { event_date, time_slot, program, venue, online_room_link, speaker, category } = event;
             const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
             if (!acc[dateKey]) {
                 acc[dateKey] = { date: dateKey, events: [] };
             }
-            acc[dateKey].events.push({ 
-                time: time_slot, 
-                program, 
-                venue, 
-                online_room_link 
+            acc[dateKey].events.push({
+                time: time_slot,
+                program,
+                venue,
+                online_room_link,
+                speaker,
+                category
             });
 
             return acc;
@@ -332,6 +338,26 @@ app.get("/api/admin_event_preview", async (req, res) => {
 });
 
 app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
+
+// 📋 Fetch Categories for Filtering
+app.get("/api/category", async (req, res) => {
+    try {
+        // Get distinct categories from the events table
+        const [rows] = await db.query(
+            `SELECT DISTINCT category 
+             FROM events 
+             WHERE category IS NOT NULL AND category != ''`
+        );
+        
+        // Extract categories from result
+        const categories = rows.map(row => row.category);
+        
+        res.json(categories);
+    } catch (error) {
+        console.error("Error fetching categories:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 // Serve static files from the React app (build folder)
 if (process.env.NODE_ENV === "production") {
