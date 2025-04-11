@@ -56,32 +56,40 @@ const EventsHistoryPage = () => {
               <table className="w-full border-collapse border-2 border-black">
                 <thead>
                   <tr className="bg-customRed text-white">
-                    <th className="w-1/2 py-3 px-4 border-2 border-black text-left font-semibold">Time</th>
-                    <th className="w-1/2 py-3 px-4 border-2 border-black text-left font-semibold">Program</th>
+                    <th className="w-1/6 py-3 px-4 border-2 border-black text-left font-semibold">Time</th>
+                    <th className="w-4/6 py-3 px-4 border-2 border-black text-left font-semibold">Program</th>
+                    <th className="w-1/6 py-3 px-4 border-2 border-black text-left font-semibold">Venue</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {event.schedule && event.schedule.length > 0 ? (
-                    event.schedule.map((item, idx) => (
+                  {event.events && event.events.length > 0 ? (
+                    event.events.map((item, idx) => (
                       <tr 
                         key={idx} 
                         className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                       >
                         <td className="py-4 px-4 border-2 border-black min-h-[50px]">{item.time}</td>
                         <td className="py-4 px-4 border-2 border-black min-h-[50px]">
-                          {item.program && item.program.length > 0 ? (
-                            item.program.map((detail, i) => (
-                              <p key={i} className="text-gray-800 mb-2 last:mb-0">{detail}</p>
-                            ))
-                          ) : (
-                            <p className="text-gray-600">No program details available</p>
+                          <p className="text-gray-800 font-medium">{item.program}</p>
+                          {item.speaker && <p className="text-gray-700 mt-1">Speaker: {item.speaker}</p>}
+                          {item.category && <p className="text-gray-600 mt-1 italic">Category: {item.category}</p>}
+                          {item.online_room_link && (
+                            <a 
+                              href={item.online_room_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 mt-2 inline-block"
+                            >
+                              Online Room Link
+                            </a>
                           )}
                         </td>
+                        <td className="py-4 px-4 border-2 border-black min-h-[50px]">{item.venue}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={2} className="py-4 px-4 border-2 border-black text-center text-gray-600">
+                      <td colSpan={3} className="py-4 px-4 border-2 border-black text-center text-gray-600">
                         No schedule available
                       </td>
                     </tr>
