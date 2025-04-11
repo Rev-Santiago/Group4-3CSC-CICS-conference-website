@@ -18,27 +18,27 @@ router.get("/publications-admin", async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
         
-        // Get total count
+        // Get total count - NO database prefix
         const [countResult] = await db.query(
-            `SELECT COUNT(*) AS total FROM conference_db.conference_publications`
+            `SELECT COUNT(*) AS total FROM conference_publications`
         );
         const totalPublications = countResult[0].total;
         
-        // Fetch publications with pagination - selecting publication_link as well
+        // Fetch publications with pagination - NO database prefix
         const [publications] = await db.query(
             `SELECT id, publication_date, publication_description, publication_link 
-             FROM conference_db.conference_publications 
+             FROM conference_publications 
              ORDER BY publication_date DESC
              LIMIT ? OFFSET ?`,
             [limit, offset]
         );
         
-        // Format the response to include the expected fields
+        // Format the response to include all necessary fields
         const formattedPublications = publications.map(pub => ({
             id: pub.id,
             publication_date: pub.publication_date,
             publication_description: pub.publication_description,
-            publication_link: pub.publication_link // now coming from the DB
+            publication_link: pub.publication_link
         }));
         
         res.json({ 
@@ -62,9 +62,9 @@ router.get("/publications/drafts", async (req, res) => {
     try {
         console.log("Request to get publication drafts received. User:", req.user);
         
-        // Verify user has appropriate permissions
+        // Verify user has appropriate permissions - NO database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            `SELECT account_type FROM users WHERE id = ?`, 
             [req.user.id]
         );
         
@@ -76,10 +76,7 @@ router.get("/publications/drafts", async (req, res) => {
         
         // Check if draft table exists
         const [tables] = await db.query(
-            `SELECT TABLE_NAME 
-             FROM information_schema.TABLES 
-             WHERE TABLE_SCHEMA = 'conference_db' 
-             AND TABLE_NAME = 'publication_drafts'`
+            `SHOW TABLES LIKE 'publication_drafts'`
         );
         
         // If draft table doesn't exist, return empty array
@@ -87,10 +84,10 @@ router.get("/publications/drafts", async (req, res) => {
             return res.json({ drafts: [], count: 0 });
         }
         
-        // Fetch drafts
+        // Fetch drafts - NO database prefix
         const [drafts] = await db.query(
             `SELECT id, publication_date, publication_description, publication_link, created_at, updated_at
-             FROM conference_db.publication_drafts 
+             FROM publication_drafts 
              ORDER BY updated_at DESC`
         );
         
@@ -106,9 +103,9 @@ router.post("/publications/drafts", async (req, res) => {
     try {
         const { title, date, link, id } = req.body;
         
-        // Verify user has appropriate permissions
+        // Verify user has appropriate permissions - NO database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            `SELECT account_type FROM users WHERE id = ?`, 
             [req.user.id]
         );
         
@@ -120,16 +117,13 @@ router.post("/publications/drafts", async (req, res) => {
         
         // Check if draft table exists
         const [tables] = await db.query(
-            `SELECT TABLE_NAME 
-             FROM information_schema.TABLES 
-             WHERE TABLE_SCHEMA = 'conference_db' 
-             AND TABLE_NAME = 'publication_drafts'`
+            `SHOW TABLES LIKE 'publication_drafts'`
         );
         
-        // If draft table doesn't exist, create it
+        // If draft table doesn't exist, create it - NO database prefix
         if (tables.length === 0) {
             await db.execute(`
-                CREATE TABLE conference_db.publication_drafts (
+                CREATE TABLE publication_drafts (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     publication_date DATE NOT NULL,
                     publication_description TEXT NOT NULL,
@@ -143,14 +137,14 @@ router.post("/publications/drafts", async (req, res) => {
         // Check if we're updating an existing draft
         if (id) {
             const [existingDraft] = await db.query(
-                `SELECT id FROM conference_db.publication_drafts WHERE id = ?`,
+                `SELECT id FROM publication_drafts WHERE id = ?`,
                 [id]
             );
             
             if (existingDraft.length > 0) {
-                // Update existing draft
+                // Update existing draft - NO database prefix
                 await db.execute(
-                    `UPDATE conference_db.publication_drafts 
+                    `UPDATE publication_drafts 
                      SET publication_date = ?, publication_description = ?, publication_link = ?, updated_at = NOW()
                      WHERE id = ?`,
                     [date, title, link || null, id]
@@ -160,9 +154,9 @@ router.post("/publications/drafts", async (req, res) => {
             }
         }
         
-        // Insert new draft
+        // Insert new draft - NO database prefix
         const [result] = await db.execute(
-            `INSERT INTO conference_db.publication_drafts 
+            `INSERT INTO publication_drafts 
              (publication_date, publication_description, publication_link, created_at) 
              VALUES (?, ?, ?, NOW())`,
             [date, title, link || null]
@@ -183,9 +177,10 @@ router.get("/publications/latest", async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 5;
         
+        // NO database prefix
         const [publications] = await db.query(
             `SELECT id, publication_date, publication_description, publication_link
-             FROM conference_db.conference_publications 
+             FROM conference_publications 
              ORDER BY publication_date DESC
              LIMIT ?`,
             [limit]
@@ -203,9 +198,9 @@ router.post("/publications", async (req, res) => {
     try {
         const { title, date, link } = req.body;
         
-        // Verify user has appropriate permissions
+        // Verify user has appropriate permissions - NO database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            `SELECT account_type FROM users WHERE id = ?`, 
             [req.user.id]
         );
         
@@ -220,9 +215,9 @@ router.post("/publications", async (req, res) => {
             return res.status(400).json({ error: "Title and date are required" });
         }
         
-        // Insert new publication using the link field also
+        // Insert new publication using the link field also - NO database prefix
         const [result] = await db.execute(
-            `INSERT INTO conference_db.conference_publications 
+            `INSERT INTO conference_publications 
              (publication_date, publication_description, publication_link) 
              VALUES (?, ?, ?)`,
             [date, title, link || null]
@@ -243,9 +238,10 @@ router.get("/publications/:id", async (req, res) => {
     try {
         const publicationId = req.params.id;
         
+        // NO database prefix
         const [publications] = await db.query(
             `SELECT id, publication_date, publication_description, publication_link, created_at 
-             FROM conference_db.conference_publications 
+             FROM conference_publications 
              WHERE id = ?`,
             [publicationId]
         );
@@ -261,15 +257,15 @@ router.get("/publications/:id", async (req, res) => {
     }
 });
 
-// Replace the old PUT route with the updated one that includes publication_link:
+// Update a publication
 router.put("/publications/:id", async (req, res) => {
     try {
         const publicationId = req.params.id;
         const { title, date, link } = req.body;
         
-        // Verify user has appropriate permissions
+        // Verify user has appropriate permissions - NO database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            `SELECT account_type FROM users WHERE id = ?`, 
             [req.user.id]
         );
         
@@ -279,9 +275,9 @@ router.put("/publications/:id", async (req, res) => {
             return res.status(403).json({ error: "Only Admins can update publications" });
         }
         
-        // Check if publication exists
+        // Check if publication exists - NO database prefix
         const [existingPublication] = await db.query(
-            `SELECT id FROM conference_db.conference_publications WHERE id = ?`,
+            `SELECT id FROM conference_publications WHERE id = ?`,
             [publicationId]
         );
         
@@ -294,9 +290,9 @@ router.put("/publications/:id", async (req, res) => {
             return res.status(400).json({ error: "Title and date are required" });
         }
         
-        // Update publication including publication_link column
+        // Update publication including publication_link column - NO database prefix
         await db.execute(
-            `UPDATE conference_db.conference_publications 
+            `UPDATE conference_publications 
              SET publication_date = ?, publication_description = ?, publication_link = ?
              WHERE id = ?`,
             [date, title, link || null, publicationId]
@@ -314,9 +310,9 @@ router.delete("/publications/:id", async (req, res) => {
     try {
         const publicationId = req.params.id;
         
-        // Verify user has appropriate permissions
+        // Verify user has appropriate permissions - NO database prefix
         const [currentUser] = await db.query(
-            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            `SELECT account_type FROM users WHERE id = ?`, 
             [req.user.id]
         );
         
@@ -326,9 +322,9 @@ router.delete("/publications/:id", async (req, res) => {
             return res.status(403).json({ error: "Only Admins can delete publications" });
         }
         
-        // Check if publication exists
+        // Check if publication exists - NO database prefix
         const [existingPublication] = await db.query(
-            `SELECT id FROM conference_db.conference_publications WHERE id = ?`,
+            `SELECT id FROM conference_publications WHERE id = ?`,
             [publicationId]
         );
         
@@ -336,9 +332,9 @@ router.delete("/publications/:id", async (req, res) => {
             return res.status(404).json({ error: "Publication not found" });
         }
         
-        // Delete publication
+        // Delete publication - NO database prefix
         await db.execute(
-            `DELETE FROM conference_db.conference_publications WHERE id = ?`,
+            `DELETE FROM conference_publications WHERE id = ?`,
             [publicationId]
         );
         
@@ -349,6 +345,7 @@ router.delete("/publications/:id", async (req, res) => {
     }
 });
 
+// Debug database connection and structure
 router.get("/debug-db", async (req, res) => {
     try {
         // Test basic database connection
@@ -356,10 +353,10 @@ router.get("/debug-db", async (req, res) => {
         const [result] = await db.query("SELECT 1 as test");
         console.log("Database connection working:", result);
         
-        // Check for conference_publications table
+        // Check for conference_publications table - NO database prefix
         console.log("Checking for tables...");
         const [tables] = await db.query(
-            `SHOW TABLES FROM conference_db LIKE 'conference_publications'`
+            `SHOW TABLES LIKE 'conference_publications'`
         );
         console.log("Tables check result:", tables);
         
@@ -371,9 +368,9 @@ router.get("/debug-db", async (req, res) => {
             });
         }
         
-        // Check table structure
+        // Check table structure - NO database prefix
         const [columns] = await db.query(
-            `SHOW COLUMNS FROM conference_db.conference_publications`
+            `SHOW COLUMNS FROM conference_publications`
         );
         
         res.json({
