@@ -323,9 +323,10 @@ router.put("/publications/:id", authenticateToken, async (req, res) => {
 });
 
 // Delete a publication - parameter route after specific routes
-router.delete("/publications/drafts/:id", authenticateToken, async (req, res) => {
+// Delete a publication
+router.delete("/publications/:id", authenticateToken, async (req, res) => {
     try {
-        const draftId = req.params.id;
+        const publicationId = req.params.id;
         
         // Verify user has appropriate permissions
         const [currentUser] = await db.query(
@@ -336,28 +337,28 @@ router.delete("/publications/drafts/:id", authenticateToken, async (req, res) =>
         if (currentUser.length === 0 || 
             (currentUser[0].account_type !== 'admin' && 
              currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can delete drafts" });
+            return res.status(403).json({ error: "Only Admins can delete publications" });
         }
         
-        // Check if draft exists
-        const [existingDraft] = await db.query(
-            `SELECT id FROM publication_drafts WHERE id = ?`,
-            [draftId]
+        // Check if publication exists
+        const [existingPublication] = await db.query(
+            `SELECT id FROM conference_publications WHERE id = ?`,
+            [publicationId]
         );
         
-        if (existingDraft.length === 0) {
-            return res.status(404).json({ error: "Draft not found" });
+        if (existingPublication.length === 0) {
+            return res.status(404).json({ error: "Publication not found" });
         }
         
-        // Delete the draft
+        // Delete the publication
         await db.execute(
-            `DELETE FROM publication_drafts WHERE id = ?`,
-            [draftId]
+            `DELETE FROM conference_publications WHERE id = ?`,
+            [publicationId]
         );
         
-        res.json({ message: "Draft deleted successfully" });
+        res.json({ message: "Publication deleted successfully" });
     } catch (error) {
-        console.error("Error deleting draft:", error);
+        console.error("Error deleting publication:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
