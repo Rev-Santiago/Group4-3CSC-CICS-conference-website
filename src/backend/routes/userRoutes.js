@@ -1,6 +1,7 @@
 // routes/userRoutes.js
 import express from "express";
 import db from "../db.js";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -12,10 +13,10 @@ router.get("/users", async (req, res) => {
     try {
         console.log("Request to get users received. User:", req.user);
         
-        // Use the same format as other queries in server.js (no database prefix)
+        // Add database prefix to match your SELECT * FROM conference_db.users format
         const [users] = await db.query(
             `SELECT id, email, account_type, created_at 
-             FROM users ORDER BY created_at DESC`
+             FROM conference_db.users ORDER BY created_at DESC`
         );
         
         console.log("Users found:", users);
@@ -36,6 +37,63 @@ router.get("/users", async (req, res) => {
     }
 });
 
+// Create new user (super_admin only)
+router.post("/users", async (req, res) => {
+    try {
+        const { email, password, account_type } = req.body;
+        
+        // Verify current user is super_admin
+        const [currentUser] = await db.query(
+            "SELECT account_type FROM conference_db.users WHERE id = ?", 
+            [req.user.id]
+        );
+        
+        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
+            return res.status(403).json({ error: "Only Super Admins can add new users" });
+        }
+        
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
+        }
+        
+        if (password.length < 6) {
+            return res.status(400).json({ error: "Password must be at least 6 characters" });
+        }
+        
+        // Check if email already exists
+        const [existingUser] = await db.query(
+            "SELECT id FROM conference_db.users WHERE email = ?",
+            [email]
+        );
+        
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: "User with this email already exists" });
+        }
+        
+        // Hash password with bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        console.log("Attempting to create user:", { email, account_type: account_type || 'admin' });
+        
+        try {
+            await db.execute(
+                "INSERT INTO conference_db.users (email, password, account_type, created_at) VALUES (?, ?, ?, NOW())",
+                [email, hashedPassword, account_type || 'admin'] // Default to 'admin' if not specified
+            );
+            console.log("User created successfully");
+        } catch (insertError) {
+            console.error("Database insertion error:", insertError);
+            throw insertError; // Re-throw to be caught by the outer try-catch
+        }
+        
+        res.status(201).json({ message: "User created successfully" });
+    } catch (error) {
+        console.error("Error creating user:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 // Promote user to super_admin
 router.post("/users/:id/promote", async (req, res) => {
     const userId = req.params.id;
@@ -43,7 +101,7 @@ router.post("/users/:id/promote", async (req, res) => {
     try {
         // Verify current user is super_admin before allowing promotion
         const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
+            "SELECT account_type FROM conference_db.users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -52,7 +110,7 @@ router.post("/users/:id/promote", async (req, res) => {
         }
         
         await db.execute(
-            "UPDATE users SET account_type = 'super_admin' WHERE id = ?",
+            "UPDATE conference_db.users SET account_type = 'super_admin' WHERE id = ?",
             [userId]
         );
         
@@ -70,7 +128,7 @@ router.post("/users/:id/demote", async (req, res) => {
     try {
         // Verify current user is super_admin before allowing demotion
         const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
+            "SELECT account_type FROM conference_db.users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -84,7 +142,7 @@ router.post("/users/:id/demote", async (req, res) => {
         }
         
         await db.execute(
-            "UPDATE users SET account_type = 'admin' WHERE id = ?",
+            "UPDATE conference_db.users SET account_type = 'admin' WHERE id = ?",
             [userId]
         );
         
@@ -107,7 +165,7 @@ router.delete("/users/:id", async (req, res) => {
     try {
         // Verify current user is super_admin before allowing deletion
         const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
+            "SELECT account_type FROM conference_db.users WHERE id = ?", 
             [req.user.id]
         );
         
@@ -115,7 +173,7 @@ router.delete("/users/:id", async (req, res) => {
             return res.status(403).json({ error: "Only Super Admins can remove users" });
         }
         
-        await db.execute("DELETE FROM users WHERE id = ?", [userId]);
+        await db.execute("DELETE FROM conference_db.users WHERE id = ?", [userId]);
         res.json({ message: "User removed successfully" });
     } catch (error) {
         console.error("Error removing user:", error);

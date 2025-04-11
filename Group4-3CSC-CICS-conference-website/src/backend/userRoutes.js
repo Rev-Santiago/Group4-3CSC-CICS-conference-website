@@ -1,6 +1,7 @@
 // routes/userRoutes.js
 import express from "express";
 import db from "../db.js";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -32,6 +33,55 @@ router.get("/users", async (req, res) => {
         res.json({ users: formattedUsers, count: users.length });
     } catch (error) {
         console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Create new user (super_admin only)
+router.post("/users", async (req, res) => {
+    try {
+        const { email, password, account_type } = req.body;
+        
+        // Verify current user is super_admin
+        const [currentUser] = await db.query(
+            "SELECT account_type FROM users WHERE id = ?", 
+            [req.user.id]
+        );
+        
+        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
+            return res.status(403).json({ error: "Only Super Admins can add new users" });
+        }
+        
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
+        }
+        
+        if (password.length < 6) {
+            return res.status(400).json({ error: "Password must be at least 6 characters" });
+        }
+        
+        // Check if email already exists
+        const [existingUser] = await db.query(
+            "SELECT id FROM users WHERE email = ?",
+            [email]
+        );
+        
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: "User with this email already exists" });
+        }
+        
+        // Hash password with bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        await db.execute(
+            "INSERT INTO users (email, password, account_type, created_at) VALUES (?, ?, ?, NOW())",
+            [email, hashedPassword, account_type || 'admin'] // Default to 'admin' if not specified
+        );
+        
+        res.status(201).json({ message: "User created successfully" });
+    } catch (error) {
+        console.error("Error creating user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });

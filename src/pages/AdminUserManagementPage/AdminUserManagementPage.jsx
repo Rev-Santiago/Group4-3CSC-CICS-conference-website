@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, Snackbar, Alert } from "@mui/material";
+import { 
+    IconButton, 
+    Menu, 
+    MenuItem, 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions, 
+    Button, 
+    Snackbar, 
+    Alert,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    FormHelperText
+} from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import axios from "axios";
 
@@ -12,6 +28,16 @@ export default function AdminUserManagementPage() {
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', title: '', message: '' });
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [search, setSearch] = useState('');
+    
+    // New state for add user dialog
+    const [addUserDialog, setAddUserDialog] = useState(false);
+    const [newUser, setNewUser] = useState({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        account_type: 'admin'
+    });
+    const [formErrors, setFormErrors] = useState({});
 
     // Menu handling
     const handleMenuOpen = (event, user) => {
@@ -28,7 +54,6 @@ export default function AdminUserManagementPage() {
         fetchUsers();
     }, []);
 
-    // Fix your fetchUsers function in AdminUserManagementPage.jsx:
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -42,7 +67,6 @@ export default function AdminUserManagementPage() {
             });
             
             console.log("API response:", response.data);
-            // Add these lines to update state
             setUsers(response.data.users || []);
             setTotalUsers(response.data.count || 0);
         } catch (error) {
@@ -161,6 +185,113 @@ export default function AdminUserManagementPage() {
         setSearch(e.target.value);
     };
 
+    // NEW HANDLERS FOR ADD USER DIALOG
+    const openAddUserDialog = () => {
+        setAddUserDialog(true);
+    };
+
+    const closeAddUserDialog = () => {
+        setAddUserDialog(false);
+        // Reset form data and errors
+        setNewUser({
+            email: '',
+            password: '',
+            confirmPassword: '',
+            account_type: 'admin'
+        });
+        setFormErrors({});
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setNewUser({
+            ...newUser,
+            [name]: value
+        });
+        
+        // Clear the error for this field when it's changed
+        if (formErrors[name]) {
+            setFormErrors({
+                ...formErrors,
+                [name]: null
+            });
+        }
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        
+        // Email validation
+        if (!newUser.email) {
+            errors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(newUser.email)) {
+            errors.email = 'Email is invalid';
+        }
+        
+        // Password validation
+        if (!newUser.password) {
+            errors.password = 'Password is required';
+        } else if (newUser.password.length < 6) {
+            errors.password = 'Password must be at least 6 characters';
+        }
+        
+        // Confirm password validation
+        if (!newUser.confirmPassword) {
+            errors.confirmPassword = 'Please confirm your password';
+        } else if (newUser.password !== newUser.confirmPassword) {
+            errors.confirmPassword = 'Passwords do not match';
+        }
+        
+        // Account type validation
+        if (!newUser.account_type) {
+            errors.account_type = 'Account type is required';
+        }
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleSubmitNewUser = async () => {
+        if (!validateForm()) return;
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            console.log("Sending request with token:", token);
+            
+            const response = await axios.post('/api/users', {
+                email: newUser.email,
+                password: newUser.password,
+                account_type: newUser.account_type
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            console.log("Create user response:", response.data);
+            showNotification('User created successfully');
+            fetchUsers(); // Refresh the list
+            closeAddUserDialog();
+        } catch (error) {
+            console.error('Error creating user:', error);
+            // More detailed error logging
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error('Error response data:', error.response.data);
+                console.error('Error response status:', error.response.status);
+                console.error('Error response headers:', error.response.headers);
+                showNotification(error.response.data?.error || 'Failed to create user', 'error');
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error('Error request:', error.request);
+                showNotification('No response received from server', 'error');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.error('Error message:', error.message);
+                showNotification('Error preparing request: ' + error.message, 'error');
+            }
+        }
+    };
+
     // Filter users based on search
     const filteredUsers = users.filter(user => 
         user.email?.toLowerCase().includes(search.toLowerCase()) || 
@@ -203,7 +334,12 @@ export default function AdminUserManagementPage() {
                             </span>
                         </div>
                         <button className="border px-4 py-2 rounded-md text-sm font-medium">Filters</button>
-                        <button className="bg-customRed text-white px-4 py-2 rounded-md text-sm font-medium">+ Add user</button>
+                        <button 
+                            onClick={openAddUserDialog}
+                            className="bg-customRed text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            + Add user
+                        </button>
                     </div>
                 </div>
 
@@ -312,6 +448,129 @@ export default function AdminUserManagementPage() {
                         }
                     >
                         Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Add User Dialog */}
+            <Dialog 
+                open={addUserDialog} 
+                onClose={closeAddUserDialog}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }
+                }}
+            >
+                <DialogTitle 
+                    sx={{ 
+                        backgroundColor: 'customRed', 
+                        color: 'white',
+                        borderTopLeftRadius: '8px',
+                        borderTopRightRadius: '8px',
+                        padding: '16px 24px',
+                        fontWeight: 600
+                    }}
+                >
+                    Add New User
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3, pb: 2, px: 3, mt: 1 }}>
+                    <div className="mb-4">
+                        <p className="text-sm text-gray-500">
+                            Create a new user account. All users will receive an email with their login details.
+                        </p>
+                    </div>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        name="email"
+                        label="Email Address"
+                        type="email"
+                        fullWidth
+                        variant="outlined"
+                        value={newUser.email}
+                        onChange={handleInputChange}
+                        error={!!formErrors.email}
+                        helperText={formErrors.email}
+                        sx={{ mb: 3 }}
+                        InputProps={{
+                            sx: { borderRadius: '6px' }
+                        }}
+                    />
+                    <TextField
+                        margin="dense"
+                        name="password"
+                        label="Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={newUser.password}
+                        onChange={handleInputChange}
+                        error={!!formErrors.password}
+                        helperText={formErrors.password || "Must be at least 6 characters"}
+                        sx={{ mb: 3 }}
+                        InputProps={{
+                            sx: { borderRadius: '6px' }
+                        }}
+                    />
+                    <TextField
+                        margin="dense"
+                        name="confirmPassword"
+                        label="Confirm Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={newUser.confirmPassword}
+                        onChange={handleInputChange}
+                        error={!!formErrors.confirmPassword}
+                        helperText={formErrors.confirmPassword}
+                        sx={{ mb: 3 }}
+                        InputProps={{
+                            sx: { borderRadius: '6px' }
+                        }}
+                    />
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel id="account-type-label">Account Type</InputLabel>
+                        <Select
+                            labelId="account-type-label"
+                            name="account_type"
+                            value={newUser.account_type}
+                            label="Account Type"
+                            onChange={handleInputChange}
+                            sx={{ borderRadius: '6px' }}
+                        >
+                            <MenuItem value="admin">Admin</MenuItem>
+                            <MenuItem value="super_admin">Super Admin</MenuItem>
+                        </Select>
+                        <FormHelperText>Choose the user's role in the system</FormHelperText>
+                    </FormControl>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                    <Button 
+                        onClick={closeAddUserDialog} 
+                        variant="outlined"
+                        sx={{ 
+                            borderRadius: '6px',
+                            px: 3
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSubmitNewUser} 
+                        variant="contained"
+                        sx={{ 
+                            backgroundColor: '#d41c1c', 
+                            '&:hover': { backgroundColor: '#b01818' },
+                            borderRadius: '6px',
+                            px: 3,
+                            boxShadow: '0 2px 8px rgba(212,28,28,0.3)'
+                        }}
+                    >
+                        Create User
                     </Button>
                 </DialogActions>
             </Dialog>
