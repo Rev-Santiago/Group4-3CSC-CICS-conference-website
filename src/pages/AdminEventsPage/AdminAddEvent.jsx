@@ -1,4 +1,3 @@
-// src/pages/AdminEventsPage/AdminAddEvent.jsx
 import { useState, useEffect } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import {
