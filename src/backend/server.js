@@ -273,7 +273,7 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 app.get("/api/schedule", async (req, res) => {
     try {
         const query = `
-            SELECT event_date, time_slot, program, venue, online_room_link  
+            SELECT event_date, time_slot, program, venue, online_room_link, speaker, category
             FROM events 
             WHERE event_date >= CURDATE()  -- Only fetch current and future events
             ORDER BY event_date, time_slot;
@@ -281,24 +281,20 @@ app.get("/api/schedule", async (req, res) => {
         const [rows] = await db.execute(query);
 
         const groupedData = rows.reduce((acc, event) => {
-            try {
-                const { event_date, time_slot, program, venue, online_room_link, category } = event;
-                const dateKey = event_date.toISOString().split("T")[0];
-
-                if (!acc[dateKey]) {
-                    acc[dateKey] = { date: dateKey, events: [] };
-                }
-
-                acc[dateKey].events.push({
-                    time: time_slot,
-                    program: program || "Untitled",
-                    venue: venue || "TBA",
-                    online_room_link: online_room_link || "",
-                    category: category || ""
-                });
-            } catch (innerErr) {
-                console.error("Error processing event:", event, innerErr);
+            const { event_date, time_slot, program, venue, online_room_link, speaker, category } = event;
+            const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
+            if (!acc[dateKey]) {
+                acc[dateKey] = { date: dateKey, events: [] };
             }
+            acc[dateKey].events.push({
+                time: time_slot,
+                program,
+                venue,
+                online_room_link,
+                speaker,
+                category
+            });
+
             return acc;
         }, {});
 
