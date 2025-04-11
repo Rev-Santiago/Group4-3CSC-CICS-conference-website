@@ -1,8 +1,24 @@
 import express from "express";
 import multer from "multer";
-import db from "../db.js"; // Adjust path if needed
+import db from "../db.js";
 import path from "path";
 import fs from "fs";
+import jwt from "jsonwebtoken";
+import process from "process";
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return res.status(403).json({ error: "Access denied." });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: "Invalid token." });
+    req.user = user;
+    next();
+  });
+};
+
 
 const router = express.Router();
 
@@ -21,9 +37,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Route: POST /api/events
+// Format time helper
+const formatTime = (time) => {
+  const date = new Date(`1970-01-01T${time}`);
+  return date.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// ✅ POST /api/events
 router.post(
   "/events",
+  authenticateToken, // 🛡️ ADD THIS!
   upload.fields([
     { name: "keynoteImage", maxCount: 1 },
     { name: "invitedImage", maxCount: 1 },
@@ -36,56 +63,51 @@ router.post(
         startTime,
         endTime,
         venue,
-        photo_url,
+        keynoteSpeaker,
+        invitedSpeaker,
         theme,
         category,
         zoomLink,
       } = req.body;
 
-      // Format start and end time to 12-hour AM/PM format
-      const formatTime = (time) => {
-        const date = new Date(`1970-01-01T${time}`);
-        return date.toLocaleString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-      };
-
       const formattedStartTime = formatTime(startTime);
       const formattedEndTime = formatTime(endTime);
-
       const eventTime = `${formattedStartTime} - ${formattedEndTime}`;
 
-      const keynoteImage = req.files.keynoteImage?.[0]?.filename || null;
-      const invitedImage = req.files.invitedImage?.[0]?.filename || null;
+      const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
+      const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
 
       const combinedSpeakers = [keynoteSpeaker, invitedSpeaker]
         .filter(Boolean)
         .join(", ");
 
       const photoUrl = keynoteImage || invitedImage || null;
+      const userId = req.user?.id || null;
 
       const query = `
         INSERT INTO events (
           event_date, time_slot, program, venue, online_room_link,
-          speaker, theme, category, photo_url
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          speaker, theme, category, photo_url, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      
+
       const values = [
-        eventDate,
-        eventTime,
+        date || null,
+        eventTime || null,
         title || "",
         venue || "",
         zoomLink || "",
-        speaker,
+        combinedSpeakers || "",
         theme || "",
         category || "",
-        keynoteImage,
-        invitedImage,
-        userId
+        photoUrl || null,
+        userId,
       ];
+
+      console.log("[eventRoutes.js] Insert values:", values);
+      values.forEach((v, i) =>
+        console.log(`[eventRoutes.js] param ${i}:`, v)
+      );
 
       await db.execute(query, values);
       res.status(200).json({ message: "Event created successfully." });
@@ -96,7 +118,7 @@ router.post(
   }
 );
 
-// Route: GET /api/events
+// ✅ GET /api/events/public
 router.get("/events/public", async (req, res) => {
   try {
     const [rows] = await db.query(

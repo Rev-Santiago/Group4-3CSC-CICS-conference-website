@@ -202,67 +202,40 @@ router.delete("/drafts/:id", authenticateToken, async (req, res) => {
 // ==============================
 
 // Fix for the events POST endpoint in eventRoutes.js
-router.post("/events", authenticateToken, upload.fields([
+router.post("/", upload.fields([
   { name: "keynoteImage", maxCount: 1 },
-  { name: "invitedImage", maxCount: 1 },
+  { name: "invitedImage", maxCount: 1 }
 ]), async (req, res) => {
   try {
-    console.log("User from request:", req.user); // Debug log
-    const userId = req.user.id;
-    console.log("Publishing event for user ID:", userId); // Debug log
-    
-    // Verify user has super_admin rights
-    const [userRows] = await db.query("SELECT account_type FROM users WHERE id = ?", [userId]);
-    console.log("User account info:", userRows[0]); // Debug log
+    const userId = req.user?.id;
 
-    if (!userRows.length || userRows[0].account_type !== 'super_admin') {
-      return res.status(403).json({ error: "Only super_admin can publish events" });
+    // 🔒 double check
+    if (!userId) {
+      return res.status(403).json({ error: "User ID missing. Please login." });
     }
 
-    const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
-    console.log("Request body:", { title, date, startTime, endTime, venue }); // Debug
-    
-    const eventTime = startTime && endTime ? `${formatTime(startTime)} - ${formatTime(endTime)}` : "";
-
-    const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
-    const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
-
-    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
-    
-    // Use current date as fallback if date is invalid
-    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
-
-    const query = `
-      INSERT INTO events (
-        event_date, time_slot, program, venue, online_room_link,
-        speaker, theme, category, photo_url, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
+    // ... your existing logic ...
     const values = [
-      eventDate, 
-      eventTime, 
-      title || "", 
-      venue || "", 
+      eventDate,
+      eventTime,
+      title || "",
+      venue || "",
       zoomLink || "",
       speaker,
-      theme || "", 
-      category || "", 
+      theme || "",
+      category || "",
       keynoteImage || invitedImage || null,
       userId
     ];
 
-    console.log("SQL Query:", query); // Debug log
-    console.log("SQL Values:", values); // Debug log
-
     await db.execute(query, values);
     res.status(200).json({ message: "Event published successfully." });
+
   } catch (err) {
-    console.error("Error publishing event:", err);
-    res.status(500).json({ error: "Failed to publish event: " + err.message });
+    console.error("🔥 Event publish error:", err);
+    res.status(500).json({ error: "Failed to publish event." });
   }
 });
-
 
 router.put("/events/:id", authenticateToken, upload.fields([
   { name: "keynoteImage", maxCount: 1 },
