@@ -6,14 +6,23 @@ import nodemailer from "nodemailer";
 
 const router = express.Router();
 
+// Get environment variables using import.meta.env
+const EMAIL_HOST = import.meta.env.VITE_EMAIL_HOST || "smtp.ethereal.email";
+const EMAIL_PORT = import.meta.env.VITE_EMAIL_PORT || 587;
+const EMAIL_SECURE = import.meta.env.VITE_EMAIL_SECURE === "true" ? true : false;
+const EMAIL_USER = import.meta.env.VITE_EMAIL_USER;
+const EMAIL_PASS = import.meta.env.VITE_EMAIL_PASS;
+const EMAIL_FROM = import.meta.env.VITE_EMAIL_FROM || '"Admin" <admin@example.com>';
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || 'https://cics-conference-website.onrender.com';
+
 // Configure email transporter (using a testing service here - use your own SMTP in production)
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.ethereal.email",
-    port: process.env.EMAIL_PORT || 587,
-    secure: process.env.EMAIL_SECURE === "true" ? true : false,
+    host: EMAIL_HOST,
+    port: EMAIL_PORT,
+    secure: EMAIL_SECURE,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
     },
 });
 
@@ -71,11 +80,11 @@ router.post("/request-password-reset", async (req, res) => {
         );
         
         // Create reset URL
-        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+        const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
         
         // Send email with reset link
         const mailOptions = {
-            from: process.env.EMAIL_FROM || '"Admin" <admin@example.com>',
+            from: EMAIL_FROM,
             to: user.email,
             subject: "Password Reset Request",
             html: `
