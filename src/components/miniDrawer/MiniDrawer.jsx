@@ -145,3 +145,232 @@ export default function MiniDrawer({ children }) {
         position="fixed"
         open={open}
         sx={{ backgroundColor: "black", borderBottom: "4px solid #B7152F" }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerOpen}
+            edge="start"
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div" marginLeft={"3px"}>
+            Admin Dashboard
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer variant="permanent" open={open}>
+        <DrawerHeader>
+          {open && (
+            <img
+              src={cicsSeal}
+              alt="Logo"
+              style={{ width: "55px", height: "auto", marginTop: "12px" }}
+            />
+          )}
+          <IconButton
+            onClick={handleDrawerClose}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#B7152F",
+                color: "white",
+                borderRadius: "full",
+              },
+              color: "white",
+              position: "absolute",
+              right: "10px"
+            }}
+          >
+            {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        </DrawerHeader>
+        {open && (
+          <>
+            <Typography variant="caption" sx={{ pl: 2, pt: 2, color: "gray" }}>
+              Main
+            </Typography>
+          </>
+        )}
+        <List>
+          {menuItems.map(({ text, icon, path }) => (
+            <React.Fragment key={text} >
+              {/* Conditionally render Divider and Typography if open */}
+              {open && text === "Events" && (
+                <>
+                  <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+                  <Typography variant="caption" sx={{ mt: 2, mb: 1, pl: 2, color: "gray", display: "block" }}>
+                    Content Management
+                  </Typography>
+                </>
+              )}
+              <ListItem disablePadding>
+                <Tooltip title={!open ? text : ""} placement="right">
+                  <ListItemButton
+                    onClick={() => navigate(path)}
+                    sx={{
+                      mx: 1,
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "8px",
+                      },
+                    }}
+                  >
+
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    {open && <ListItemText primary={text} />}
+                  </ListItemButton>
+                </Tooltip>
+              </ListItem>
+            </React.Fragment>
+          ))}
+
+          {/* Account Section (Moved outside the loop) */}
+          {open && (
+            <>
+              <Divider sx={{ mt: 3, mx: 2, backgroundColor: "gray" }} />
+              <Typography variant="caption" sx={{ mt: 2, pl: 2, color: "gray", display: "block" }}>
+                User Management
+              </Typography>
+            </>
+          )}
+          
+          {/* Show Users option only for super_admin users */}
+          {isSuperAdmin && (
+            <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
+              {open ? (
+                <ListItemButton
+                  onClick={() => navigate("/admin-dashboard/user-management")}
+                  sx={{
+                    mx: 1,
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "10px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <GroupIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Users" />
+                </ListItemButton>
+              ) : (
+                <Tooltip title="Users" placement="right">
+                  <ListItemButton
+                    onClick={() => navigate("/admin-dashboard/user-management")}
+                    sx={{
+                      mx: 1,
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <GroupIcon />
+                    </ListItemIcon>
+                  </ListItemButton>
+                </Tooltip>
+              )}
+            </ListItem>
+          )}
+
+          <ListItem disablePadding sx={{ display: "block" }}>
+            {open ? (
+              <ListItemButton
+                onClick={() => navigate("/admin-dashboard/account")}
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "10px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <AccountCircleIcon />
+                </ListItemIcon>
+                <ListItemText primary="Account" />
+              </ListItemButton>
+            ) : (
+              <Tooltip title="Account" placement="right">
+                <ListItemButton
+                  onClick={() => navigate("/admin-dashboard/account")}
+                  sx={{
+                    mx: 1,
+                    "&:hover": {
+                      backgroundColor: "#B7152F",
+                      color: "white",
+                      borderRadius: "10px",
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <AccountCircleIcon />
+                  </ListItemIcon>
+                </ListItemButton>
+              </Tooltip>
+            )}
+          </ListItem>
+        </List>
+
+        <ListItem
+          disablePadding
+          sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}
+        >
+          {open ? (
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                mx: 1,
+                "&:hover": {
+                  backgroundColor: "#B7152F",
+                  color: "white",
+                  borderRadius: "8px",
+                },
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon color="error" />
+              </ListItemIcon>
+              <ListItemText primary="Log Out" sx={{ color: "red" }} />
+            </ListItemButton>
+          ) : (
+            <Tooltip title="Log Out" placement="right">
+              <ListItemButton
+                onClick={handleLogout}
+                sx={{
+                  mx: 1,
+                  "&:hover": {
+                    backgroundColor: "#B7152F",
+                    color: "white",
+                    borderRadius: "8px",
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <LogoutIcon color="error" />
+                </ListItemIcon>
+              </ListItemButton>
+            </Tooltip>
+          )}
+        </ListItem>
+      </Drawer>
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <DrawerHeader />
+        {children}
+      </Box>
+    </Box>
+  );
+}
