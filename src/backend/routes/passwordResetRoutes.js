@@ -12,7 +12,7 @@ const EMAIL_PORT = process.env.EMAIL_PORT || 587;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_FROM = process.env.EMAIL_FROM || '"Admin" <admin@example.com>';
-const FRONTEND_URL = process.env.EMAIL_FROM || 'https://cics-conference-website.onrender.com';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cics-conference-website.onrender.com';
 const EMAIL_SECURE = process.env.EMAIL_SECURE === "true";
 
 
@@ -83,7 +83,8 @@ router.post("/request-password-reset", async (req, res) => {
         
         // Create reset URL
         const resetUrl = `${FRONTEND_URL}/reset-password/${resetToken}`;
-        
+
+
         // Send email with reset link
         const mailOptions = {
             from: EMAIL_FROM,
