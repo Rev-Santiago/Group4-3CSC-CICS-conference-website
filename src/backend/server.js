@@ -330,6 +330,39 @@ app.get("/api/admin_event_preview", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+// Add this code to your server.js file, before the final app.listen line:
+
+// 🧪 Debug routes
+app.get("/api/debug/token", authenticateToken, (req, res) => {
+    try {
+        res.json({
+            message: "Token debug information",
+            user: req.user,
+            userId: req.user.id,
+            tokenPresent: !!req.headers.authorization,
+            headers: {
+                authorization: req.headers.authorization ? "Present (not shown for security)" : "Missing",
+                contentType: req.headers["content-type"],
+            },
+            serverTime: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({
+            error: "Error in debug endpoint",
+            message: err.message,
+            stack: process.env.NODE_ENV === "production" ? null : err.stack
+        });
+    }
+});
+
+app.get("/api/debug/env", (req, res) => {
+    res.json({
+        environment: process.env.NODE_ENV || "not set",
+        jwtSecret: process.env.JWT_SECRET ? "Set (not shown)" : "Not set",
+        serverVersion: "1.0.0",
+        time: new Date().toISOString()
+    });
+});
 
 app.use("/screenshots", express.static(path.join(process.cwd(), "screenshots")));
 
