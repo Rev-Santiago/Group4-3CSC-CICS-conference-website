@@ -277,7 +277,7 @@ app.get("/api/schedule", async (req, res) => {
 
         const groupedData = rows.reduce((acc, event) => {
             try {
-                const { event_date, time_slot, program, venue, online_room_link } = event;
+                const { event_date, time_slot, program, venue, online_room_link, category } = event;
                 const dateKey = event_date.toISOString().split("T")[0];
 
                 if (!acc[dateKey]) {
@@ -288,7 +288,8 @@ app.get("/api/schedule", async (req, res) => {
                     time: time_slot,
                     program: program || "Untitled",
                     venue: venue || "TBA",
-                    online_room_link: online_room_link || ""
+                    online_room_link: online_room_link || "",
+                    category: category || ""
                 });
             } catch (innerErr) {
                 console.error("Error processing event:", event, innerErr);
