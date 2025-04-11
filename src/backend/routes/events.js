@@ -70,20 +70,22 @@ router.post(
       const query = `
         INSERT INTO events (
           event_date, time_slot, program, venue, online_room_link,
-          speaker, theme, category, photo_url
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          speaker, theme, category, keynote_image, invited_image, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-
+      
       const values = [
-        date,
+        eventDate,
         eventTime,
-        title,
-        venue,
+        title || "",
+        venue || "",
         zoomLink || "",
-        combinedSpeakers,
-        theme,
-        category,
-        photoUrl,
+        speaker,
+        theme || "",
+        category || "",
+        keynoteImage,
+        invitedImage,
+        userId
       ];
 
       await db.execute(query, values);
