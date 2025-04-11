@@ -268,38 +268,41 @@ app.get("/api/admin-dashboard", authenticateToken, (req, res) => {
 // 📅 Fetch Event Schedule Dynamically
 app.get("/api/schedule", async (req, res) => {
     try {
-        const query = `
-            SELECT event_date, time_slot, program, venue, online_room_link, category  
-            FROM events 
-            WHERE event_date >= CURDATE()  -- Only fetch current and future events
-            ORDER BY event_date, time_slot;
-        `;
-        const [rows] = await db.execute(query);
+        const [rows] = await db.execute(`
+            SELECT event_date, time_slot, program, venue, online_room_link
+            FROM events
+            WHERE event_date >= CURDATE()
+            ORDER BY event_date, time_slot
+        `);
 
-        // Group events by date
         const groupedData = rows.reduce((acc, event) => {
-            const { event_date, time_slot, program, venue, online_room_link } = event;
-            const dateKey = event_date.toISOString().split("T")[0]; // Format date properly
-            if (!acc[dateKey]) {
-                acc[dateKey] = { date: dateKey, events: [] };
-            }
-           acc[dateKey].events.push({ 
-                time: time_slot, 
-                program, 
-                venue, 
-                category, // <-- THIS!
-                online_room_link 
-            });
+            try {
+                const { event_date, time_slot, program, venue, online_room_link } = event;
+                const dateKey = event_date.toISOString().split("T")[0];
 
+                if (!acc[dateKey]) {
+                    acc[dateKey] = { date: dateKey, events: [] };
+                }
+
+                acc[dateKey].events.push({
+                    time: time_slot,
+                    program: program || "Untitled",
+                    venue: venue || "TBA",
+                    online_room_link: online_room_link || ""
+                });
+            } catch (innerErr) {
+                console.error("Error processing event:", event, innerErr);
+            }
             return acc;
         }, {});
 
         res.json({ data: Object.values(groupedData) });
     } catch (error) {
-        console.error("Error fetching schedule:", error);
+        console.error("🔥 Schedule route error:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 
 // 📅 Admin Event Preview API
 app.get("/api/admin_event_preview", async (req, res) => {
