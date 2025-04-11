@@ -6,7 +6,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import IconButton from '@mui/material/IconButton';
-import cicsLogoSmall from '../../../assets/cics-seal.png';
+import cicsLogoSmall from '../../../../assets/cics-seal.png';
 import cicsTextWithLogo from '../../../assets/cics-logo-with-text.png';
 import Breadcrumbs from "../../../components/breadcrumbComponent/Breadcrumbs.jsx";
 
