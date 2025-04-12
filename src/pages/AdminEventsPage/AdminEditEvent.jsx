@@ -212,16 +212,14 @@ export default function AdminEditEvent() {
             formData.append("category", eventData.category);
             formData.append("zoomLink", eventData.zoomLink || "");
             
-            // Add speakers data
-            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
-            eventData.keynoteSpeakers.forEach((speaker, index) => {
-                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
-            });
+            // Modified speaker handling - combine into single strings like in AdminAddEvent
+            // Combine all keynote speakers into a single string
+            const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("keynoteSpeaker", keynoteSpeaker);
             
-            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
-            eventData.invitedSpeakers.forEach((speaker, index) => {
-                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
-            });
+            // Combine all invited speakers into a single string
+            const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("invitedSpeaker", invitedSpeaker);
 
             let response;
             // If editing an existing draft
@@ -374,16 +372,14 @@ export default function AdminEditEvent() {
             formData.append("category", eventData.category || "");
             formData.append("zoomLink", eventData.zoomLink || "");
             
-            // Add speakers data
-            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
-            eventData.keynoteSpeakers.forEach((speaker, index) => {
-                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
-            });
+            // Modified speaker handling - combine into single strings like in AdminAddEvent
+            // Combine all keynote speakers into a single string
+            const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("keynoteSpeaker", keynoteSpeaker);
             
-            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
-            eventData.invitedSpeakers.forEach((speaker, index) => {
-                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
-            });
+            // Combine all invited speakers into a single string
+            const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("invitedSpeaker", invitedSpeaker);
     
             // Verify token before publishing
             const verifyResponse = await axios.get("/api/verify-token", { headers });
