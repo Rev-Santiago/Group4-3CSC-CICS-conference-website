@@ -158,168 +158,165 @@ export default function AdminAddEvent({ currentUser }) {
         return localStorage.getItem('authToken');
     };
 
-    const handleSaveDraft = async () => {
+// Updated handleSaveDraft function
+const handleSaveDraft = async () => {
+    const formData = new FormData();
+    formData.append("title", eventData.title);
+    formData.append("date", eventData.date);
+    formData.append("startTime", eventData.startTime);
+    formData.append("endTime", eventData.endTime);
+    formData.append("venue", eventData.venue);
+    formData.append("theme", eventData.theme);
+    formData.append("category", eventData.category);
+    formData.append("zoomLink", eventData.zoomLink || "");
+    
+    // Combine all keynote speakers into a single string
+    const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
+    formData.append("keynoteSpeaker", keynoteSpeaker);
+    
+    // Combine all invited speakers into a single string
+    const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
+    formData.append("invitedSpeaker", invitedSpeaker);
+
+    try {
+        const token = getAuthToken();
+        if (!token) {
+            setNotification({
+                open: true,
+                message: "Authentication error: No token found",
+                severity: "error"
+            });
+            return;
+        }
+        
+        console.log("Saving draft with token", token.substring(0, 10) + "...");
+        
+        const res = await fetch(`${BACKEND_URL}/api/drafts`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        
+        // Check if response is HTML (a sign of error page)
+        if (res.headers.get("content-type")?.includes("text/html")) {
+            throw new Error("Received HTML, which might be an error page.");
+        }
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save draft");
+        
+
+        setNotification({
+            open: true,
+            message: "📝 Draft saved successfully!",
+            severity: "success"
+        });
+    } catch (err) {
+        console.error(err);
+        setNotification({
+            open: true,
+            message: `❌ Error: ${err.message || "Failed to save draft"}`,
+            severity: "error"
+        });
+    }
+};
+
+// Updated handlePublish function
+const handlePublish = async () => {
+    try {
+        // Validate form data
+        if (!eventData.title || eventData.title.trim() === "") {
+            setNotification({
+                open: true,
+                message: "Event title is required",
+                severity: "warning"
+            });
+            return;
+        }
+        
+        // Ensure we have a valid date - if not, use current date
+        const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const useDate = eventData.date && eventData.date.trim() !== "" 
+            ? eventData.date 
+            : currentDate;
+            
         const formData = new FormData();
-        formData.append("title", eventData.title);
-        formData.append("date", eventData.date);
-        formData.append("startTime", eventData.startTime);
-        formData.append("endTime", eventData.endTime);
-        formData.append("venue", eventData.venue);
-        formData.append("theme", eventData.theme);
-        formData.append("category", eventData.category);
+        
+        // Set fields manually, ensuring required fields have values
+        formData.append("title", eventData.title || "Untitled Event");
+        formData.append("date", useDate);
+        formData.append("startTime", eventData.startTime || "");
+        formData.append("endTime", eventData.endTime || "");
+        formData.append("venue", eventData.venue || "");
+        formData.append("theme", eventData.theme || "");
+        formData.append("category", eventData.category || "");
         formData.append("zoomLink", eventData.zoomLink || "");
         
-        // Add speakers data
-        formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
-        eventData.keynoteSpeakers.forEach((speaker, index) => {
-            formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
+        // Combine all keynote speakers into a single string
+        const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
+        formData.append("keynoteSpeaker", keynoteSpeaker);
+        
+        // Combine all invited speakers into a single string
+        const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
+        formData.append("invitedSpeaker", invitedSpeaker);
+        
+        console.log("Publishing event with date:", useDate);
+        
+        const token = getAuthToken();
+        if (!token) {
+            setNotification({
+                open: true,
+                message: "Authentication error: No token found",
+                severity: "error"
+            });
+            return;
+        }
+        
+        // First verify the token
+        const verifyRes = await fetch(`${BACKEND_URL}/api/verify-token`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         });
         
-        formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
-        eventData.invitedSpeakers.forEach((speaker, index) => {
-            formData.append(`invitedSpeaker_${index}`, speaker.name || "");
-        });
-    
-        try {
-            const token = getAuthToken();
-            if (!token) {
-                setNotification({
-                    open: true,
-                    message: "Authentication error: No token found",
-                    severity: "error"
-                });
-                return;
-            }
-            
-            console.log("Saving draft with token", token.substring(0, 10) + "...");
-            
-            const res = await fetch(`${BACKEND_URL}/api/drafts`, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            
-            // Check if response is HTML (a sign of error page)
-            if (res.headers.get("content-type")?.includes("text/html")) {
-                throw new Error("Received HTML, which might be an error page.");
-            }
-            
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to save draft");
-            
-    
-            setNotification({
-                open: true,
-                message: "📝 Draft saved successfully!",
-                severity: "success"
-            });
-        } catch (err) {
-            console.error(err);
-            setNotification({
-                open: true,
-                message: `❌ Error: ${err.message || "Failed to save draft"}`,
-                severity: "error"
-            });
-        }
-    };
-    
-    const handlePublish = async () => {
-        try {
-            // Validate form data
-            if (!eventData.title || eventData.title.trim() === "") {
-                setNotification({
-                    open: true,
-                    message: "Event title is required",
-                    severity: "warning"
-                });
-                return;
-            }
-            
-            // Ensure we have a valid date - if not, use current date
-            const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-            const useDate = eventData.date && eventData.date.trim() !== "" 
-                ? eventData.date 
-                : currentDate;
-                
-            const formData = new FormData();
-            
-            // Set fields manually, ensuring required fields have values
-            formData.append("title", eventData.title || "Untitled Event");
-            formData.append("date", useDate);
-            formData.append("startTime", eventData.startTime || "");
-            formData.append("endTime", eventData.endTime || "");
-            formData.append("venue", eventData.venue || "");
-            formData.append("theme", eventData.theme || "");
-            formData.append("category", eventData.category || "");
-            formData.append("zoomLink", eventData.zoomLink || "");
-            
-            // Add speakers data
-            formData.append("keynoteSpeakersCount", eventData.keynoteSpeakers.length);
-            eventData.keynoteSpeakers.forEach((speaker, index) => {
-                formData.append(`keynoteSpeaker_${index}`, speaker.name || "");
-            });
-            
-            formData.append("invitedSpeakersCount", eventData.invitedSpeakers.length);
-            eventData.invitedSpeakers.forEach((speaker, index) => {
-                formData.append(`invitedSpeaker_${index}`, speaker.name || "");
-            });
-            
-            console.log("Publishing event with date:", useDate);
-            
-            const token = getAuthToken();
-            if (!token) {
-                setNotification({
-                    open: true,
-                    message: "Authentication error: No token found",
-                    severity: "error"
-                });
-                return;
-            }
-            
-            // First verify the token
-            const verifyRes = await fetch(`${BACKEND_URL}/api/verify-token`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            
-            if (!verifyRes.ok) {
-                const verifyData = await verifyRes.json();
-                throw new Error(`Token verification failed: ${verifyData.error || "Unknown error"}`);
-            }
-            
+        if (!verifyRes.ok) {
             const verifyData = await verifyRes.json();
-            console.log("Token verification before publish:", verifyData);
-    
-            const res = await fetch(`${BACKEND_URL}/api/events`, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-    
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to publish event");
-    
-            setNotification({
-                open: true,
-                message: "✅ Event published successfully!",
-                severity: "success"
-            });
-    
-            resetForm();
-        } catch (err) {
-            console.error(err);
-            setNotification({
-                open: true,
-                message: `❌ Error: ${err.message || "Failed to publish event"}`,
-                severity: "error"
-            });
+            throw new Error(`Token verification failed: ${verifyData.error || "Unknown error"}`);
         }
-    };
+        
+        const verifyData = await verifyRes.json();
+        console.log("Token verification before publish:", verifyData);
+
+        const res = await fetch(`${BACKEND_URL}/api/events`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to publish event");
+
+        setNotification({
+            open: true,
+            message: "✅ Event published successfully!",
+            severity: "success"
+        });
+
+        resetForm();
+    } catch (err) {
+        console.error(err);
+        setNotification({
+            open: true,
+            message: `❌ Error: ${err.message || "Failed to publish event"}`,
+            severity: "error"
+        });
+    }
+};
+
 
     const accountType = localStorage.getItem("accountType");
     const handleOpenDetails = () => setDetailsOpen(true);
@@ -508,6 +505,6 @@ export default function AdminAddEvent({ currentUser }) {
                     {notification.message}
                 </Alert>
             </Snackbar>
-        </Box>
+        </Box>      
     );
 }

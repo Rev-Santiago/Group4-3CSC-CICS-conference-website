@@ -72,32 +72,43 @@ const PublicationPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {publications.length > 0 ? (
-                            publications.map((pub, index) => (
-                                <tr
-                                    key={index}
-                                    className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                                >
-                                    <td className="py-4 px-4 border-2 border-black min-h-[50px]">
-                                        {new Date(pub.publication_date).toLocaleDateString('en-US', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </td>
-                                    <td className="py-4 px-4 border-2 border-black min-h-[50px] hover:underline text-blue-700">
+    {publications.length > 0 ? (
+        publications.map((pub, index) => (
+            <tr
+                key={index}
+                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+            >
+                <td className="py-4 px-4 border-2 border-black min-h-[50px]">
+                    {new Date(pub.publication_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}
+                </td>
+                            <td className="py-4 px-4 border-2 border-black min-h-[50px]">
+                                {pub.publication_link ? (
+                                    <a 
+                                        href={pub.publication_link} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="hover:underline text-blue-700"
+                                    >
                                         {pub.publication_description}
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="2" className="py-4 px-4 border-2 border-black text-center min-h-[50px]">
-                                    No publications available.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
+                                    </a>
+                                ) : (
+                                    <span>{pub.publication_description}</span>
+                                )}
+                            </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan="2" className="py-4 px-4 border-2 border-black text-center min-h-[50px]">
+                            No publications available.
+                        </td>
+                    </tr>
+                )}
+            </tbody>
                 </table>
             </div>
 

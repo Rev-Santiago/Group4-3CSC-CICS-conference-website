@@ -202,7 +202,7 @@ router.delete("/drafts/:id", authenticateToken, async (req, res) => {
 // ==============================
 
 // Fix for the events POST endpoint in eventRoutes.js
-router.post("/", upload.fields([
+router.post("/", authenticateToken, upload.fields([
   { name: "keynoteImage", maxCount: 1 },
   { name: "invitedImage", maxCount: 1 }
 ]), async (req, res) => {
@@ -214,7 +214,27 @@ router.post("/", upload.fields([
       return res.status(403).json({ error: "User ID missing. Please login." });
     }
 
-    // ... your existing logic ...
+    // Extract data from request body
+    const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
+    const eventTime = startTime && endTime ? `${formatTime(startTime)} - ${formatTime(endTime)}` : "";
+
+    // Handle file uploads
+    const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
+    const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
+
+    // Combine speakers if both are provided
+    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
+    
+    // Use current date as fallback if date is invalid
+    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
+
+    const query = `
+      INSERT INTO events (
+        event_date, time_slot, program, venue, online_room_link,
+        speaker, theme, category, photo_url, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    
     const values = [
       eventDate,
       eventTime,
@@ -234,58 +254,6 @@ router.post("/", upload.fields([
   } catch (err) {
     console.error("🔥 Event publish error:", err);
     res.status(500).json({ error: "Failed to publish event." });
-  }
-});
-
-router.put("/events/:id", authenticateToken, upload.fields([
-  { name: "keynoteImage", maxCount: 1 },
-  { name: "invitedImage", maxCount: 1 },
-]), async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const [userRows] = await db.query("SELECT account_type FROM users WHERE id = ?", [userId]);
-
-    if (!userRows.length || userRows[0].account_type !== 'super_admin') {
-      return res.status(403).json({ error: "Only super_admin can update events" });
-    }
-
-    const { id } = req.params;
-    const { title, date, startTime, endTime, venue, keynoteSpeaker, invitedSpeaker, theme, category, zoomLink } = req.body;
-    const eventTime = startTime && endTime ? `${formatTime(startTime)} - ${formatTime(endTime)}` : "";
-
-    const keynoteImage = req.files?.keynoteImage?.[0]?.filename || null;
-    const invitedImage = req.files?.invitedImage?.[0]?.filename || null;
-
-    const speaker = [keynoteSpeaker, invitedSpeaker].filter(Boolean).join(", ");
-    
-    // Use current date as fallback if date is invalid
-    const eventDate = isValidDate(date) ? date : new Date().toISOString().split('T')[0];
-
-    const query = `
-      UPDATE events
-      SET event_date = ?, time_slot = ?, program = ?, venue = ?, online_room_link = ?, 
-          speaker = ?, theme = ?, category = ?, photo_url = ?
-      WHERE id = ?
-    `;
-
-    const values = [
-      eventDate, 
-      eventTime, 
-      title || "", 
-      venue || "", 
-      zoomLink || "",
-      speaker,
-      theme || "", 
-      category || "", 
-      keynoteImage || invitedImage || null,
-      id
-    ];
-
-    await db.execute(query, values);
-    res.status(200).json({ message: "Event updated successfully." });
-  } catch (err) {
-    console.error("Error updating event:", err);
-    res.status(500).json({ error: "Failed to update event." });
   }
 });
 
