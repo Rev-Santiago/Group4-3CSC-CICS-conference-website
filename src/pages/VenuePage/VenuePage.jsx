@@ -111,9 +111,9 @@ const VenuePage = () => {
         })).filter(day => day.events.length > 0)
         : venueData;
 
-    // Custom dropdown component
-    const CustomDropdown = ({ label, options, onSelect, isOpen, setIsOpen, selectedValue, reference }) => (
-        <div className="relative inline-block text-left z-10" ref={reference}>
+    // Custom dropdown component - UPDATED with zIndex parameter
+    const CustomDropdown = ({ label, options, onSelect, isOpen, setIsOpen, selectedValue, reference, zIndex = "z-40", className = "" }) => (
+        <div className={`relative inline-block text-left ${className}`} ref={reference}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center justify-between w-56 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-black rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-customRed focus:ring-opacity-50 transition-all duration-200"
@@ -143,7 +143,17 @@ const VenuePage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-60 overflow-y-auto"
+                        // UPDATED CLASSES for dropdown menu positioning and added zIndex
+                        className={`absolute right-0 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-60 overflow-y-auto ${zIndex}`}
+                        style={{ 
+                            // For mobile view - position dropdown above the button when on small screens
+                            [`@media (max-width: 768px)`]: {
+                                bottom: '100%',
+                                top: 'auto',
+                                marginBottom: '8px',
+                                marginTop: '0'
+                            }
+                        }}
                     >
                         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                             {options.map((option, idx) => (
@@ -287,10 +297,11 @@ const VenuePage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
+                    // UPDATED: Added better spacing for mobile
                     className="flex flex-col md:flex-row items-center justify-center mb-10 gap-6"
                 >
                     {venueData.length > 0 && (
-                        <div className="flex flex-col justify-center gap-2">
+                        <div className="flex flex-col justify-center gap-2 mb-8 md:mb-0 relative">
                             <label className="text-gray-700 font-medium mb-1 text-center md:text-left">Select a Date</label>
                             <CustomDropdown
                                 label="Jump to Date"
@@ -300,12 +311,14 @@ const VenuePage = () => {
                                 setIsOpen={setIsDateDropdownOpen}
                                 selectedValue={selectedDateLabel}
                                 reference={dateDropdownRef}
+                                zIndex="z-50" // Higher z-index for date dropdown
+                                className="date-dropdown"
                             />
                         </div>
                     )}
 
                     {categories.length > 0 && (
-                        <div className="flex flex-col justify-center gap-2">
+                        <div className="flex flex-col justify-center gap-2 relative">
                             <label className="text-gray-700 font-medium mb-1 text-center md:text-left">Select a Category</label>
                             <CustomDropdown
                                 label="All Categories"
@@ -315,6 +328,8 @@ const VenuePage = () => {
                                 setIsOpen={setIsCategoryDropdownOpen}
                                 selectedValue={selectedCategory || "All Categories"}
                                 reference={categoryDropdownRef}
+                                zIndex="z-40" // Lower z-index for category dropdown
+                                className="category-dropdown"
                             />
                         </div>
                     )}
@@ -349,7 +364,7 @@ const VenuePage = () => {
                     >
                         <div className="flex items-center justify-center mb-6">
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>
-                            <h6 className="text-xl text-center mx-4 px-4 py-2  text-black rounded-full">
+                            <h6 className="text-xl text-center mx-4 px-4 py-2 text-black rounded-full">
                                 {formatDate(day.date)}
                             </h6>
                             <div className="h-0.5 bg-gray-200 flex-grow max-w-xs"></div>
