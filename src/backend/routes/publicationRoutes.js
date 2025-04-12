@@ -2,32 +2,25 @@
 
 import express from "express";
 import db from "../db.js";
-import jwt from "jsonwebtoken";
-import process from "process";
+import { 
+    authenticateToken, 
+    authorizeAdmin, 
+    authorizeContentEditor,
+    authorizeSuperAdmin,
+    canPublishContent,
+    canEditPublishedContent,
+    canDeleteContent
+} from "../middleware/auth.js";
 
 const router = express.Router();
-
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) return res.status(403).json({ error: "Access denied." });
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid token." });
-        req.user = user;
-        next();
-    });
-};
 
 // Test route to verify connection
 router.get("/publications-test", (req, res) => {
     res.json({ message: "Publications API is working!" });
 });
 
-// Get all publications with pagination
-router.get("/publications-admin", authenticateToken, async (req, res) => {
+// Get all publications with pagination (admin dashboard)
+router.get("/publications-admin", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         console.log("Request to get publications received. User:", req.user);
         
@@ -62,7 +55,8 @@ router.get("/publications-admin", authenticateToken, async (req, res) => {
             publications: formattedPublications, 
             count: totalPublications,
             currentPage: page,
-            totalPages: Math.ceil(totalPublications / limit)
+            totalPages: Math.ceil(totalPublications / limit),
+            userRole: req.userRole
         });
     } catch (error) {
         console.error("Error fetching publications:", error);
@@ -74,22 +68,10 @@ router.get("/publications-admin", authenticateToken, async (req, res) => {
     }
 });
 
-// Get all publication drafts - specific route before parameter routes
-router.get("/publications/drafts", authenticateToken, async (req, res) => {
+// Get all publication drafts
+router.get("/publications/drafts", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         console.log("Request to get publication drafts received. User:", req.user);
-        
-        // Verify user has appropriate permissions - NO database prefix
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can view drafts" });
-        }
         
         // Check if draft table exists
         const [tables] = await db.query(
@@ -115,21 +97,14 @@ router.get("/publications/drafts", authenticateToken, async (req, res) => {
     }
 });
 
-// Save as draft functionality - specific route before parameter routes
-router.post("/publications/drafts", authenticateToken, async (req, res) => {
+// Save as draft functionality
+router.post("/publications/drafts", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const { title, date, link, id } = req.body;
         
-        // Verify user has appropriate permissions - NO database prefix
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can save drafts" });
+        // Validate input
+        if (!title.trim() || !date) {
+            return res.status(400).json({ error: "Title and date are required" });
         }
         
         // Check if draft table exists
@@ -149,6 +124,32 @@ router.post("/publications/drafts", authenticateToken, async (req, res) => {
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
             `);
+        }
+        
+        // Check for duplicates in publication_drafts
+        const [existingDraft] = await db.query(
+            `SELECT id FROM publication_drafts 
+             WHERE publication_description = ? AND publication_date = ? AND id != ?`,
+            [title, date, id || 0]
+        );
+        
+        if (existingDraft.length > 0) {
+            return res.status(409).json({ 
+                error: "A draft with this title and date already exists" 
+            });
+        }
+        
+        // Check for duplicates in conference_publications
+        const [existingPublication] = await db.query(
+            `SELECT id FROM conference_publications 
+             WHERE publication_description = ? AND publication_date = ?`,
+            [title, date]
+        );
+        
+        if (existingPublication.length > 0) {
+            return res.status(409).json({ 
+                error: "A published publication with this title and date already exists" 
+            });
         }
         
         // Check if we're updating an existing draft
@@ -185,11 +186,19 @@ router.post("/publications/drafts", authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error("Error saving publication draft:", error);
+        
+        // Check for duplicate constraint violations
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 
+                error: "A draft with this title and date already exists" 
+            });
+        }
+        
         res.status(500).json({ error: "Internal server error" });
     }
 });
 
-// Get latest publications - specific route before parameter routes
+// Get latest publications (public)
 router.get("/publications/latest", async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 5;
@@ -210,26 +219,34 @@ router.get("/publications/latest", async (req, res) => {
     }
 });
 
-// Create a new publication
-router.post("/publications", authenticateToken, async (req, res) => {
+// Create a new publication (admin/super_admin only)
+router.post("/publications", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const { title, date, link } = req.body;
         
-        // Verify user has appropriate permissions - NO database prefix
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can add publications" });
+        // Check if user has publish rights
+        if (!canPublishContent(req.userRole)) {
+            return res.status(403).json({ 
+                error: "You don't have permission to publish content" 
+            });
         }
         
         // Validate input
-        if (!title || !date) {
+        if (!title.trim() || !date) {
             return res.status(400).json({ error: "Title and date are required" });
+        }
+        
+        // Check for duplicate publication
+        const [existingPublication] = await db.query(
+            `SELECT id FROM conference_publications 
+             WHERE publication_description = ? AND publication_date = ?`,
+            [title, date]
+        );
+        
+        if (existingPublication.length > 0) {
+            return res.status(409).json({ 
+                error: "A publication with this title and date already exists" 
+            });
         }
         
         // Insert new publication using the link field also - NO database prefix
@@ -246,12 +263,20 @@ router.post("/publications", authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error("Error creating publication:", error);
+        
+        // Check for duplicate constraint violations
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 
+                error: "A publication with this title and date already exists" 
+            });
+        }
+        
         res.status(500).json({ error: "Internal server error" });
     }
 });
 
 // Get a specific publication by ID - parameter route after specific routes
-router.get("/publications/:id", authenticateToken, async (req, res) => {
+router.get("/publications/:id", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const publicationId = req.params.id;
         
@@ -275,21 +300,16 @@ router.get("/publications/:id", authenticateToken, async (req, res) => {
 });
 
 // Update a publication
-router.put("/publications/:id", authenticateToken, async (req, res) => {
+router.put("/publications/:id", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const publicationId = req.params.id;
         const { title, date, link } = req.body;
         
-        // Verify user has appropriate permissions - NO database prefix
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can update publications" });
+        // Check if user can edit published content
+        if (!canEditPublishedContent(req.userRole)) {
+            return res.status(403).json({ 
+                error: "You don't have permission to edit published content" 
+            });
         }
         
         // Check if publication exists - NO database prefix
@@ -303,8 +323,21 @@ router.put("/publications/:id", authenticateToken, async (req, res) => {
         }
         
         // Validate input
-        if (!title || !date) {
+        if (!title.trim() || !date) {
             return res.status(400).json({ error: "Title and date are required" });
+        }
+        
+        // Check for duplicate publication (excluding current one)
+        const [duplicatePublication] = await db.query(
+            `SELECT id FROM conference_publications 
+             WHERE publication_description = ? AND publication_date = ? AND id != ?`,
+            [title, date, publicationId]
+        );
+        
+        if (duplicatePublication.length > 0) {
+            return res.status(409).json({ 
+                error: "Another publication with this title and date already exists" 
+            });
         }
         
         // Update publication including publication_link column - NO database prefix
@@ -318,26 +351,22 @@ router.put("/publications/:id", authenticateToken, async (req, res) => {
         res.json({ message: "Publication updated successfully" });
     } catch (error) {
         console.error("Error updating publication:", error);
+        
+        // Check for duplicate constraint violations
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 
+                error: "Another publication with this title and date already exists" 
+            });
+        }
+        
         res.status(500).json({ error: "Internal server error" });
     }
 });
 
-// Delete a publication - parameter route after specific routes
-router.delete("/publications/drafts/:id", authenticateToken, async (req, res) => {
+// Delete a publication draft
+router.delete("/publications/drafts/:id", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const draftId = req.params.id;
-        
-        // Verify user has appropriate permissions
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can delete drafts" });
-        }
         
         // Check if draft exists
         const [existingDraft] = await db.query(
@@ -361,20 +390,17 @@ router.delete("/publications/drafts/:id", authenticateToken, async (req, res) =>
         res.status(500).json({ error: "Internal server error" });
     }
 });
-router.delete("/publications/:id", authenticateToken, async (req, res) => {
+
+// Delete a publication
+router.delete("/publications/:id", authenticateToken, authorizeContentEditor, async (req, res) => {
     try {
         const publicationId = req.params.id;
         
-        // Verify user has appropriate permissions
-        const [currentUser] = await db.query(
-            `SELECT account_type FROM users WHERE id = ?`, 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || 
-            (currentUser[0].account_type !== 'admin' && 
-             currentUser[0].account_type !== 'super_admin')) {
-            return res.status(403).json({ error: "Only Admins can delete publications" });
+        // Check if user can delete content
+        if (!canDeleteContent(req.userRole)) {
+            return res.status(403).json({ 
+                error: "You don't have permission to delete publications" 
+            });
         }
         
         // Check if publication exists
@@ -399,6 +425,7 @@ router.delete("/publications/:id", authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
+
 // Debug database connection and structure
 router.get("/debug-db", async (req, res) => {
     try {

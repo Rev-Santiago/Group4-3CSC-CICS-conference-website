@@ -126,6 +126,7 @@ export default function MiniDrawer({ children }) {
   const { handleLogout } = useContext(AuthContext);
   const [userRole, setUserRole] = useState('');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
@@ -136,6 +137,7 @@ export default function MiniDrawer({ children }) {
     const accountType = localStorage.getItem('accountType');
     setUserRole(accountType);
     setIsSuperAdmin(accountType === 'super_admin');
+    setIsAdmin(accountType === 'admin' || accountType === 'super_admin');
   }, []);
 
   return (

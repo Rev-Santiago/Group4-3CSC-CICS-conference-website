@@ -1,36 +1,28 @@
-// Updated routes/userRoutes.js file
+// Updated src/backend/routes/userRoutes.js
 
 import express from "express";
 import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import process from "process";
+import { 
+    authenticateToken, 
+    authorizeSuperAdmin, 
+    authorizeAdmin 
+} from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) return res.status(403).json({ error: "Access denied." });
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid token." });
-        req.user = user;
-        next();
-    });
-};
-
+// Test route to verify connection
 router.get("/test", (req, res) => {
     res.json({ message: "API is working!" });
 });
 
-router.get("/users", authenticateToken, async (req, res) => {
+// Get all users (super_admin only)
+router.get("/users", authenticateToken, authorizeSuperAdmin, async (req, res) => {
     try {
         console.log("Request to get users received. User:", req.user);
         
-        // FIXED: Removed database prefix to match the format in other working routes
         const [users] = await db.query(
             `SELECT id, email, account_type, created_at 
              FROM users ORDER BY created_at DESC`
@@ -55,20 +47,9 @@ router.get("/users", authenticateToken, async (req, res) => {
 });
 
 // Create new user (super_admin only)
-router.post("/users", authenticateToken, async (req, res) => {
+router.post("/users", authenticateToken, authorizeSuperAdmin, async (req, res) => {
     try {
         const { email, password, account_type } = req.body;
-        
-        // Verify current user is super_admin
-        // FIXED: Removed database prefix
-        const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
-            return res.status(403).json({ error: "Only Super Admins can add new users" });
-        }
         
         // Validate input
         if (!email || !password) {
@@ -79,8 +60,13 @@ router.post("/users", authenticateToken, async (req, res) => {
             return res.status(400).json({ error: "Password must be at least 6 characters" });
         }
         
+        // Validate account_type
+        const validRoles = ['super_admin', 'admin', 'organizer'];
+        if (!validRoles.includes(account_type)) {
+            return res.status(400).json({ error: "Invalid account type" });
+        }
+        
         // Check if email already exists
-        // FIXED: Removed database prefix
         const [existingUser] = await db.query(
             "SELECT id FROM users WHERE email = ?",
             [email]
@@ -93,13 +79,12 @@ router.post("/users", authenticateToken, async (req, res) => {
         // Hash password with bcrypt
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        console.log("Attempting to create user:", { email, account_type: account_type || 'admin' });
+        console.log("Attempting to create user:", { email, account_type });
         
         try {
-            // FIXED: Removed database prefix
             await db.execute(
                 "INSERT INTO users (email, password, account_type, created_at) VALUES (?, ?, ?, NOW())",
-                [email, hashedPassword, account_type || 'admin'] // Default to 'admin' if not specified
+                [email, hashedPassword, account_type]
             );
             console.log("User created successfully");
         } catch (insertError) {
@@ -114,23 +99,55 @@ router.post("/users", authenticateToken, async (req, res) => {
     }
 });
 
+// Change user role (new endpoint for super_admin)
+router.post("/users/:id/change-role", authenticateToken, authorizeSuperAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        
+        // Validate role
+        const validRoles = ['super_admin', 'admin', 'organizer'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ error: "Invalid role specified" });
+        }
+        
+        // Get current user's info
+        const [userData] = await db.query("SELECT id, account_type FROM users WHERE id = ?", [id]);
+        
+        if (userData.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
+        // Prevent changing your own role to ensure at least one super_admin exists
+        if (id === req.user.id.toString()) {
+            return res.status(400).json({ error: "You cannot change your own role" });
+        }
+        
+        // Apply the role change
+        await db.execute(
+            "UPDATE users SET account_type = ? WHERE id = ?",
+            [role, id]
+        );
+        
+        res.json({ message: `User role changed to ${role} successfully` });
+    } catch (error) {
+        console.error("Error changing user role:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 // Promote user to super_admin
-router.post("/users/:id/promote", authenticateToken, async (req, res) => {
+router.post("/users/:id/promote", authenticateToken, authorizeSuperAdmin, async (req, res) => {
     const userId = req.params.id;
     
     try {
-        // Verify current user is super_admin before allowing promotion
-        // FIXED: Removed database prefix
-        const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
-            [req.user.id]
-        );
+        // Verify user exists
+        const [userExists] = await db.query("SELECT id FROM users WHERE id = ?", [userId]);
         
-        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
-            return res.status(403).json({ error: "Only Super Admins can promote users" });
+        if (userExists.length === 0) {
+            return res.status(404).json({ error: "User not found" });
         }
         
-        // FIXED: Removed database prefix
         await db.execute(
             "UPDATE users SET account_type = 'super_admin' WHERE id = ?",
             [userId]
@@ -144,27 +161,22 @@ router.post("/users/:id/promote", authenticateToken, async (req, res) => {
 });
 
 // Demote user from super_admin to regular admin
-router.post("/users/:id/demote", authenticateToken, async (req, res) => {
+router.post("/users/:id/demote", authenticateToken, authorizeSuperAdmin, async (req, res) => {
     const userId = req.params.id;
     
     try {
-        // Verify current user is super_admin before allowing demotion
-        // FIXED: Removed database prefix
-        const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
-            return res.status(403).json({ error: "Only Super Admins can demote users" });
-        }
-        
-        // Prevent self-demotion (optional security feature)
+        // Prevent self-demotion (security feature)
         if (userId == req.user.id) {
             return res.status(400).json({ error: "You cannot demote yourself" });
         }
         
-        // FIXED: Removed database prefix
+        // Verify user exists
+        const [userExists] = await db.query("SELECT id FROM users WHERE id = ?", [userId]);
+        
+        if (userExists.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
         await db.execute(
             "UPDATE users SET account_type = 'admin' WHERE id = ?",
             [userId]
@@ -177,28 +189,32 @@ router.post("/users/:id/demote", authenticateToken, async (req, res) => {
     }
 });
 
-// Add at top of userRoutes.js routes
+// Debug endpoint to verify tokens
 router.get("/users-test", authenticateToken, (req, res) => {
-    res.json({ message: "User routes are connected!", user: req.user });
+    res.json({ 
+        message: "User routes are connected!", 
+        user: req.user,
+        role: req.userRole || 'unknown'
+    });
 });
 
-// Remove user
-router.delete("/users/:id", authenticateToken, async (req, res) => {
+// Remove user (super_admin only)
+router.delete("/users/:id", authenticateToken, authorizeSuperAdmin, async (req, res) => {
     const userId = req.params.id;
     
     try {
-        // Verify current user is super_admin before allowing deletion
-        // FIXED: Removed database prefix
-        const [currentUser] = await db.query(
-            "SELECT account_type FROM users WHERE id = ?", 
-            [req.user.id]
-        );
-        
-        if (currentUser.length === 0 || currentUser[0].account_type !== 'super_admin') {
-            return res.status(403).json({ error: "Only Super Admins can remove users" });
+        // Prevent self-deletion
+        if (userId == req.user.id) {
+            return res.status(400).json({ error: "You cannot remove yourself" });
         }
         
-        // FIXED: Removed database prefix
+        // Verify user exists
+        const [userExists] = await db.query("SELECT id FROM users WHERE id = ?", [userId]);
+        
+        if (userExists.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
         await db.execute("DELETE FROM users WHERE id = ?", [userId]);
         res.json({ message: "User removed successfully" });
     } catch (error) {
@@ -206,7 +222,6 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
-// Add this route to userRoutes.js to enable profile updates
 
 // Update user profile (email and/or password)
 router.put("/users/update-profile", authenticateToken, async (req, res) => {

@@ -120,6 +120,28 @@ export default function AdminUserManagementPage() {
         }
     };
 
+    // New function to handle role change
+    const handleChangeRole = async (newRole) => {
+        if (!selectedUser) return;
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            await axios.post(`${baseUrl}/api/users/${selectedUser.id}/change-role`, { 
+                role: newRole 
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            showNotification(`User's role changed to ${newRole} successfully`);
+            fetchUsers(); // Refresh the list
+            setConfirmDialog({ ...confirmDialog, open: false });
+        } catch (error) {
+            console.error('Error changing user role:', error);
+            showNotification(error.response?.data?.error || 'Failed to change user role', 'error');
+            setConfirmDialog({ ...confirmDialog, open: false });
+        }
+    };
+
     // Handle remove user
     const handleRemoveUser = async () => {
         if (!selectedUser) return;
@@ -141,7 +163,7 @@ export default function AdminUserManagementPage() {
     };
 
     // Open confirmation dialog
-    const openConfirmDialog = (type) => {
+    const openConfirmDialog = (type, newRole = null) => {
         if (type === 'promote') {
             setConfirmDialog({
                 open: true,
@@ -155,6 +177,14 @@ export default function AdminUserManagementPage() {
                 type: 'demote',
                 title: 'Demote User',
                 message: `Are you sure you want to demote ${selectedUser?.name || selectedUser?.email} to regular Admin?`
+            });
+        } else if (type === 'change-role') {
+            setConfirmDialog({
+                open: true,
+                type: 'change-role',
+                newRole: newRole,
+                title: 'Change User Role',
+                message: `Are you sure you want to change ${selectedUser?.name || selectedUser?.email}'s role to ${newRole}?`
             });
         } else if (type === 'remove') {
             setConfirmDialog({
@@ -301,6 +331,34 @@ export default function AdminUserManagementPage() {
         (user.name && user.name.toLowerCase().includes(search.toLowerCase()))
     );
 
+    // Get role badge color
+    const getRoleBadgeColor = (role) => {
+        switch(role) {
+            case 'super_admin':
+                return 'bg-red-100 text-red-700';
+            case 'admin':
+                return 'bg-green-100 text-green-700';
+            case 'organizer':
+                return 'bg-blue-100 text-blue-700';
+            default:
+                return 'bg-gray-100 text-gray-700';
+        }
+    };
+
+    // Get role display name
+    const getRoleDisplayName = (role) => {
+        switch(role) {
+            case 'super_admin':
+                return 'Super Admin';
+            case 'admin':
+                return 'Admin';
+            case 'organizer':
+                return 'Organizer';
+            default:
+                return role;
+        }
+    };
+
     return (
         <section>
             {/* Page Header */}
@@ -351,7 +409,7 @@ export default function AdminUserManagementPage() {
                         {/* Table Header */}
                         <div className="grid grid-cols-10 px-4 py-2 bg-customRed border border-b-0 text-sm font-medium text-white">
                             <div className="col-span-4">User name</div>
-                            <div className="col-span-3">Roles</div>
+                            <div className="col-span-3">Role</div>
                             <div className="col-span-2">Date added</div>
                             <div className="col-span-1"></div>
                         </div>
@@ -372,8 +430,8 @@ export default function AdminUserManagementPage() {
                                         </div>
                                     </div>
                                     <div className="col-span-3">
-                                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                            {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
+                                        <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor(user.account_type)}`}>
+                                            {getRoleDisplayName(user.account_type)}
                                         </span>
                                     </div>
                                     <div className="col-span-2 text-sm text-gray-700">{formatDate(user.date_added)}</div>
@@ -388,7 +446,7 @@ export default function AdminUserManagementPage() {
                     </div>
                 </div>
 
-                {/* Pagination (You can implement this based on API response) */}
+                {/* Pagination placeholder - implement pagination based on API response */}
                 <div className="flex justify-center gap-2 mt-6 flex-wrap">
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                         <button
@@ -408,15 +466,34 @@ export default function AdminUserManagementPage() {
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
             >
-                {selectedUser?.account_type === 'admin' ? (
-                    <MenuItem onClick={() => openConfirmDialog('promote')}>
-                        Promote to Super Admin
-                    </MenuItem>
-                ) : selectedUser?.account_type === 'super_admin' ? (
+                {selectedUser?.account_type === 'admin' && (
+                    <>
+                        <MenuItem onClick={() => openConfirmDialog('promote')}>
+                            Promote to Super Admin
+                        </MenuItem>
+                        <MenuItem onClick={() => openConfirmDialog('change-role', 'organizer')}>
+                            Change to Organizer
+                        </MenuItem>
+                    </>
+                )}
+
+                {selectedUser?.account_type === 'super_admin' && (
                     <MenuItem onClick={() => openConfirmDialog('demote')}>
                         Demote to Admin
                     </MenuItem>
-                ) : null}
+                )}
+
+                {selectedUser?.account_type === 'organizer' && (
+                    <>
+                        <MenuItem onClick={() => openConfirmDialog('change-role', 'admin')}>
+                            Change to Admin
+                        </MenuItem>
+                        <MenuItem onClick={() => openConfirmDialog('change-role', 'super_admin')}>
+                            Change to Super Admin
+                        </MenuItem>
+                    </>
+                )}
+
                 <MenuItem onClick={() => openConfirmDialog('remove')}>
                     Remove
                 </MenuItem>
@@ -435,6 +512,7 @@ export default function AdminUserManagementPage() {
                         onClick={
                             confirmDialog.type === 'promote' ? handlePromoteUser : 
                             confirmDialog.type === 'demote' ? handleDemoteUser : 
+                            confirmDialog.type === 'change-role' ? () => handleChangeRole(confirmDialog.newRole) :
                             handleRemoveUser
                         }
                     >
@@ -535,6 +613,7 @@ export default function AdminUserManagementPage() {
                         >
                             <MenuItem value="admin">Admin</MenuItem>
                             <MenuItem value="super_admin">Super Admin</MenuItem>
+                            <MenuItem value="organizer">Organizer</MenuItem>
                         </Select>
                         <FormHelperText>Choose the user's role in the system</FormHelperText>
                     </FormControl>
@@ -571,6 +650,7 @@ export default function AdminUserManagementPage() {
                 open={notification.open} 
                 autoHideDuration={6000} 
                 onClose={() => setNotification({ ...notification, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
                 <Alert 
                     onClose={() => setNotification({ ...notification, open: false })} 

@@ -5,27 +5,28 @@ import {
     Select, 
     MenuItem, 
     Button, 
-    Box, 
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Snackbar,
-    Alert,
+    Box,
     CircularProgress
 } from "@mui/material";
 import axios from "axios";
+import { useNotification } from "../../contexts/NotificationContext";
 
 const AdminDeletePublication = () => {
     const [selectedPublication, setSelectedPublication] = useState("");
     const [publications, setPublications] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [confirmDialog, setConfirmDialog] = useState(false);
-    const [notification, setNotification] = useState({
-        open: false,
-        message: "",
-        severity: "success"
-    });
+    const [fetchingData, setFetchingData] = useState(true);
+    const [userRole, setUserRole] = useState("");
+    const { showNotification, showConfirmation } = useNotification();
+
+    // Get the base URL
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
+
+    // Check if user can delete (only super_admin)
+    useEffect(() => {
+        const accountType = localStorage.getItem('accountType');
+        setUserRole(accountType || '');
+    }, []);
 
     // Fetch publications on component mount
     useEffect(() => {
@@ -33,10 +34,10 @@ const AdminDeletePublication = () => {
     }, []);
 
     const fetchPublications = async () => {
-        setLoading(true);
+        setFetchingData(true);
         try {
             const token = getAuthToken();
-            const response = await axios.get("/api/publications-admin", {
+            const response = await axios.get(`${baseUrl}/api/publications-admin`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
@@ -50,13 +51,9 @@ const AdminDeletePublication = () => {
             setPublications(formattedPublications);
         } catch (error) {
             console.error("Error fetching publications:", error);
-            setNotification({
-                open: true,
-                message: "Failed to load publications",
-                severity: "error"
-            });
+            showNotification("Failed to load publications", "error");
         } finally {
-            setLoading(false);
+            setFetchingData(false);
         }
     };
 
@@ -68,55 +65,50 @@ const AdminDeletePublication = () => {
         setSelectedPublication(event.target.value);
     };
 
-    const openConfirmDialog = () => {
+    const handleDelete = async () => {
         if (!selectedPublication) {
-            setNotification({
-                open: true,
-                message: "Please select a publication to delete",
-                severity: "warning"
-            });
+            showNotification("Please select a publication to delete", "warning");
             return;
         }
-        setConfirmDialog(true);
-    };
-
-    const handleDelete = async () => {
-        if (!selectedPublication) return;
+        
+        // Only super_admin can delete
+        if (userRole !== 'super_admin') {
+            showNotification("You don't have permission to delete publications", "error");
+            return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = await showConfirmation(
+            "Delete Publication", 
+            "Are you sure you want to delete this publication? This action cannot be undone."
+        );
+        
+        if (!confirmed) return;
         
         setLoading(true);
         try {
             const token = getAuthToken();
-            await axios.delete(`/api/publications/${selectedPublication}`, {
+            await axios.delete(`${baseUrl}/api/publications/${selectedPublication}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
             // Remove from list
             setPublications(publications.filter(pub => pub.id !== selectedPublication));
             setSelectedPublication("");
-            setNotification({
-                open: true,
-                message: "Publication deleted successfully",
-                severity: "success"
-            });
-            setConfirmDialog(false);
+            showNotification("Publication deleted successfully", "success");
         } catch (error) {
             console.error("Error deleting publication:", error);
-            setNotification({
-                open: true,
-                message: error.response?.data?.error || "Failed to delete publication",
-                severity: "error"
-            });
+            showNotification(error.response?.data?.error || "Failed to delete publication", "error");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCloseNotification = () => {
-        setNotification(prev => ({ ...prev, open: false }));
-    };
-
     // Find the selected publication object
     const selectedPublicationObject = publications.find(pub => pub.id === selectedPublication);
+
+    // Check if user can delete (only super_admin)
+    const canDelete = userRole === 'super_admin';
 
     return (
         <Box className="p-4">
@@ -128,7 +120,7 @@ const AdminDeletePublication = () => {
                 onChange={handlePublicationChange}
                 variant="outlined"
                 displayEmpty
-                disabled={loading || publications.length === 0}
+                disabled={fetchingData || publications.length === 0}
             >
                 <MenuItem value="">Select a publication to remove</MenuItem>
                 {publications.map((pub) => (
@@ -144,6 +136,12 @@ const AdminDeletePublication = () => {
                 </Typography>
             )}
             
+            {fetchingData && (
+                <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress size={40} />
+                </Box>
+            )}
+            
             <Grid
                 item xs={12}
                 className="flex flex-wrap gap-3"
@@ -151,8 +149,8 @@ const AdminDeletePublication = () => {
             >
                 <Button
                     variant="contained"
-                    onClick={openConfirmDialog}
-                    disabled={!selectedPublication || loading}
+                    onClick={handleDelete}
+                    disabled={!selectedPublication || loading || !canDelete}
                     sx={{
                         backgroundColor: "#B7152F",
                         color: "white",
@@ -162,45 +160,12 @@ const AdminDeletePublication = () => {
                     {loading ? <CircularProgress size={24} color="inherit" /> : "Delete Publication"}
                 </Button>
             </Grid>
-
-            {/* Confirmation Dialog */}
-            <Dialog
-                open={confirmDialog}
-                onClose={() => setConfirmDialog(false)}
-            >
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete the publication:
-                        {selectedPublicationObject && (
-                            <strong> "{selectedPublicationObject.title}"</strong>
-                        )}? This action cannot be undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmDialog(false)} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleDelete} color="error" variant="contained">
-                        {loading ? <CircularProgress size={24} color="inherit" /> : "Delete"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Notification */}
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={6000}
-                onClose={handleCloseNotification}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert
-                    onClose={handleCloseNotification}
-                    severity={notification.severity}
-                >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
+            
+            {!canDelete && (
+                <Typography sx={{ mt: 2, color: 'gray', textAlign: 'center', fontStyle: 'italic' }}>
+                    Only Super Admins can delete publications
+                </Typography>
+            )}
         </Box>
     );
 };

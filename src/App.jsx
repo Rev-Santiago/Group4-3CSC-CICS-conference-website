@@ -4,6 +4,7 @@ import { useState, createContext, useEffect } from "react";
 import BaseNavbar from "./pages/globalLayout/BaseNavbar/BaseNavbar.jsx";
 import BaseFooter from "./pages/globalLayout/BaseFooter/BaseFooter.jsx";
 import LoaderPage from "./pages/LoaderPage/LoaderPage.jsx";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 export const AuthContext = createContext(null);
 export const LayoutContext = createContext(null);
@@ -24,12 +25,19 @@ function App() {
 
   const handleLogout = async () => {
     localStorage.removeItem("authToken");
- const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+    localStorage.removeItem("accountType");
+    localStorage.removeItem("userEmail");
+    
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-await fetch(`${BACKEND_URL}/api/logout`, {
-  method: "POST",
-  credentials: "include",
-});
+    try {
+      await fetch(`${BACKEND_URL}/api/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
 
     setAuth(null);
     navigate("/login");
@@ -41,27 +49,28 @@ await fetch(`${BACKEND_URL}/api/logout`, {
   return (
     <AuthContext.Provider value={{ auth, setAuth, handleLogout }}>
       <LayoutContext.Provider value={{ hideLayout, setHideLayout }}>
-        <div className="flex flex-col min-h-screen">
-          {/* ✅ Conditionally Apply Layout Only for Non-Admin Pages */}
-          <main className="flex-grow">
-          {!shouldHideLayout ? (
-            <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
-              <BaseNavbar />
-              {state === "loading" ? <LoaderPage /> : <Outlet />}
-            </Box>
-          ) : (
-            <body className="m-0 p-0 min-h-screen bg-lightGray">
-              <Outlet />
-            </body>
-          )}
-          </main>
+        <NotificationProvider>
+          <div className="flex flex-col min-h-screen">
+            {/* ✅ Conditionally Apply Layout Only for Non-Admin Pages */}
+            <main className="flex-grow">
+            {!shouldHideLayout ? (
+              <Box sx={{ maxWidth: "1200px", width: "100%", margin: "0 auto", padding: "0 20px" }}>
+                <BaseNavbar />
+                {state === "loading" ? <LoaderPage /> : <Outlet />}
+              </Box>
+            ) : (
+              <body className="m-0 p-0 min-h-screen bg-lightGray">
+                <Outlet />
+              </body>
+            )}
+            </main>
 
-          {!shouldHideLayout && <BaseFooter />}
-        </div>
+            {!shouldHideLayout && <BaseFooter />}
+          </div>
+        </NotificationProvider>
       </LayoutContext.Provider>
     </AuthContext.Provider>
   );
 }
-
 
 export default App;

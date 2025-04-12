@@ -6,7 +6,7 @@ import Routes from "./routes/Routes.jsx";
 import { AuthContext } from "./App";
 
 function RootComponent() {
-    const [auth, setAuth] = useState(null);
+    const [auth, setAuth] = useState(localStorage.getItem("authToken") || null);
 
     return (
         <AuthContext.Provider value={{ auth, setAuth }}>

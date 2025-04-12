@@ -1,29 +1,32 @@
-// Updated src/pages/AdminPublicationsPage/AdminAddPublication.jsx
-import { useState } from "react";
+// src/pages/AdminPublicationsPage/AdminAddPublication.jsx
+import { useState, useEffect } from "react";
 import {
     Grid,
     TextField,
     Typography,
     Button,
     Box,
-    Snackbar,
-    Alert
+    CircularProgress
 } from "@mui/material";
 import axios from "axios";
+import { useNotification } from "../../contexts/NotificationContext";
 
-export default function AdminAddPublication({ currentUser }) {
+export default function AdminAddPublication() {
     const [publicationData, setPublicationData] = useState({
         title: "",
         date: "",
         link: ""
     });
-    const [notification, setNotification] = useState({ 
-        open: false, 
-        message: "", 
-        severity: "success" 
-    });
     const [loading, setLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [userRole, setUserRole] = useState("");
+    const { showNotification, showConfirmation } = useNotification();
+
+    useEffect(() => {
+        // Get user role from localStorage
+        const accountType = localStorage.getItem('accountType');
+        setUserRole(accountType || '');
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -80,7 +83,6 @@ export default function AdminAddPublication({ currentUser }) {
             // Get the base URL
             const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
             const apiUrl = `${baseUrl}/api/publications/drafts`;
-            console.log("API URL:", apiUrl);
 
             const response = await axios.post(apiUrl, {
                 title: publicationData.title,
@@ -92,25 +94,22 @@ export default function AdminAddPublication({ currentUser }) {
             
             console.log("Draft saved:", response.data);
             
-            setNotification({
-                open: true,
-                message: "Draft saved successfully!",
-                severity: "success"
-            });
+            showNotification("Draft saved successfully!", "success");
         } catch (error) {
             console.error("Error saving draft:", error);
             
-            // More detailed error logging
-            if (error.response) {
-                console.error("Response data:", error.response.data);
-                console.error("Response status:", error.response.status);
+            // Handle duplicate error specifically
+            if (error.response?.status === 409) {
+                showNotification(error.response.data.error || "A duplicate publication already exists", "warning");
+            } else {
+                // More detailed error logging
+                if (error.response) {
+                    console.error("Response data:", error.response.data);
+                    console.error("Response status:", error.response.status);
+                }
+                
+                showNotification(error.response?.data?.error || "Failed to save draft", "error");
             }
-            
-            setNotification({
-                open: true,
-                message: error.response?.data?.error || "Failed to save draft",
-                severity: "error"
-            });
         } finally {
             setLoading(false);
         }
@@ -118,6 +117,20 @@ export default function AdminAddPublication({ currentUser }) {
 
     const handlePublish = async () => {
         if (!validateForm()) return;
+        
+        // Check if user has publish permission (admin or super_admin)
+        if (userRole !== 'admin' && userRole !== 'super_admin') {
+            showNotification("You don't have permission to publish content", "error");
+            return;
+        }
+
+        // Show confirmation dialog
+        const confirmed = await showConfirmation(
+            "Publish Publication", 
+            "Are you sure you want to publish this publication? Once published, it will be visible to all users."
+        );
+        
+        if (!confirmed) return;
         
         setLoading(true);
         try {
@@ -127,7 +140,6 @@ export default function AdminAddPublication({ currentUser }) {
             // Get the base URL
             const baseUrl = import.meta.env.VITE_BACKEND_URL || "";
             const apiUrl = `${baseUrl}/api/publications`;
-            console.log("API URL:", apiUrl);
             
             const response = await axios.post(apiUrl, {
                 title: publicationData.title,
@@ -139,35 +151,30 @@ export default function AdminAddPublication({ currentUser }) {
             
             console.log("Publication published:", response.data);
             
-            setNotification({
-                open: true,
-                message: "Publication published successfully!",
-                severity: "success"
-            });
-            
+            showNotification("Publication published successfully!", "success");
             resetForm();
         } catch (error) {
             console.error("Error publishing:", error);
             
-            // More detailed error logging
-            if (error.response) {
-                console.error("Response data:", error.response.data);
-                console.error("Response status:", error.response.status);
+            // Handle duplicate error specifically
+            if (error.response?.status === 409) {
+                showNotification(error.response.data.error || "A duplicate publication already exists", "warning");
+            } else {
+                // More detailed error logging
+                if (error.response) {
+                    console.error("Response data:", error.response.data);
+                    console.error("Response status:", error.response.status);
+                }
+                
+                showNotification(error.response?.data?.error || "Failed to publish", "error");
             }
-            
-            setNotification({
-                open: true,
-                message: error.response?.data?.error || "Failed to publish",
-                severity: "error"
-            });
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCloseNotification = () => {
-        setNotification(prev => ({ ...prev, open: false }));
-    };
+    // Check if user can publish (admin or super_admin)
+    const canPublish = userRole === 'admin' || userRole === 'super_admin';
 
     return (
         <Box className="p-4">
@@ -206,7 +213,7 @@ export default function AdminAddPublication({ currentUser }) {
                     <TextField 
                         fullWidth 
                         size="small" 
-                        label="Insert Link" 
+                        label="Insert Link (Optional)" 
                         name="link"
                         value={publicationData.link} 
                         onChange={handleChange}
@@ -220,34 +227,21 @@ export default function AdminAddPublication({ currentUser }) {
                         onClick={handleSaveDraft}
                         disabled={loading}
                     >
-                        Save Draft
+                        {loading ? <CircularProgress size={24} /> : "Save Draft"}
                     </Button>
-                    <Button 
-                        variant="contained" 
-                        color="error" 
-                        onClick={handlePublish}
-                        disabled={loading}
-                        sx={{ backgroundColor: "#B7152F", "&:hover": { backgroundColor: "#930E24" } }}
-                    >
-                        Publish
-                    </Button>
+                    {canPublish && (
+                        <Button 
+                            variant="contained" 
+                            color="error" 
+                            onClick={handlePublish}
+                            disabled={loading}
+                            sx={{ backgroundColor: "#B7152F", "&:hover": { backgroundColor: "#930E24" } }}
+                        >
+                            {loading ? <CircularProgress size={24} color="inherit" /> : "Publish"}
+                        </Button>
+                    )}
                 </Grid>
             </Grid>
-
-            {/* Notification */}
-            <Snackbar 
-                open={notification.open} 
-                autoHideDuration={6000} 
-                onClose={handleCloseNotification}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert 
-                    onClose={handleCloseNotification} 
-                    severity={notification.severity}
-                >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
         </Box>
     );
 }
