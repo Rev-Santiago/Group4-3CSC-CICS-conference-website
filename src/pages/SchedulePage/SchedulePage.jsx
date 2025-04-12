@@ -192,8 +192,8 @@ const SchedulePage = () => {
     };
 
     // Custom dropdown component
-    const CustomDropdown = ({ label, options, onSelect, isOpen, setIsOpen, selectedValue, reference }) => (
-        <div className="relative inline-block text-left z-10" ref={reference}>
+    const CustomDropdown = ({ label, options, onSelect, isOpen, setIsOpen, selectedValue, reference, zIndex }) => (
+        <div className={`relative inline-block text-left ${zIndex}`} ref={reference}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center justify-between w-56 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-black rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-customRed focus:ring-opacity-50 transition-all duration-200"
@@ -223,7 +223,7 @@ const SchedulePage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-60 overflow-y-auto"
+                        className={`absolute right-0 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-60 overflow-y-auto`}
                     >
                         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                             {options.map((option, idx) => (
@@ -320,7 +320,7 @@ const SchedulePage = () => {
                     className="flex flex-col md:flex-row items-center justify-center mb-6 gap-6"
                 >
                     {scheduleData.length > 0 && (
-                        <div className="flex flex-col justify-center gap-2">
+                        <div className="flex flex-col justify-center gap-2 relative">
                             <label className="text-gray-700 font-medium mb-1 text-center md:text-left">Select a Date</label>
                             <CustomDropdown
                                 label="Jump to Date"
@@ -330,12 +330,13 @@ const SchedulePage = () => {
                                 setIsOpen={setIsDateDropdownOpen}
                                 selectedValue={selectedDateLabel}
                                 reference={dateDropdownRef}
+                                zIndex="z-50" // Higher z-index for date dropdown
                             />
                         </div>
                     )}
 
                     {categories.length > 0 && (
-                        <div className="flex flex-col justify-center gap-2">
+                        <div className="flex flex-col justify-center gap-2 relative">
                             <label className="text-gray-700 font-medium mb-1 text-center md:text-left">Select a Category</label>
                             <CustomDropdown
                                 label="All Categories"
@@ -345,6 +346,7 @@ const SchedulePage = () => {
                                 setIsOpen={setIsCategoryDropdownOpen}
                                 selectedValue={selectedCategory || "All Categories"}
                                 reference={categoryDropdownRef}
+                                zIndex="z-40" // Lower z-index for category dropdown
                             />
                         </div>
                     )}
