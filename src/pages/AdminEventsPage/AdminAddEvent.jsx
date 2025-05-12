@@ -15,10 +15,16 @@ import {
     Alert,
     Snackbar,
     Autocomplete,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import { Add, Delete } from "@mui/icons-material";
 
 export default function AdminAddEvent({ currentUser }) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
     const [eventData, setEventData] = useState({
         title: "",
         date: "",
@@ -158,100 +164,16 @@ export default function AdminAddEvent({ currentUser }) {
         return localStorage.getItem('authToken');
     };
 
-// Updated handleSaveDraft function
-const handleSaveDraft = async () => {
-    const formData = new FormData();
-    formData.append("title", eventData.title);
-    formData.append("date", eventData.date);
-    formData.append("startTime", eventData.startTime);
-    formData.append("endTime", eventData.endTime);
-    formData.append("venue", eventData.venue);
-    formData.append("theme", eventData.theme);
-    formData.append("category", eventData.category);
-    formData.append("zoomLink", eventData.zoomLink || "");
-    
-    // Combine all keynote speakers into a single string
-    const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
-    formData.append("keynoteSpeaker", keynoteSpeaker);
-    
-    // Combine all invited speakers into a single string
-    const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
-    formData.append("invitedSpeaker", invitedSpeaker);
-
-    try {
-        const token = getAuthToken();
-        if (!token) {
-            setNotification({
-                open: true,
-                message: "Authentication error: No token found",
-                severity: "error"
-            });
-            return;
-        }
-        
-        console.log("Saving draft with token", token.substring(0, 10) + "...");
-        
-        const res = await fetch(`${BACKEND_URL}/api/drafts`, {
-            method: "POST",
-            body: formData,
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        
-        // Check if response is HTML (a sign of error page)
-        if (res.headers.get("content-type")?.includes("text/html")) {
-            throw new Error("Received HTML, which might be an error page.");
-        }
-        
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to save draft");
-        
-
-        setNotification({
-            open: true,
-            message: "📝 Draft saved successfully!",
-            severity: "success"
-        });
-    } catch (err) {
-        console.error(err);
-        setNotification({
-            open: true,
-            message: `❌ Error: ${err.message || "Failed to save draft"}`,
-            severity: "error"
-        });
-    }
-};
-
-// Updated handlePublish function
-const handlePublish = async () => {
-    try {
-        // Validate form data
-        if (!eventData.title || eventData.title.trim() === "") {
-            setNotification({
-                open: true,
-                message: "Event title is required",
-                severity: "warning"
-            });
-            return;
-        }
-        
-        // Ensure we have a valid date - if not, use current date
-        const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const useDate = eventData.date && eventData.date.trim() !== "" 
-            ? eventData.date 
-            : currentDate;
-            
+    // Updated handleSaveDraft function
+    const handleSaveDraft = async () => {
         const formData = new FormData();
-        
-        // Set fields manually, ensuring required fields have values
-        formData.append("title", eventData.title || "Untitled Event");
-        formData.append("date", useDate);
-        formData.append("startTime", eventData.startTime || "");
-        formData.append("endTime", eventData.endTime || "");
-        formData.append("venue", eventData.venue || "");
-        formData.append("theme", eventData.theme || "");
-        formData.append("category", eventData.category || "");
+        formData.append("title", eventData.title);
+        formData.append("date", eventData.date);
+        formData.append("startTime", eventData.startTime);
+        formData.append("endTime", eventData.endTime);
+        formData.append("venue", eventData.venue);
+        formData.append("theme", eventData.theme);
+        formData.append("category", eventData.category);
         formData.append("zoomLink", eventData.zoomLink || "");
         
         // Combine all keynote speakers into a single string
@@ -261,62 +183,145 @@ const handlePublish = async () => {
         // Combine all invited speakers into a single string
         const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
         formData.append("invitedSpeaker", invitedSpeaker);
-        
-        console.log("Publishing event with date:", useDate);
-        
-        const token = getAuthToken();
-        if (!token) {
+
+        try {
+            const token = getAuthToken();
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            console.log("Saving draft with token", token.substring(0, 10) + "...");
+            
+            const res = await fetch(`${BACKEND_URL}/api/drafts`, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            // Check if response is HTML (a sign of error page)
+            if (res.headers.get("content-type")?.includes("text/html")) {
+                throw new Error("Received HTML, which might be an error page.");
+            }
+            
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to save draft");
+            
+
             setNotification({
                 open: true,
-                message: "Authentication error: No token found",
+                message: "📝 Draft saved successfully!",
+                severity: "success"
+            });
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: `❌ Error: ${err.message || "Failed to save draft"}`,
                 severity: "error"
             });
-            return;
         }
-        
-        // First verify the token
-        const verifyRes = await fetch(`${BACKEND_URL}/api/verify-token`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+    };
+
+    // Updated handlePublish function
+    const handlePublish = async () => {
+        try {
+            // Validate form data
+            if (!eventData.title || eventData.title.trim() === "") {
+                setNotification({
+                    open: true,
+                    message: "Event title is required",
+                    severity: "warning"
+                });
+                return;
             }
-        });
-        
-        if (!verifyRes.ok) {
+            
+            // Ensure we have a valid date - if not, use current date
+            const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const useDate = eventData.date && eventData.date.trim() !== "" 
+                ? eventData.date 
+                : currentDate;
+                
+            const formData = new FormData();
+            
+            // Set fields manually, ensuring required fields have values
+            formData.append("title", eventData.title || "Untitled Event");
+            formData.append("date", useDate);
+            formData.append("startTime", eventData.startTime || "");
+            formData.append("endTime", eventData.endTime || "");
+            formData.append("venue", eventData.venue || "");
+            formData.append("theme", eventData.theme || "");
+            formData.append("category", eventData.category || "");
+            formData.append("zoomLink", eventData.zoomLink || "");
+            
+            // Combine all keynote speakers into a single string
+            const keynoteSpeaker = eventData.keynoteSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("keynoteSpeaker", keynoteSpeaker);
+            
+            // Combine all invited speakers into a single string
+            const invitedSpeaker = eventData.invitedSpeakers.map(s => s.name).filter(Boolean).join(", ");
+            formData.append("invitedSpeaker", invitedSpeaker);
+            
+            console.log("Publishing event with date:", useDate);
+            
+            const token = getAuthToken();
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            // First verify the token
+            const verifyRes = await fetch(`${BACKEND_URL}/api/verify-token`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            if (!verifyRes.ok) {
+                const verifyData = await verifyRes.json();
+                throw new Error(`Token verification failed: ${verifyData.error || "Unknown error"}`);
+            }
+            
             const verifyData = await verifyRes.json();
-            throw new Error(`Token verification failed: ${verifyData.error || "Unknown error"}`);
+            console.log("Token verification before publish:", verifyData);
+
+            const res = await fetch(`${BACKEND_URL}/api/events`, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to publish event");
+
+            setNotification({
+                open: true,
+                message: "✅ Event published successfully!",
+                severity: "success"
+            });
+
+            resetForm();
+        } catch (err) {
+            console.error(err);
+            setNotification({
+                open: true,
+                message: `❌ Error: ${err.message || "Failed to publish event"}`,
+                severity: "error"
+            });
         }
-        
-        const verifyData = await verifyRes.json();
-        console.log("Token verification before publish:", verifyData);
-
-        const res = await fetch(`${BACKEND_URL}/api/events`, {
-            method: "POST",
-            body: formData,
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to publish event");
-
-        setNotification({
-            open: true,
-            message: "✅ Event published successfully!",
-            severity: "success"
-        });
-
-        resetForm();
-    } catch (err) {
-        console.error(err);
-        setNotification({
-            open: true,
-            message: `❌ Error: ${err.message || "Failed to publish event"}`,
-            severity: "error"
-        });
-    }
-};
-
+    };
 
     const accountType = localStorage.getItem("accountType");
     const handleOpenDetails = () => setDetailsOpen(true);
@@ -324,22 +329,57 @@ const handlePublish = async () => {
     const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
 
     return (
-        <Box className="p-4">
+        <Box className="p-2 sm:p-4">
             <Grid item xs={12}>
                 <Typography variant="subtitle1">Event Details:</Typography>
             </Grid>
-            <Grid container spacing={2}>
+            <Grid container spacing={isTablet ? 1 : 2}>
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Title" name="title" value={eventData.title} onChange={handleChange} sx={{ mt: 2 }}/>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Title"
+                        name="title"
+                        value={eventData.title}
+                        onChange={handleChange}
+                        sx={{ mt: isMobile ? 1 : 2 }}
+                    />
                 </Grid>
-                <Grid item xs={6}>
-                    <TextField fullWidth size="small" label="Date" type="date" name="date" InputLabelProps={{ shrink: true }} value={eventData.date} onChange={handleChange} />
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Date"
+                        type="date"
+                        name="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.date}
+                        onChange={handleChange}
+                    />
                 </Grid>
-                <Grid item xs={3}>
-                    <TextField fullWidth size="small" label="Start Time" type="time" name="startTime" InputLabelProps={{ shrink: true }} value={eventData.startTime} onChange={handleChange} />
+                <Grid item xs={6} sm={3}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Start Time"
+                        type="time"
+                        name="startTime"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.startTime}
+                        onChange={handleChange}
+                    />
                 </Grid>
-                <Grid item xs={3}>
-                    <TextField fullWidth size="small" label="End Time" type="time" name="endTime" InputLabelProps={{ shrink: true }} value={eventData.endTime} onChange={handleChange} />
+                <Grid item xs={6} sm={3}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="End Time"
+                        type="time"
+                        name="endTime"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.endTime}
+                        onChange={handleChange}
+                    />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -349,95 +389,149 @@ const handlePublish = async () => {
                         value={eventData.venue}
                         onChange={handleVenueChange}
                         renderInput={(params) => (
-                            <TextField {...params} label="Venue" size="small" fullWidth />
+                            <TextField
+                                {...params}
+                                label="Venue"
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth
+                            />
                         )}
                     />
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Zoom Link" name="zoomLink" value={eventData.zoomLink} onChange={handleChange} />
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Zoom Link"
+                        name="zoomLink"
+                        value={eventData.zoomLink}
+                        onChange={handleChange}
+                    />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ mt: isMobile ? 1 : 2 }}>
                     <Typography variant="subtitle1">Keynote Speaker(s):</Typography>
                 </Grid>
 
                 {eventData.keynoteSpeakers.map((speaker, index) => (
-                    <Grid container item xs={12} key={`keynote-${index}`} spacing={1}>
-                        <Grid item xs={10} className="flex items-center">
-                            <TextField 
-                                fullWidth 
-                                size="small" 
-                                label={`Keynote Speaker ${index + 1}`} 
-                                value={speaker.name} 
-                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)} 
+                    <Grid container item xs={12} key={`keynote-${index}`} spacing={1} alignItems="center">
+                        <Grid item xs={isMobile ? 8 : 10} className="flex items-center">
+                            <TextField
+                                fullWidth
+                                size={isMobile ? "small" : "medium"}
+                                label={`Keynote Speaker ${index + 1}`}
+                                value={speaker.name}
+                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)}
                             />
                         </Grid>
-                        <Grid item xs={2} className="flex items-center">
-                            <IconButton 
-                                color="primary" 
-                                onClick={handleAddKeynoteSpeaker}
-                                title="Add another keynote speaker"
-                                sx={{ mr: 1 }}
-                            >
-                                <Add />
-                            </IconButton>
-                            {eventData.keynoteSpeakers.length > 1 && (
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => handleRemoveKeynoteSpeaker(index)}
-                                    title="Remove this keynote speaker"
+                        <Grid item xs={isMobile ? 4 : 2} className="flex items-center">
+                            <Box sx={{
+                                display: 'flex',
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <IconButton
+                                    color="primary"
+                                    onClick={handleAddKeynoteSpeaker}
+                                    title="Add another keynote speaker"
+                                    size="small"
+                                    sx={{
+                                        p: isMobile ? 0.5 : 1,
+                                        minWidth: 34,
+                                        height: 34
+                                    }}
                                 >
-                                    <Delete />
+                                    <Add fontSize={isMobile ? "small" : "medium"} />
                                 </IconButton>
-                            )}
+                                {eventData.keynoteSpeakers.length > 1 && (
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleRemoveKeynoteSpeaker(index)}
+                                        title="Remove this keynote speaker"
+                                        size="small"
+                                        sx={{
+                                            p: isMobile ? 0.5 : 1,
+                                            minWidth: 34,
+                                            height: 34
+                                        }}
+                                    >
+                                        <Delete fontSize={isMobile ? "small" : "medium"} />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Grid>
                     </Grid>
                 ))}
 
-                <Grid item xs={12} sx={{ mt: 2 }}>
+
+                <Grid item xs={12} sx={{ mt: isMobile ? 1 : 2 }}>
                     <Typography variant="subtitle1">Invited Speaker(s):</Typography>
                 </Grid>
 
                 {eventData.invitedSpeakers.map((speaker, index) => (
-                    <Grid container item xs={12} key={`invited-${index}`} spacing={1}>
-                        <Grid item xs={10} className="flex items-center">
-                            <TextField 
-                                fullWidth 
-                                size="small" 
-                                label={`Invited Speaker ${index + 1}`} 
-                                value={speaker.name} 
-                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)} 
+                    <Grid container item xs={12} key={`invited-${index}`} spacing={1} alignItems="center">
+                        <Grid item xs={isMobile ? 8 : 10} className="flex items-center">
+                            <TextField
+                                fullWidth
+                                size={isMobile ? "small" : "medium"}
+                                label={`Invited Speaker ${index + 1}`}
+                                value={speaker.name}
+                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)}
                             />
                         </Grid>
-                        <Grid item xs={2} className="flex items-center">
-                            <IconButton 
-                                color="primary" 
-                                onClick={handleAddInvitedSpeaker}
-                                title="Add another invited speaker"
-                                sx={{ mr: 1 }}
-                            >
-                                <Add />
-                            </IconButton>
-                            {eventData.invitedSpeakers.length > 1 && (
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => handleRemoveInvitedSpeaker(index)}
-                                    title="Remove this invited speaker"
+                        <Grid item xs={isMobile ? 4 : 2} className="flex items-center">
+                            <Box sx={{
+                                display: 'flex',
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <IconButton
+                                    color="primary"
+                                    onClick={handleAddInvitedSpeaker}
+                                    title="Add another invited speaker"
+                                    size="small"
+                                    sx={{
+                                        p: isMobile ? 0.5 : 1,
+                                        minWidth: 34,
+                                        height: 34
+                                    }}
                                 >
-                                    <Delete />
+                                    <Add fontSize={isMobile ? "small" : "medium"} />
                                 </IconButton>
-                            )}
+                                {eventData.invitedSpeakers.length > 1 && (
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleRemoveInvitedSpeaker(index)}
+                                        title="Remove this invited speaker"
+                                        size="small"
+                                        sx={{
+                                            p: isMobile ? 0.5 : 1,
+                                            minWidth: 34,
+                                            height: 34
+                                        }}
+                                    >
+                                        <Delete fontSize={isMobile ? "small" : "medium"} />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Grid>
                     </Grid>
                 ))}
-
-                <Grid item xs={12} sx={{ mt: 2 }}>
+                
+                <Grid item xs={12} sx={{ mt: isMobile ? 1 : 2 }}>
                     <Typography variant="subtitle1">Event Classification:</Typography>
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Theme" name="theme" value={eventData.theme} onChange={handleChange} />
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Theme"
+                        name="theme"
+                        value={eventData.theme}
+                        onChange={handleChange}
+                    />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -447,25 +541,60 @@ const handlePublish = async () => {
                         value={eventData.category}
                         onChange={handleCategoryChange}
                         renderInput={(params) => (
-                            <TextField {...params} label="Category" size="small" fullWidth />
+                            <TextField
+                                {...params}
+                                label="Category"
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth
+                            />
                         )}
                     />
                 </Grid>
 
-                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                    <Button variant="outlined" onClick={handleOpenDetails}>See All Details</Button>
-                    <Button variant="contained" color="warning" onClick={handleSaveDraft}>Save</Button>
+                <Grid item xs={12} className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleOpenDetails}
+                        size={isMobile ? "small" : "medium"}
+                        fullWidth={isMobile}
+                        sx={{ mb: isMobile ? 1 : 0 }}
+                    >
+                        See All Details
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={handleSaveDraft}
+                        size={isMobile ? "small" : "medium"}
+                        fullWidth={isMobile}
+                        sx={{ mb: isMobile ? 1 : 0 }}
+                    >
+                        Save
+                    </Button>
                     {accountType === "super_admin" && (
-                        <Button variant="contained" sx={{ 
-                            backgroundColor: "#B7152F", 
-                            color: "white", 
-                            "&:hover": { backgroundColor: "#930E24" },
-                        }} onClick={handlePublish}>Publish</Button>
+                        <Button
+                            variant="contained"
+                            onClick={handlePublish}
+                            size={isMobile ? "small" : "medium"}
+                            fullWidth={isMobile}
+                            sx={{
+                                backgroundColor: "#B7152F",
+                                color: "white",
+                                "&:hover": { backgroundColor: "#930E24" },
+                            }}
+                        >
+                            Publish
+                        </Button>
                     )}
                 </Grid>
             </Grid>
 
-            <Dialog open={detailsOpen} onClose={handleCloseDetails} fullWidth>
+            <Dialog
+                open={detailsOpen}
+                onClose={handleCloseDetails}
+                fullWidth
+                maxWidth={isMobile ? "xs" : "sm"}
+            >
                 <DialogTitle>Event Details Overview</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2"><strong>Title:</strong> {eventData.title}</Typography>
