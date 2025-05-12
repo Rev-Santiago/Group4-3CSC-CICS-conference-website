@@ -29,6 +29,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Divider from "@mui/material/Divider";
 import GroupIcon from '@mui/icons-material/Group';
 import ArticleIcon from '@mui/icons-material/Article';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const drawerWidth = 240;
 
@@ -126,10 +127,32 @@ export default function MiniDrawer({ children }) {
   const { handleLogout } = useContext(AuthContext);
   const [userRole, setUserRole] = useState('');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Set initial drawer state based on screen size
+  useEffect(() => {
+    setOpen(!isMobile);
+  }, [isMobile]);
 
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
   const navigate = useNavigate();
+
+  // Handle navigation and close drawer on mobile
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setOpen(false);
+    }
+  };
+
+  // Handle logout and close drawer on mobile
+  const handleLogoutClick = () => {
+    if (isMobile) {
+      setOpen(false);
+    }
+    handleLogout();
+  };
 
   // Check user role on component mount
   useEffect(() => {
@@ -153,6 +176,8 @@ export default function MiniDrawer({ children }) {
             onClick={handleDrawerOpen}
             edge="start"
             sx={{
+              marginRight: 2,
+              ...(open && { display: 'none' }),
               "&:hover": {
                 backgroundColor: "#B7152F",
                 color: "white",
@@ -214,8 +239,9 @@ export default function MiniDrawer({ children }) {
               <ListItem disablePadding>
                 <Tooltip title={!open ? text : ""} placement="right">
                   <ListItemButton
-                    onClick={() => navigate(path)}
+                    onClick={() => handleNavigation(path)}
                     sx={{
+                      justifyContent: open ? 'initial' : 'center', // Center when closed
                       mx: 1,
                       "&:hover": {
                         backgroundColor: "#B7152F",
@@ -224,8 +250,15 @@ export default function MiniDrawer({ children }) {
                       },
                     }}
                   >
-
-                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemIcon 
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : 'auto', // Proper spacing when open, auto when closed
+                        justifyContent: 'center', // Center the icon
+                      }}
+                    >
+                      {icon}
+                    </ListItemIcon>
                     {open && <ListItemText primary={text} />}
                   </ListItemButton>
                 </Tooltip>
@@ -248,7 +281,7 @@ export default function MiniDrawer({ children }) {
             <ListItem disablePadding sx={{ display: "block", mt: 1 }}>
               {open ? (
                 <ListItemButton
-                  onClick={() => navigate("/admin-dashboard/user-management")}
+                  onClick={() => handleNavigation("/admin-dashboard/user-management")}
                   sx={{
                     mx: 1,
                     "&:hover": {
@@ -258,7 +291,7 @@ export default function MiniDrawer({ children }) {
                     },
                   }}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 0, mr: 3, justifyContent: 'center' }}>
                     <GroupIcon />
                   </ListItemIcon>
                   <ListItemText primary="Users" />
@@ -266,8 +299,9 @@ export default function MiniDrawer({ children }) {
               ) : (
                 <Tooltip title="Users" placement="right">
                   <ListItemButton
-                    onClick={() => navigate("/admin-dashboard/user-management")}
+                    onClick={() => handleNavigation("/admin-dashboard/user-management")}
                     sx={{
+                      justifyContent: 'center',
                       mx: 1,
                       "&:hover": {
                         backgroundColor: "#B7152F",
@@ -276,7 +310,7 @@ export default function MiniDrawer({ children }) {
                       },
                     }}
                   >
-                    <ListItemIcon>
+                    <ListItemIcon sx={{ minWidth: 0, mr: 0, justifyContent: 'center' }}>
                       <GroupIcon />
                     </ListItemIcon>
                   </ListItemButton>
@@ -287,26 +321,8 @@ export default function MiniDrawer({ children }) {
 
           <ListItem disablePadding sx={{ display: "block" }}>
             {open ? (
-              <ListItemButton
-                onClick={() => navigate("/admin-dashboard/account")}
-                sx={{
-                  mx: 1,
-                  "&:hover": {
-                    backgroundColor: "#B7152F",
-                    color: "white",
-                    borderRadius: "10px",
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <AccountCircleIcon />
-                </ListItemIcon>
-                <ListItemText primary="Account" />
-              </ListItemButton>
-            ) : (
-              <Tooltip title="Account" placement="right">
                 <ListItemButton
-                  onClick={() => navigate("/admin-dashboard/account")}
+                  onClick={() => handleNavigation("/admin-dashboard/account")}
                   sx={{
                     mx: 1,
                     "&:hover": {
@@ -316,22 +332,46 @@ export default function MiniDrawer({ children }) {
                     },
                   }}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 0, mr: 3, justifyContent: 'center' }}>
                     <AccountCircleIcon />
                   </ListItemIcon>
+                  <ListItemText primary="Account" />
                 </ListItemButton>
-              </Tooltip>
-            )}
+              ) : (
+                <Tooltip title="Account" placement="right">
+                  <ListItemButton
+                    onClick={() => handleNavigation("/admin-dashboard/account")}
+                    sx={{
+                      justifyContent: 'center',
+                      mx: 1,
+                      "&:hover": {
+                        backgroundColor: "#B7152F",
+                        color: "white",
+                        borderRadius: "10px",
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 0, mr: 0, justifyContent: 'center' }}>
+                      <AccountCircleIcon />
+                    </ListItemIcon>
+                  </ListItemButton>
+                </Tooltip>
+              )}
           </ListItem>
         </List>
 
         <ListItem
           disablePadding
-          sx={{ display: "block", textAlign: "center", marginBottom: "10px" }}
+          sx={{ 
+            display: "block", 
+            textAlign: "center", 
+            marginTop: "auto",  // Push to bottom
+            marginBottom: "10px" 
+          }}
         >
           {open ? (
             <ListItemButton
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               sx={{
                 mx: 1,
                 "&:hover": {
@@ -341,7 +381,7 @@ export default function MiniDrawer({ children }) {
                 },
               }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 0, mr: 3, justifyContent: 'center' }}>
                 <LogoutIcon color="error" />
               </ListItemIcon>
               <ListItemText primary="Log Out" sx={{ color: "red" }} />
@@ -349,8 +389,9 @@ export default function MiniDrawer({ children }) {
           ) : (
             <Tooltip title="Log Out" placement="right">
               <ListItemButton
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 sx={{
+                  justifyContent: 'center',
                   mx: 1,
                   "&:hover": {
                     backgroundColor: "#B7152F",
@@ -359,7 +400,7 @@ export default function MiniDrawer({ children }) {
                   },
                 }}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 0, mr: 0, justifyContent: 'center' }}>
                   <LogoutIcon color="error" />
                 </ListItemIcon>
               </ListItemButton>
