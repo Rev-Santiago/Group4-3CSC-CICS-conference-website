@@ -3,13 +3,18 @@ import axios from "axios";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   IconButton, Menu, MenuItem, CircularProgress, Typography, Snackbar, Alert,
-  Button, Pagination, Box, TextField, InputAdornment
+  Button, Pagination, Box, TextField, InputAdornment, Card, CardContent,
+  useMediaQuery, useTheme, Divider, Chip, Stack
 } from "@mui/material";
-import { MoreVert, Search, Link as LinkIcon } from "@mui/icons-material";
+import { MoreVert, Search, Link as LinkIcon, Event, Person, Category, Place } from "@mui/icons-material";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 const AdminSeeAllEvent = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState([]);
@@ -178,6 +183,60 @@ const AdminSeeAllEvent = () => {
     page * rowsPerPage
   );
 
+  // Mobile card view component for each event
+  const EventCard = ({ event }) => (
+    <Card sx={{ mb: 2, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}>
+      <CardContent>
+        <Typography variant="h6" component="div" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+          {event.program || "Untitled Event"}
+        </Typography>
+        
+        <Box sx={{ mt: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+            <Event fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {event.date ? new Date(event.date).toLocaleDateString() : "No date"} at {event.time || "No time"}
+            </Typography>
+          </Stack>
+          
+          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+            <Place fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {event.venue || "No venue"}
+            </Typography>
+          </Stack>
+          
+          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+            <Person fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {event.speaker || "No speaker"}
+            </Typography>
+          </Stack>
+          
+          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+            <Category fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {event.category || "Uncategorized"}
+            </Typography>
+          </Stack>
+        </Box>
+        
+        {event.online_room_link && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<LinkIcon />}
+            onClick={() => window.open(event.online_room_link, '_blank')}
+            sx={{ mt: 1 }}
+            fullWidth
+          >
+            Join Meeting
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   // Render loading state
   if (loading) {
     return (
@@ -218,54 +277,73 @@ const AdminSeeAllEvent = () => {
         />
       </Box>
 
-      <TableContainer component={Paper} sx={{
-        mt: 3,
-        width: "100%",
-        overflowX: "auto",
-        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
-      }}>
-        <Table sx={{ minWidth: 700 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#B7152F" }}>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Date</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Time</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Program</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Venue</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Speaker</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Category</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Link</TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {paginatedEvents.map((event, index) => (
-              <TableRow key={event.id || event.dateTime || index} hover>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>
-                  {event.date ? new Date(event.date).toLocaleDateString() : "N/A"}
-                </TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.time || "N/A"}</TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee", fontSize: "0.75rem" }}>
-                  {event.program || "N/A"}
-                </TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.venue || "N/A"}</TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.speaker || "N/A"}</TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.category || "N/A"}</TableCell>
-                <TableCell sx={{ borderRight: "1px solid #eee" }}>
-                  {event.online_room_link ? (
-                    <Button
-                      startIcon={<LinkIcon />}
-                      size="small"
-                      onClick={() => window.open(event.online_room_link, '_blank')}
-                    >
-                      Join
-                    </Button>
-                  ) : "None"}
-                </TableCell>
+      {/* Conditional rendering based on screen size */}
+      {isMobile ? (
+        // Mobile view - cards
+        <Box sx={{ mt: 2 }}>
+          {paginatedEvents.map((event, index) => (
+            <EventCard key={event.id || event.dateTime || index} event={event} />
+          ))}
+        </Box>
+      ) : (
+        // Desktop view - table
+        <TableContainer component={Paper} sx={{
+          mt: 3,
+          width: "100%",
+          overflowX: "auto",
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
+        }}>
+          <Table sx={{ minWidth: isTablet ? 650 : 700 }} size={isTablet ? "small" : "medium"}>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#B7152F" }}>
+                <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Date</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Time</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Program</TableCell>
+                {!isTablet && (
+                  <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Venue</TableCell>
+                )}
+                <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Speaker</TableCell>
+                {!isTablet && (
+                  <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Category</TableCell>
+                )}
+                <TableCell sx={{ color: "white", fontWeight: "bold", borderRight: "1px solid rgba(255,255,255,0.2)" }}>Link</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+
+            <TableBody>
+              {paginatedEvents.map((event, index) => (
+                <TableRow key={event.id || event.dateTime || index} hover>
+                  <TableCell sx={{ borderRight: "1px solid #eee" }}>
+                    {event.date ? new Date(event.date).toLocaleDateString() : "N/A"}
+                  </TableCell>
+                  <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.time || "N/A"}</TableCell>
+                  <TableCell sx={{ borderRight: "1px solid #eee", fontSize: isTablet ? "0.7rem" : "0.75rem" }}>
+                    {event.program || "N/A"}
+                  </TableCell>
+                  {!isTablet && (
+                    <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.venue || "N/A"}</TableCell>
+                  )}
+                  <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.speaker || "N/A"}</TableCell>
+                  {!isTablet && (
+                    <TableCell sx={{ borderRight: "1px solid #eee" }}>{event.category || "N/A"}</TableCell>
+                  )}
+                  <TableCell sx={{ borderRight: "1px solid #eee" }}>
+                    {event.online_room_link ? (
+                      <Button
+                        startIcon={<LinkIcon />}
+                        size="small"
+                        onClick={() => window.open(event.online_room_link, '_blank')}
+                      >
+                        Join
+                      </Button>
+                    ) : "None"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -275,6 +353,8 @@ const AdminSeeAllEvent = () => {
             page={page}
             color="primary"
             onChange={handlePageChange}
+            size={isMobile ? "small" : "medium"}
+            siblingCount={isMobile ? 0 : 1}
           />
         </Box>
       )}
