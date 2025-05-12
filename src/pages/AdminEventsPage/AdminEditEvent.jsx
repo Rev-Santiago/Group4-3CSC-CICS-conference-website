@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-    Grid, TextField, MenuItem, Typography, Divider,
-    IconButton, Select, Button, Box, Autocomplete, Snackbar, Alert,
+    Grid, TextField, Typography, IconButton, Select, Button, Box, Autocomplete, 
+    Snackbar, Alert, useTheme, useMediaQuery, FormControl, InputLabel, 
+    MenuItem, FormHelperText
 } from "@mui/material";
-import { Add, Delete } from "@mui/icons-material";
+import { Add, Delete, Save, Publish } from "@mui/icons-material";
 
 export default function AdminEditEvent() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    
     const accountType = localStorage.getItem("accountType");
     const [drafts, setDrafts] = useState([]);
     const [selectedDraftId, setSelectedDraftId] = useState("");
@@ -437,39 +442,81 @@ export default function AdminEditEvent() {
     };
 
     return (
-        <Box className="p-4">
-            <Grid container spacing={3} className="mt-3">
+        <Box className="p-2 sm:p-4">
+            <Grid container spacing={isTablet ? 1 : 3} className="mt-1 sm:mt-3">
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Select an Existing Draft</Typography>
-                    <Select
-                        fullWidth size="small" value={selectedDraftId}
-                        onChange={handleDraftSelection} displayEmpty sx={{ mt: 2 }}
-                    >
-                        <MenuItem value="" disabled>Select a draft</MenuItem>
-                        {drafts.length > 0 ? (
-                            drafts.map((draft) => (
-                                <MenuItem key={draft.id} value={draft.id}>
-                                    {draft.program || "Untitled Draft"}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem disabled>No drafts found</MenuItem>
-                        )}
-                    </Select>
+                    <Typography variant={isMobile ? "subtitle1" : "h6"}>Select an Existing Draft</Typography>
+                    <FormControl fullWidth size={isMobile ? "small" : "medium"} variant="filled" sx={{ mt: isMobile ? 1 : 2 }}>
+                        <InputLabel id="draft-select-label">Select Draft</InputLabel>
+                        <Select
+                            labelId="draft-select-label"
+                            value={selectedDraftId}
+                            onChange={handleDraftSelection}
+                            displayEmpty
+                        >
+                            <MenuItem value="" disabled></MenuItem>
+                            {drafts.length > 0 ? (
+                                drafts.map((draft) => (
+                                    <MenuItem key={draft.id} value={draft.id}>
+                                        {draft.program || "Untitled Draft"}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>No drafts found</MenuItem>
+                            )}
+                        </Select>
+                        <FormHelperText>Select a draft to edit or create a new one</FormHelperText>
+                    </FormControl>
                 </Grid>
 
                 <Grid item xs={12}>
-                    <Grid item xs={12}><Typography variant="subtitle1">Event Details:</Typography></Grid>
-                    <TextField fullWidth size="small" label="Title" name="title" variant="outlined" value={eventData.title} onChange={handleChange} sx={{ mt: 2 }} />
+                    <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: 2 }}>Event Details:</Typography>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Title"
+                        name="title"
+                        variant="outlined"
+                        value={eventData.title}
+                        onChange={handleChange}
+                        sx={{ mt: isMobile ? 1 : 2 }}
+                    />
                 </Grid>
-                <Grid item xs={6}>
-                    <TextField fullWidth size="small" label="Date" type="date" name="date" InputLabelProps={{ shrink: true }} value={eventData.date} onChange={handleChange} />
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Date"
+                        type="date"
+                        name="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.date}
+                        onChange={handleChange}
+                    />
                 </Grid>
-                <Grid item xs={3}>
-                    <TextField fullWidth size="small" label="Start Time" type="time" name="startTime" InputLabelProps={{ shrink: true }} value={eventData.startTime} onChange={handleChange} />
+                <Grid item xs={6} sm={3}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Start Time"
+                        type="time"
+                        name="startTime"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.startTime}
+                        onChange={handleChange}
+                    />
                 </Grid>
-                <Grid item xs={3}>
-                    <TextField fullWidth size="small" label="End Time" type="time" name="endTime" InputLabelProps={{ shrink: true }} value={eventData.endTime} onChange={handleChange} />
+                <Grid item xs={6} sm={3}>
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="End Time"
+                        type="time"
+                        name="endTime"
+                        InputLabelProps={{ shrink: true }}
+                        value={eventData.endTime}
+                        onChange={handleChange}
+                    />
                 </Grid>
 
                 <Grid item xs={12}>
@@ -482,7 +529,7 @@ export default function AdminEditEvent() {
                             <TextField
                                 {...params}
                                 label="Venue"
-                                size="small"
+                                size={isMobile ? "small" : "medium"}
                                 fullWidth
                             />
                         )}
@@ -490,90 +537,143 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Zoom Link (Optional)" name="zoomLink" variant="outlined" value={eventData.zoomLink || ""} onChange={handleChange} />
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Zoom Link (Optional)"
+                        name="zoomLink"
+                        variant="outlined"
+                        value={eventData.zoomLink || ""}
+                        onChange={handleChange}
+                    />
                 </Grid>
 
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Keynote Speaker(s):</Typography>
+                    <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: isMobile ? 1 : 2 }}>Keynote Speaker(s):</Typography>
                 </Grid>
 
                 {eventData.keynoteSpeakers.map((speaker, index) => (
-                    <Grid container item xs={12} key={`keynote-${index}`} spacing={2}>
-                        <Grid item xs={10}>
-                            <TextField 
-                                fullWidth 
-                                size="small" 
-                                label={`Keynote Speaker ${index + 1}`} 
-                                variant="outlined" 
-                                value={speaker.name} 
-                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)} 
+                    <Grid container item xs={12} key={`keynote-${index}`} spacing={isTablet ? 1 : 2} alignItems="center">
+                        <Grid item xs={isMobile ? 8 : 10}>
+                            <TextField
+                                fullWidth
+                                size={isMobile ? "small" : "medium"}
+                                label={`Keynote Speaker ${index + 1}`}
+                                variant="outlined"
+                                value={speaker.name}
+                                onChange={(e) => handleKeynoteSpeakerChange(index, e.target.value)}
                             />
                         </Grid>
-                        <Grid item xs={2} className="flex items-center">
-                            <IconButton 
-                                color="primary" 
-                                onClick={handleAddKeynoteSpeaker}
-                                title="Add another keynote speaker"
-                            >
-                                <Add />
-                            </IconButton>
-                            {eventData.keynoteSpeakers.length > 1 && (
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => handleRemoveKeynoteSpeaker(index)}
-                                    title="Remove this keynote speaker"
+                        <Grid item xs={isMobile ? 4 : 2} className="flex items-center">
+                            <Box sx={{
+                                display: 'flex',
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <IconButton
+                                    color="primary"
+                                    onClick={handleAddKeynoteSpeaker}
+                                    title="Add another keynote speaker"
+                                    size="small"
+                                    sx={{
+                                        p: isMobile ? 0.5 : 1,
+                                        minWidth: 34,
+                                        height: 34
+                                    }}
                                 >
-                                    <Delete />
+                                    <Add fontSize={isMobile ? "small" : "medium"} />
                                 </IconButton>
-                            )}
+                                {eventData.keynoteSpeakers.length > 1 && (
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleRemoveKeynoteSpeaker(index)}
+                                        title="Remove this keynote speaker"
+                                        size="small"
+                                        sx={{
+                                            p: isMobile ? 0.5 : 1,
+                                            minWidth: 34,
+                                            height: 34
+                                        }}
+                                    >
+                                        <Delete fontSize={isMobile ? "small" : "medium"} />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Grid>
                     </Grid>
                 ))}
 
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Invited Speaker(s):</Typography>
+                    <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: isMobile ? 1 : 2 }}>Invited Speaker(s):</Typography>
                 </Grid>
 
                 {eventData.invitedSpeakers.map((speaker, index) => (
-                    <Grid container item xs={12} key={`invited-${index}`} spacing={2}>
-                        <Grid item xs={10}>
-                            <TextField 
-                                fullWidth 
-                                size="small" 
-                                label={`Invited Speaker ${index + 1}`} 
-                                variant="outlined" 
-                                value={speaker.name} 
-                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)} 
+                    <Grid container item xs={12} key={`invited-${index}`} spacing={isTablet ? 1 : 2} alignItems="center">
+                        <Grid item xs={isMobile ? 8 : 10}>
+                            <TextField
+                                fullWidth
+                                size={isMobile ? "small" : "medium"}
+                                label={`Invited Speaker ${index + 1}`}
+                                variant="outlined"
+                                value={speaker.name}
+                                onChange={(e) => handleInvitedSpeakerChange(index, e.target.value)}
                             />
                         </Grid>
-                        <Grid item xs={2} className="flex items-center">
-                            <IconButton 
-                                color="primary" 
-                                onClick={handleAddInvitedSpeaker}
-                                title="Add another invited speaker"
-                            >
-                                <Add />
-                            </IconButton>
-                            {eventData.invitedSpeakers.length > 1 && (
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => handleRemoveInvitedSpeaker(index)}
-                                    title="Remove this invited speaker"
+                        <Grid item xs={isMobile ? 4 : 2} className="flex items-center">
+                            <Box sx={{
+                                display: 'flex',
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <IconButton
+                                    color="primary"
+                                    onClick={handleAddInvitedSpeaker}
+                                    title="Add another invited speaker"
+                                    size="small"
+                                    sx={{
+                                        p: isMobile ? 0.5 : 1,
+                                        minWidth: 34,
+                                        height: 34
+                                    }}
                                 >
-                                    <Delete />
+                                    <Add fontSize={isMobile ? "small" : "medium"} />
                                 </IconButton>
-                            )}
+                                {eventData.invitedSpeakers.length > 1 && (
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleRemoveInvitedSpeaker(index)}
+                                        title="Remove this invited speaker"
+                                        size="small"
+                                        sx={{
+                                            p: isMobile ? 0.5 : 1,
+                                            minWidth: 34,
+                                            height: 34
+                                        }}
+                                    >
+                                        <Delete fontSize={isMobile ? "small" : "medium"} />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Grid>
                     </Grid>
                 ))}
 
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Event Classification:</Typography>
+                    <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: isMobile ? 1 : 2 }}>Event Classification:</Typography>
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TextField fullWidth size="small" label="Theme" name="theme" variant="outlined" value={eventData.theme} onChange={handleChange} />
+                    <TextField
+                        fullWidth
+                        size={isMobile ? "small" : "medium"}
+                        label="Theme"
+                        name="theme"
+                        variant="outlined"
+                        value={eventData.theme}
+                        onChange={handleChange}
+                    />
                 </Grid>
+
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
@@ -588,7 +688,7 @@ export default function AdminEditEvent() {
                             <TextField
                                 {...params}
                                 label="Category"
-                                size="small"
+                                size={isMobile ? "small" : "medium"}
                                 fullWidth
                             />
                         )}
@@ -596,28 +696,44 @@ export default function AdminEditEvent() {
                 </Grid>
 
                 {/* Save/Publish/Delete Buttons */}
-                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
-                    <Button onClick={handleSave} variant="outlined" color="primary">Save Draft</Button>
-                    
+                <Grid item xs={12} className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-3 ${isMobile ? 'justify-center' : 'justify-end'}`}>
+                    <Button
+                        onClick={handleSave}
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<Save />}
+                        size={isMobile ? "small" : "medium"}
+                        fullWidth={isMobile}
+                        sx={{ mb: isMobile ? 1 : 0 }}
+                    >
+                        Save Draft
+                    </Button>
+
                     {accountType === "super_admin" && (
                         <>
-                            <Button 
-                                onClick={handlePublish} 
-                                variant="contained" 
-                                sx={{ 
-                                    backgroundColor: "#B7152F", 
-                                    color: "white", 
-                                    "&:hover": { backgroundColor: "#B7152F" }, 
+                            <Button
+                                onClick={handlePublish}
+                                variant="contained"
+                                startIcon={<Publish />}
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth={isMobile}
+                                sx={{
+                                    mb: isMobile ? 1 : 0,
+                                    backgroundColor: "#B7152F",
+                                    color: "white",
+                                    "&:hover": { backgroundColor: "#B7152F" },
                                 }}
                             >
                                 Publish
                             </Button>
                             {selectedDraftId && (
-                                <Button 
-                                    onClick={handleDelete} 
-                                    variant="outlined" 
+                                <Button
+                                    onClick={handleDelete}
+                                    variant="outlined"
                                     color="error"
                                     startIcon={<Delete />}
+                                    size={isMobile ? "small" : "medium"}
+                                    fullWidth={isMobile}
                                 >
                                     Delete
                                 </Button>
@@ -626,7 +742,7 @@ export default function AdminEditEvent() {
                     )}
                 </Grid>
             </Grid>
-            
+
             {/* Notification Snackbar */}
             <Snackbar
                 open={notification.open}
@@ -634,8 +750,8 @@ export default function AdminEditEvent() {
                 onClose={handleCloseNotification}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert 
-                    onClose={handleCloseNotification} 
+                <Alert
+                    onClose={handleCloseNotification}
                     severity={notification.severity}
                     sx={{ width: '100%' }}
                 >
