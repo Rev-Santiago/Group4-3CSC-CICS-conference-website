@@ -11,10 +11,20 @@ import {
     MenuItem, 
     Snackbar,
     Alert,
-    CircularProgress
+    CircularProgress,
+    useTheme,
+    useMediaQuery,
+    FormControl,
+    InputLabel,
+    FormHelperText
 } from "@mui/material";
+import { Save, Publish, Delete } from "@mui/icons-material";
 
 export default function AdminEditPublication() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    
     const [drafts, setDrafts] = useState([]);
     const [selectedDraftId, setSelectedDraftId] = useState("");
     const [publicationData, setPublicationData] = useState({
@@ -249,108 +259,108 @@ export default function AdminEditPublication() {
     };
     
     // Delete a draft
-// Updated handleDelete function for AdminEditPublication.jsx
-
-const handleDelete = async () => {
-    if (!selectedDraftId) {
-        setNotification({
-            open: true,
-            message: "Please select a draft to delete",
-            severity: "warning"
-        });
-        return;
-    }
-
-    if (!window.confirm("Are you sure you want to delete this draft?")) {
-        return;
-    }
-    
-    setLoading(true);
-    try {
-        const token = getAuthToken();
-        if (!token) {
+    const handleDelete = async () => {
+        if (!selectedDraftId) {
             setNotification({
                 open: true,
-                message: "Authentication error: No token found",
-                severity: "error"
+                message: "Please select a draft to delete",
+                severity: "warning"
             });
             return;
         }
+
+        if (!window.confirm("Are you sure you want to delete this draft?")) {
+            return;
+        }
         
-        // Use the correct URL format for the delete endpoint
-        const response = await axios.delete(`${baseUrl}/api/publications/drafts/${selectedDraftId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setNotification({
-            open: true,
-            message: "Draft deleted successfully!",
-            severity: "success"
-        });
-        
-        // Refresh drafts and reset selection
-        fetchDrafts();
-        setSelectedDraftId("");
-        setPublicationData({
-            title: "",
-            date: "",
-            link: ""
-        });
-    } catch (err) {
-        console.error("Error deleting draft:", err);
-        setNotification({
-            open: true,
-            message: err.response?.data?.error || "Failed to delete draft",
-            severity: "error"
-        });
-    } finally {
-        setLoading(false);
-    }
-};
+        setLoading(true);
+        try {
+            const token = getAuthToken();
+            if (!token) {
+                setNotification({
+                    open: true,
+                    message: "Authentication error: No token found",
+                    severity: "error"
+                });
+                return;
+            }
+            
+            // Use the correct URL format for the delete endpoint
+            const response = await axios.delete(`${baseUrl}/api/publications/drafts/${selectedDraftId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            setNotification({
+                open: true,
+                message: "Draft deleted successfully!",
+                severity: "success"
+            });
+            
+            // Refresh drafts and reset selection
+            fetchDrafts();
+            setSelectedDraftId("");
+            setPublicationData({
+                title: "",
+                date: "",
+                link: ""
+            });
+        } catch (err) {
+            console.error("Error deleting draft:", err);
+            setNotification({
+                open: true,
+                message: err.response?.data?.error || "Failed to delete draft",
+                severity: "error"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
     
     const handleCloseNotification = () => {
         setNotification(prev => ({ ...prev, open: false }));
     };
 
     return (
-        <Box className="p-4">
-            <Grid container spacing={3} className="mt-3">
+        <Box className="p-2 sm:p-4">
+            <Grid container spacing={isTablet ? 1 : 3} className="mt-1 sm:mt-3">
                 <Grid item xs={12}>
-                    <Typography variant="subtitle1">Select an Existing Draft</Typography>
-                    <Select
-                        fullWidth 
-                        size="small" 
-                        value={selectedDraftId}
-                        onChange={handleDraftSelection} 
-                        displayEmpty 
-                        sx={{ mt: 2 }}
-                        disabled={fetchingData}
-                    >
-                        <MenuItem value="" disabled>{fetchingData ? 'Loading...' : 'Select a draft'}</MenuItem>
-                        {drafts.length > 0 ? (
-                            drafts.map((draft) => (
-                                <MenuItem key={draft.id} value={draft.id}>
-                                    {draft.title}
-                                </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem disabled>No drafts found</MenuItem>
-                        )}
-                    </Select>
+                    <Typography variant={isMobile ? "subtitle1" : "h6"}>Select an Existing Draft</Typography>
+                    <FormControl fullWidth size={isMobile ? "small" : "medium"} variant="filled" sx={{ mt: isMobile ? 1 : 2 }}>
+                        <InputLabel id="draft-select-label">Select Draft</InputLabel>
+                        <Select
+                            labelId="draft-select-label"
+                            value={selectedDraftId}
+                            onChange={handleDraftSelection}
+                            displayEmpty
+                            disabled={fetchingData}
+                        >
+                            {drafts.length > 0 ? (
+                                drafts.map((draft) => (
+                                    <MenuItem key={draft.id} value={draft.id}>
+                                        {draft.title || "Untitled Draft"}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>{fetchingData ? 'Loading...' : 'No drafts found'}</MenuItem>
+                            )}
+                        </Select>
+                        <FormHelperText>Select a draft to edit or create a new one</FormHelperText>
+                    </FormControl>
                 </Grid>
 
                 {selectedDraftId && (
                     <>
                         <Grid item xs={12}>
-                            <Typography variant="subtitle1">Publication Details:</Typography>
+                            <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: 2 }}>Publication Details:</Typography>
                             <TextField 
                                 fullWidth 
-                                size="small" 
+                                size={isMobile ? "small" : "medium"} 
                                 label="Title" 
                                 name="title" 
+                                variant="outlined"
                                 value={publicationData.title}
                                 onChange={handleChange} 
-                                sx={{ mt: 2 }}
+                                sx={{ mt: isMobile ? 1 : 2 }}
                                 error={!!formErrors.title}
                                 helperText={formErrors.title}
                             />
@@ -358,10 +368,11 @@ const handleDelete = async () => {
                         <Grid item xs={12}>
                             <TextField 
                                 fullWidth 
-                                size="small" 
+                                size={isMobile ? "small" : "medium"} 
                                 label="Date" 
                                 type="date" 
                                 name="date"
+                                variant="outlined"
                                 value={publicationData.date}
                                 InputLabelProps={{ shrink: true }} 
                                 onChange={handleChange}
@@ -372,9 +383,10 @@ const handleDelete = async () => {
                         <Grid item xs={12}>
                             <TextField 
                                 fullWidth 
-                                size="small" 
+                                size={isMobile ? "small" : "medium"} 
                                 label="Link" 
                                 name="link"
+                                variant="outlined"
                                 value={publicationData.link || ""}
                                 onChange={handleChange}
                                 error={!!formErrors.link}
@@ -383,20 +395,29 @@ const handleDelete = async () => {
                         </Grid>
 
                         {/* Save/Publish/Delete Buttons */}
-                        <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                        <Grid item xs={12} className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-3 ${isMobile ? 'justify-center' : 'justify-end'}`}>
                             <Button 
                                 onClick={handleSaveDraft} 
                                 variant="outlined" 
                                 color="primary"
+                                startIcon={<Save />}
                                 disabled={loading}
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth={isMobile}
+                                sx={{ mb: isMobile ? 1 : 0 }}
                             >
                                 {loading ? <CircularProgress size={24} /> : "Save Draft"}
                             </Button>
+                            
                             <Button 
                                 onClick={handlePublish} 
                                 variant="contained"
+                                startIcon={<Publish />}
                                 disabled={loading}
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth={isMobile}
                                 sx={{ 
+                                    mb: isMobile ? 1 : 0,
                                     backgroundColor: "#B7152F", 
                                     color: "white", 
                                     "&:hover": { backgroundColor: "#930E24" }
@@ -404,11 +425,15 @@ const handleDelete = async () => {
                             >
                                 {loading ? <CircularProgress size={24} color="inherit" /> : "Publish"}
                             </Button>
+                            
                             <Button 
                                 onClick={handleDelete} 
                                 variant="outlined"
+                                startIcon={<Delete />}
                                 color="error"
                                 disabled={loading}
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth={isMobile}
                             >
                                 {loading ? <CircularProgress size={24} /> : "Delete"}
                             </Button>
