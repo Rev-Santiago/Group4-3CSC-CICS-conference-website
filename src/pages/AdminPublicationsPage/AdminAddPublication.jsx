@@ -7,11 +7,17 @@ import {
     Button,
     Box,
     Snackbar,
-    Alert
+    Alert,
+    useMediaQuery,
+    useTheme
 } from "@mui/material";
 import axios from "axios";
 
 export default function AdminAddPublication({ currentUser }) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    
     const [publicationData, setPublicationData] = useState({
         title: "",
         date: "",
@@ -169,21 +175,23 @@ export default function AdminAddPublication({ currentUser }) {
         setNotification(prev => ({ ...prev, open: false }));
     };
 
+    const accountType = localStorage.getItem("accountType");
+
     return (
-        <Box className="p-4">
+        <Box className="p-2 sm:p-4">
             <Grid item xs={12}>
-                <Typography variant="subtitle1">Publication Details:</Typography>
+                <Typography variant={isMobile ? "subtitle2" : "subtitle1"}>Publication Details:</Typography>
             </Grid>
-            <Grid container spacing={2}>
+            <Grid container spacing={isTablet ? 1 : 2}>
                 <Grid item xs={12}>
                     <TextField 
                         fullWidth 
-                        size="small" 
+                        size={isMobile ? "small" : "medium"} 
                         label="Title" 
                         name="title" 
                         value={publicationData.title}
                         onChange={handleChange} 
-                        sx={{ mt: 2 }}
+                        sx={{ mt: isMobile ? 1 : 2 }}
                         error={!!formErrors.title}
                         helperText={formErrors.title} 
                     />
@@ -191,7 +199,7 @@ export default function AdminAddPublication({ currentUser }) {
                 <Grid item xs={12}>
                     <TextField 
                         fullWidth 
-                        size="small" 
+                        size={isMobile ? "small" : "medium"} 
                         label="Date" 
                         type="date" 
                         name="date" 
@@ -205,7 +213,7 @@ export default function AdminAddPublication({ currentUser }) {
                 <Grid item xs={12}>
                     <TextField 
                         fullWidth 
-                        size="small" 
+                        size={isMobile ? "small" : "medium"} 
                         label="Insert Link" 
                         name="link"
                         value={publicationData.link} 
@@ -214,11 +222,14 @@ export default function AdminAddPublication({ currentUser }) {
                         helperText={formErrors.link || "Optional: Include http:// or https://"} 
                     />
                 </Grid>
-                <Grid item xs={12} className="flex gap-2 mt-2 justify-center sm:justify-end">
+                <Grid item xs={12} className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 mt-2 ${isMobile ? 'justify-center' : 'justify-end'}`}>
                     <Button 
                         variant="outlined" 
                         onClick={handleSaveDraft}
                         disabled={loading}
+                        size={isMobile ? "small" : "medium"}
+                        fullWidth={isMobile}
+                        sx={{ mb: isMobile ? 1 : 0 }}
                     >
                         Save Draft
                     </Button>
@@ -227,7 +238,12 @@ export default function AdminAddPublication({ currentUser }) {
                         color="error" 
                         onClick={handlePublish}
                         disabled={loading}
-                        sx={{ backgroundColor: "#B7152F", "&:hover": { backgroundColor: "#930E24" } }}
+                        size={isMobile ? "small" : "medium"}
+                        fullWidth={isMobile}
+                        sx={{ 
+                            backgroundColor: "#B7152F", 
+                            "&:hover": { backgroundColor: "#930E24" } 
+                        }}
                     >
                         Publish
                     </Button>
