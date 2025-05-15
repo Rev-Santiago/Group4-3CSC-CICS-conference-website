@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { 
-    Typography, Select, MenuItem, Button, Box, Snackbar, Alert, 
+import {
+    Typography, Select, MenuItem, Button, Box, Snackbar, Alert,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
     useTheme, useMediaQuery, FormControl, InputLabel,
     Card, CardContent, Grid
@@ -11,14 +11,14 @@ import { DeleteOutline, Warning } from "@mui/icons-material";
 const AdminDeleteEvent = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    
+
     const [selectedEvent, setSelectedEvent] = useState("");
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, eventId: null, eventTitle: "" });
-    
+
     // Get backend URL from environment variables
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -27,26 +27,26 @@ const AdminDeleteEvent = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem("authToken");
-            
+
             if (!token) {
                 setError("Authentication error: No token found");
                 setLoading(false);
                 return;
             }
-            
+
             const response = await axios.get(`${BACKEND_URL}/api/events`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            
+
             // Check if we have events in the response
             if (response.data && Array.isArray(response.data.events)) {
                 setEvents(response.data.events);
             } else {
                 setEvents([]);
             }
-            
+
             setLoading(false);
         } catch (err) {
             console.error("Error fetching events:", err);
@@ -77,7 +77,7 @@ const AdminDeleteEvent = () => {
         }
 
         const eventToDelete = events.find(event => event.id === selectedEvent);
-        
+
         if (eventToDelete) {
             setConfirmDialog({
                 open: true,
@@ -96,7 +96,7 @@ const AdminDeleteEvent = () => {
     const handleDeleteEvent = async () => {
         try {
             const token = localStorage.getItem("authToken");
-            
+
             if (!token) {
                 setNotification({
                     open: true,
@@ -105,31 +105,31 @@ const AdminDeleteEvent = () => {
                 });
                 return;
             }
-            
+
             // Close the dialog
             handleCloseConfirmDialog();
-            
+
             // Make the API call to delete the event
             await axios.delete(`${BACKEND_URL}/api/events/${confirmDialog.eventId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            
+
             // Show success notification
             setNotification({
                 open: true,
                 message: "Event deleted successfully!",
                 severity: "success"
             });
-            
+
             // Refresh events list and reset selection
             fetchEvents();
             setSelectedEvent("");
-            
+
         } catch (err) {
             console.error("Error deleting event:", err);
-            
+
             // Show error notification
             setNotification({
                 open: true,
@@ -149,13 +149,13 @@ const AdminDeleteEvent = () => {
 
     return (
         <Box className="p-2 sm:p-4">
-            <Typography 
-                variant={isMobile ? "subtitle1" : "h6"} 
+            <Typography
+                variant={isMobile ? "subtitle1" : "h6"}
                 sx={{ mb: 2, fontWeight: isMobile ? 'normal' : 'medium' }}
             >
                 Select an Event to Delete
             </Typography>
-            
+
             {loading ? (
                 <Typography variant="body2" color="textSecondary">Loading events...</Typography>
             ) : error ? (
@@ -169,9 +169,13 @@ const AdminDeleteEvent = () => {
                             value={selectedEvent}
                             onChange={handleEventChange}
                             label="Select Event"
-                            displayEmpty
+                            renderValue={(selected) => {
+                                if (!selected) return <span style={{ color: 'rgba(0, 0, 0, 0.6)' }}>Select Event</span>;
+                                const event = events.find(e => e.id === selected);
+                                return event ? `${event.program || 'Untitled Event'} - ${new Date(event.event_date).toLocaleDateString()}` : '';
+                            }}
                         >
-                            <MenuItem value="" disabled>Select an event to delete</MenuItem>
+                            {/* <MenuItem value="" disabled>Select an event to delete</MenuItem> */}
                             {events.length > 0 ? (
                                 events.map((event) => (
                                     <MenuItem key={event.id} value={event.id}>
@@ -190,7 +194,7 @@ const AdminDeleteEvent = () => {
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#666', mb: 2 }}>
                                     Selected event details:
                                 </Typography>
-                                
+
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} sm={6}>
                                         <Typography><strong>Title:</strong> {currentEvent.program || "Untitled"}</Typography>
@@ -218,9 +222,9 @@ const AdminDeleteEvent = () => {
                     )}
 
                     <Box sx={{ mt: 2, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                        <Button 
-                            variant="contained" 
-                            color="error" 
+                        <Button
+                            variant="contained"
+                            color="error"
                             disabled={!selectedEvent}
                             onClick={handleOpenConfirmDialog}
                             startIcon={<DeleteOutline />}
@@ -248,7 +252,7 @@ const AdminDeleteEvent = () => {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete the event "{confirmDialog.eventTitle}"? 
+                        Are you sure you want to delete the event "{confirmDialog.eventTitle}"?
                         This action cannot be undone.
                     </DialogContentText>
                 </DialogContent>
@@ -256,10 +260,10 @@ const AdminDeleteEvent = () => {
                     <Button onClick={handleCloseConfirmDialog} color="primary">
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleDeleteEvent} 
-                        color="error" 
-                        variant="contained" 
+                    <Button
+                        onClick={handleDeleteEvent}
+                        color="error"
+                        variant="contained"
                         startIcon={<DeleteOutline />}
                         autoFocus
                     >
@@ -275,8 +279,8 @@ const AdminDeleteEvent = () => {
                 onClose={handleCloseNotification}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert 
-                    onClose={handleCloseNotification} 
+                <Alert
+                    onClose={handleCloseNotification}
                     severity={notification.severity}
                     sx={{ width: '100%' }}
                 >

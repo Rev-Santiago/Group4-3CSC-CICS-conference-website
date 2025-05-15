@@ -88,7 +88,6 @@ const TrackItem = ({ title, description }) => (
  * PublicationsTable component to display publications in a table format
  */
 const PublicationsTable = ({ publications }) => {
-    // Format date helper function
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return new Intl.DateTimeFormat("en-US", {
@@ -96,6 +95,10 @@ const PublicationsTable = ({ publications }) => {
             month: "long",
             day: "numeric",
         }).format(date);
+    };
+
+    const hasValidLink = (link) => {
+        return link && typeof link === 'string' && link.trim() !== '';
     };
 
     const tableHeaderStyle = {
@@ -125,7 +128,8 @@ const PublicationsTable = ({ publications }) => {
                                 ...tableHeaderStyle,
                                 borderRight: "1px solid black",
                                 width: '30%'
-                            }}>
+                            }}
+                        >
                             Date
                         </TableCell>
                         <TableCell sx={tableHeaderStyle}>
@@ -157,18 +161,25 @@ const PublicationsTable = ({ publications }) => {
                                     {formatDate(pub.publication_date)}
                                 </TableCell>
                                 <TableCell
+                                    component="td"
+                                    scope="row"
                                     sx={{
                                         textAlign: 'center',
                                         borderColor: 'black',
                                         color: 'rgb(30, 58, 138)',
                                         padding: '12px 8px',
-                                        cursor: 'pointer',
+                                        cursor: hasValidLink(pub.publication_link) ? 'pointer' : 'default',
                                         transition: 'all 0.2s ease',
-                                        '&:hover': {
+                                        '&:hover': hasValidLink(pub.publication_link) ? {
                                             textDecoration: 'underline',
                                             color: '#B7152F',
                                             backgroundColor: 'rgba(183, 21, 47, 0.05)',
-                                        },
+                                        } : {}
+                                    }}
+                                    onClick={() => {
+                                        if (hasValidLink(pub.publication_link)) {
+                                            window.open(pub.publication_link, '_blank', 'noopener,noreferrer');
+                                        }
                                     }}
                                 >
                                     {pub.publication_description}

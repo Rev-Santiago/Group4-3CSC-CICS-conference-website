@@ -120,9 +120,9 @@ app.get("/api/publications", async (req, res) => {
         const totalPages = Math.ceil(totalRecords / limit);
 
         const [rows] = await db.query(
-            `SELECT publication_date, publication_description FROM conference_publications
-             ORDER BY publication_date DESC
-             LIMIT ? OFFSET ?`,
+            `SELECT publication_date, publication_description, publication_link FROM conference_publications
+            ORDER BY publication_date DESC
+            LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
@@ -389,10 +389,10 @@ app.get("/api/category", async (req, res) => {
              FROM events 
              WHERE category IS NOT NULL AND category != ''`
         );
-        
+
         // Extract categories from result
         const categories = rows.map(row => row.category);
-        
+
         res.json(categories);
     } catch (error) {
         console.error("Error fetching categories:", error);
