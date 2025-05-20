@@ -10,7 +10,9 @@ import { CircularProgress, Card, CardContent, Typography, Alert } from "@mui/mat
 const COLORS = ["#d41c1c", "#ff725c", "#ffa600", "#38a169", "#4299e1", "#805ad5", "#d53f8c"];
 
 // Backend API URL - change this to your actual API URL
-const API_URL = "http://localhost:5000/api/analytics/overview";
+const API_URL = import.meta.env.VITE_BACKEND_URL 
+  ? `${import.meta.env.VITE_BACKEND_URL}/api/analytics/overview`
+  : "http://localhost:5000/api/analytics/overview";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
