@@ -176,9 +176,11 @@ const AdminAccountPage = () => {
 
     return (
         <Box className="container mx-auto p-6">
-            <Typography variant="h5" sx={{ mb: 4, fontWeight: 600 }}>
-                Account Settings
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Typography variant="h5" sx={{ mb: 4, fontWeight: 600, textAlign: 'center' }}>
+                    Account Settings
+                </Typography>
+            </Box>F
             
             <Paper elevation={2} sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
                 <Typography variant="h6" sx={{ mb: 3, borderBottom: "1px solid #eee", pb: 1 }}>
