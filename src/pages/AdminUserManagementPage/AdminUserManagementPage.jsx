@@ -14,12 +14,33 @@ import {
     FormControl,
     InputLabel,
     Select,
-    FormHelperText
+    FormHelperText,
+    useTheme
 } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import axios from "axios";
 
 export default function AdminUserManagementPage() {
+    const theme = useTheme();
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
+    
+    // Check screen size
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth < 640);
+            setIsTablet(window.innerWidth < 768 && window.innerWidth >= 640);
+        };
+        
+        // Initial check
+        checkScreenSize();
+        
+        // Add resize listener
+        window.addEventListener('resize', checkScreenSize);
+        
+        // Clean up
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalUsers, setTotalUsers] = useState(0);
@@ -28,6 +49,10 @@ export default function AdminUserManagementPage() {
     const [confirmDialog, setConfirmDialog] = useState({ open: false, type: '', title: '', message: '' });
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
     const [search, setSearch] = useState('');
+    
+    // Pagination state
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(6); // This would be calculated from API response
     
     // New state for add user dialog
     const [addUserDialog, setAddUserDialog] = useState(false);
@@ -188,6 +213,12 @@ export default function AdminUserManagementPage() {
         setSearch(e.target.value);
     };
 
+    // Change page handler
+    const handlePageChange = (newPage) => {
+        setPage(newPage);
+        // Here you would fetch new page of data from API
+    };
+
     // NEW HANDLERS FOR ADD USER DIALOG
     const openAddUserDialog = () => {
         setAddUserDialog(true);
@@ -277,18 +308,14 @@ export default function AdminUserManagementPage() {
             console.error('Error creating user:', error);
             // More detailed error logging
             if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
                 console.error('Error response data:', error.response.data);
                 console.error('Error response status:', error.response.status);
                 console.error('Error response headers:', error.response.headers);
                 showNotification(error.response.data?.error || 'Failed to create user', 'error');
             } else if (error.request) {
-                // The request was made but no response was received
                 console.error('Error request:', error.request);
                 showNotification('No response received from server', 'error');
             } else {
-                // Something happened in setting up the request that triggered an Error
                 console.error('Error message:', error.message);
                 showNotification('Error preparing request: ' + error.message, 'error');
             }
@@ -301,11 +328,32 @@ export default function AdminUserManagementPage() {
         (user.name && user.name.toLowerCase().includes(search.toLowerCase()))
     );
 
+    // Render user card for mobile view
+    const renderUserCard = (user, idx) => {
+        return (
+            <div key={user.id || idx} className="p-4 border rounded-lg mb-4 bg-white shadow-sm">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
+                        <div className="text-sm text-gray-500 mb-2">{user.email}</div>
+                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                            {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
+                        </span>
+                        <div className="text-sm text-gray-700 mt-2">Added: {formatDate(user.date_added)}</div>
+                    </div>
+                    <IconButton onClick={(e) => handleMenuOpen(e, user)} size="small">
+                        <MoreVert />
+                    </IconButton>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <section>
+        <section className="px-4 py-6">
             {/* Page Header */}
-            <div className="bg-white rounded-lg p-6 mb-6 max-w-6xl mx-auto relative">
-                <div className="flex items-start justify-between">
+            <div className="bg-white rounded-lg p-4 sm:p-6 mb-6 max-w-6xl mx-auto relative">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                         <h1 className="text-xl font-semibold text-gray-900">User Management Overview</h1>
                         <p className="text-sm text-gray-500 mt-1">View, edit, and manage all users in the system.</p>
@@ -315,20 +363,20 @@ export default function AdminUserManagementPage() {
             </div>
 
             {/* Main Table Card */}
-            <div className="p-6 bg-white rounded-lg w-full max-w-6xl mx-auto">
+            <div className="p-4 sm:p-6 bg-white rounded-lg w-full max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
                     <h1 className="text-xl font-semibold">
                         All users <span className="text-gray-400">{totalUsers}</span>
                     </h1>
-                    <div className="flex gap-2 flex-wrap">
-                        <div className="relative">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <div className="relative flex-grow sm:flex-grow-0 max-w-full">
                             <input
                                 type="text"
                                 placeholder="Search"
                                 value={search}
                                 onChange={handleSearchChange}
-                                className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black ring-lightGray"
+                                className="w-full sm:w-auto pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black ring-lightGray"
                             />
                             <span className="absolute left-3 top-2.5 text-gray-400">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -338,62 +386,74 @@ export default function AdminUserManagementPage() {
                         </div>
                         <button 
                             onClick={openAddUserDialog}
-                            className="bg-customRed text-white px-4 py-2 rounded-md text-sm font-medium"
+                            className="bg-customRed text-white px-4 py-2 rounded-md text-sm font-medium w-full sm:w-auto"
                         >
                             + Add user
                         </button>
                     </div>
                 </div>
 
-                {/* Responsive Table */}
-                <div className="w-full overflow-x-auto rounded-lg">
-                    <div className="min-w-[768px]">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-10 px-4 py-2 bg-customRed border border-b-0 text-sm font-medium text-white">
-                            <div className="col-span-4">User name</div>
-                            <div className="col-span-3">Roles</div>
-                            <div className="col-span-2">Date added</div>
-                            <div className="col-span-1"></div>
+                {/* Loading state */}
+                {loading ? (
+                    <div className="p-4 text-center">Loading users...</div>
+                ) : filteredUsers.length === 0 ? (
+                    <div className="p-4 text-center">No users found</div>
+                ) : (
+                    <>
+                        {/* Mobile view for users */}
+                        <div className={`${isMobile ? 'block' : 'hidden'}`}>
+                            {filteredUsers.map((user, idx) => renderUserCard(user, idx))}
                         </div>
 
-                        {/* Loading state */}
-                        {loading ? (
-                            <div className="p-4 text-center">Loading users...</div>
-                        ) : filteredUsers.length === 0 ? (
-                            <div className="p-4 text-center">No users found</div>
-                        ) : (
-                            /* Table Rows */
-                            filteredUsers.map((user, idx) => (
-                                <div key={user.id || idx} className="grid grid-cols-10 items-center px-4 py-3 border border-t-0 hover:bg-gray-50">
-                                    <div className="col-span-4 flex items-center gap-3">
-                                        <div>
-                                            <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
-                                            <div className="text-sm text-gray-500">{user.email}</div>
-                                        </div>
-                                    </div>
-                                    <div className="col-span-3">
-                                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                            {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
-                                        </span>
-                                    </div>
-                                    <div className="col-span-2 text-sm text-gray-700">{formatDate(user.date_added)}</div>
-                                    <div className="col-span-1 flex justify-end">
-                                        <IconButton onClick={(e) => handleMenuOpen(e, user)} size="small">
-                                            <MoreVert />
-                                        </IconButton>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+                        {/* Desktop view - Responsive Table */}
+                        <div className={`w-full overflow-x-auto rounded-lg ${isMobile ? 'hidden' : 'block'}`}>
+                            <table className="min-w-full border-collapse">
+                                {/* Table Header */}
+                                <thead>
+                                    <tr className="bg-customRed text-white">
+                                        <th className="px-4 py-2 text-left font-medium text-sm" style={{ width: isTablet ? '50%' : '40%' }}>User name</th>
+                                        <th className="px-4 py-2 text-left font-medium text-sm" style={{ width: isTablet ? '30%' : '30%' }}>Roles</th>
+                                        <th className="px-4 py-2 text-left font-medium text-sm" style={{ width: isTablet ? '20%' : '20%' }}>Date added</th>
+                                        <th className="w-10"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredUsers.map((user, idx) => (
+                                        <tr key={user.id || idx} className="border-b hover:bg-gray-50">
+                                            <td className="px-4 py-3">
+                                                <div className="font-medium">{user.name || user.email.split('@')[0]}</div>
+                                                <div className="text-sm text-gray-500">{user.email}</div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                                    {user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-700">{formatDate(user.date_added)}</td>
+                                            <td className="px-4 py-3">
+                                                <IconButton onClick={(e) => handleMenuOpen(e, user)} size="small">
+                                                    <MoreVert />
+                                                </IconButton>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
 
-                {/* Pagination (You can implement this based on API response) */}
+                {/* Pagination */}
                 <div className="flex justify-center gap-2 mt-6 flex-wrap">
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                         <button
                             key={n}
-                            className="w-8 h-8 text-sm font-medium text-gray-700 border rounded-md hover:bg-gray-100"
+                            className={`w-8 h-8 text-sm font-medium rounded-md ${
+                                page === n 
+                                    ? 'bg-customRed text-white' 
+                                    : 'text-gray-700 border hover:bg-gray-100'
+                            }`}
+                            onClick={() => handlePageChange(n)}
                         >
                             {n}
                         </button>
@@ -423,7 +483,12 @@ export default function AdminUserManagementPage() {
             </Menu>
 
             {/* Confirmation Dialog */}
-            <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}>
+            <Dialog 
+                open={confirmDialog.open} 
+                onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+                fullWidth
+                maxWidth="xs"
+            >
                 <DialogTitle>{confirmDialog.title}</DialogTitle>
                 <DialogContent>
                     <p>{confirmDialog.message}</p>
@@ -539,10 +604,18 @@ export default function AdminUserManagementPage() {
                         <FormHelperText>Choose the user's role in the system</FormHelperText>
                     </FormControl>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <DialogActions sx={{ 
+                    px: 3, 
+                    pb: 3, 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    justifyContent: isMobile ? 'stretch' : 'flex-end', 
+                    gap: 2 
+                }}>
                     <Button 
                         onClick={closeAddUserDialog} 
                         variant="outlined"
+                        fullWidth={isMobile}
                         sx={{ 
                             borderRadius: '6px',
                             px: 3
@@ -553,6 +626,7 @@ export default function AdminUserManagementPage() {
                     <Button 
                         onClick={handleSubmitNewUser} 
                         variant="contained"
+                        fullWidth={isMobile}
                         sx={{ 
                             backgroundColor: '#d41c1c', 
                             '&:hover': { backgroundColor: '#b01818' },
@@ -571,10 +645,12 @@ export default function AdminUserManagementPage() {
                 open={notification.open} 
                 autoHideDuration={6000} 
                 onClose={() => setNotification({ ...notification, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
                 <Alert 
                     onClose={() => setNotification({ ...notification, open: false })} 
                     severity={notification.severity}
+                    sx={{ width: '100%' }}
                 >
                     {notification.message}
                 </Alert>
