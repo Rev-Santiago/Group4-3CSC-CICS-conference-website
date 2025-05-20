@@ -223,26 +223,6 @@ export default function AdminDashboard() {
 
       {/* Page Visits and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Pages by Visits */}
-        <Card className="shadow-md">
-          <CardContent>
-            <Typography variant="h6" className="mb-4">Top Pages by Visits</Typography>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topPages} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={100} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="visits" fill="#4299e1" name="Total Visits" />
-                  <Bar dataKey="uniqueVisitors" fill="#38a169" name="Unique Visitors" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Recent Activity Feed */}
         <Card className="shadow-md">
           <CardContent>
@@ -396,17 +376,6 @@ function getMockAnalyticsData() {
     { category: 'Keynote', count: 5 },
     { category: 'Paper Presentation', count: 8 },
     { category: 'Networking', count: 4 }
-  ];
-
-  // Mock page visits
-  const pageVisits = [
-    { name: 'Home', visits: 1200, uniqueVisitors: 850 },
-    { name: 'Schedule', visits: 980, uniqueVisitors: 720 },
-    { name: 'Registration & Fees', visits: 750, uniqueVisitors: 620 },
-    { name: 'Keynote Speakers', visits: 680, uniqueVisitors: 520 },
-    { name: 'Call For Papers', visits: 550, uniqueVisitors: 430 },
-    { name: 'Venue', visits: 480, uniqueVisitors: 380 },
-    { name: 'Contacts', visits: 350, uniqueVisitors: 280 }
   ];
 
   // Mock recent activity
