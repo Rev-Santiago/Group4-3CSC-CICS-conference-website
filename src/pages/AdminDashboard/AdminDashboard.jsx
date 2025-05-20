@@ -4,10 +4,29 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area
 } from "recharts";
-import { CircularProgress, Card, CardContent, Typography, Alert } from "@mui/material";
+import { 
+  CircularProgress, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Alert,
+  useTheme,
+  useMediaQuery,
+  Box,
+  Grid,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  Chip,
+  Button
+} from "@mui/material";
+import { Refresh, Person, CalendarToday, Description } from "@mui/icons-material";
 
 // Custom color palette for charts
-const COLORS = ["#d41c1c", "#ff725c", "#ffa600", "#38a169", "#4299e1", "#805ad5", "#d53f8c"];
+const COLORS = ["#B7152F", "#ff725c", "#ffa600", "#38a169", "#4299e1", "#805ad5", "#d53f8c"];
 
 // Backend API URL - change this to your actual API URL
 const API_URL = import.meta.env.VITE_BACKEND_URL 
@@ -15,6 +34,11 @@ const API_URL = import.meta.env.VITE_BACKEND_URL
   : "http://localhost:5000/api/analytics/overview";
 
 export default function AdminDashboard() {
+  // Use Material UI's useMediaQuery hook for consistent responsive behavior
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -74,9 +98,9 @@ export default function AdminDashboard() {
   // Show loading state
   if (loading && !analyticsData) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress size={60} />
-      </div>
+      </Box>
     );
   }
 
@@ -98,45 +122,46 @@ export default function AdminDashboard() {
   const topPages = pageVisits?.slice(0, 5) || [];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Analytics Dashboard</h1>
-          <p className="text-gray-600 mt-1">Conference performance and metrics at a glance</p>
-        </div>
+    <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}>
+            Analytics Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Conference performance and metrics at a glance
+          </Typography>
+        </Box>
         
         {/* Refresh button */}
-        <button 
+        <Button 
           onClick={fetchAnalytics}
           disabled={loading}
-          className="px-4 py-2 bg-customRed text-white rounded-md flex items-center gap-2 hover:bg-red-700 transition-colors"
+          variant="contained"
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Refresh />}
+          sx={{ 
+            bgcolor: '#B7152F', 
+            '&:hover': { bgcolor: '#871122' },
+            borderRadius: '6px',
+          }}
         >
-          {loading ? (
-            <>
-              <CircularProgress size={16} color="inherit" />
-              Refreshing...
-            </>
-          ) : (
-            <>
-              <RefreshIcon />
-              Refresh Data
-            </>
-          )}
-        </button>
-      </div>
+          {loading ? "Refreshing..." : "Refresh Data"}
+        </Button>
+      </Box>
       
       {/* Mock data or error alert */}
       {(usingMockData || error) && (
         <Alert 
           severity={error ? "error" : "info"} 
-          className="mb-4"
+          sx={{ mb: 3 }}
           action={
-            <button 
+            <Button 
               onClick={fetchAnalytics} 
-              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+              size="small"
+              color="inherit"
             >
               Retry
-            </button>
+            </Button>
           }
         >
           {error ? (
@@ -148,138 +173,262 @@ export default function AdminDashboard() {
       )}
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <MetricCard 
-          title="Total Users" 
-          value={counts?.users || 0} 
-          description="Registered admin users"
-          icon={<UserIcon />}
-          color="#d41c1c"
-        />
-        <MetricCard 
-          title="Total Events" 
-          value={counts?.events || 0} 
-          description="Conference events scheduled"
-          icon={<CalendarIcon />}
-          color="#4299e1"
-        />
-        <MetricCard 
-          title="Publications" 
-          value={counts?.publications || 0} 
-          description="Published conference papers"
-          icon={<DocumentIcon />}
-          color="#38a169"
-        />
-      </div>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4}>
+          <MetricCard 
+            title="Total Users" 
+            value={counts?.users || 0} 
+            description="Registered admin users"
+            icon={<Person />}
+            color="#B7152F"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <MetricCard 
+            title="Total Events" 
+            value={counts?.events || 0} 
+            description="Conference events scheduled"
+            icon={<CalendarToday />}
+            color="#4299e1"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <MetricCard 
+            title="Publications" 
+            value={counts?.publications || 0} 
+            description="Published conference papers"
+            icon={<Description />}
+            color="#38a169"
+          />
+        </Grid>
+      </Grid>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Monthly Events Chart */}
-        <Card className="shadow-md">
-          <CardContent>
-            <Typography variant="h6" className="mb-4">Monthly Events</Typography>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={formattedMonthlyEvents}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="events" stroke="#d41c1c" fill="#d41c1c" fillOpacity={0.2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <Grid item xs={12} lg={6}>
+          <Card sx={{ height: '100%', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Monthly Events
+              </Typography>
+              <Box sx={{ height: isMobile ? '250px' : '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart 
+                    data={formattedMonthlyEvents}
+                    margin={isMobile ? { top: 5, right: 5, bottom: 5, left: 5 } : { top: 10, right: 30, bottom: 30, left: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 60 : 40}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      width={isMobile ? 30 : 40}
+                    />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="events" stroke="#B7152F" fill="#B7152F" fillOpacity={0.2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
         {/* Category Distribution Chart */}
-        <Card className="shadow-md">
-          <CardContent>
-            <Typography variant="h6" className="mb-4">Event Categories</Typography>
-            <div className="h-80 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={formattedCategoryData}
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    nameKey="name"
-                    label={renderCustomizedLabel}
-                  >
-                    {formattedCategoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend layout="vertical" verticalAlign="middle" align="right" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <Grid item xs={12} lg={6}>
+          <Card sx={{ height: '100%', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Event Categories
+              </Typography>
+              <Box sx={{ 
+                height: isMobile ? '250px' : '300px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center'
+              }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  {isMobile ? (
+                    // Mobile view - Simple bar chart
+                    <BarChart
+                      data={formattedCategoryData}
+                      layout="vertical"
+                      margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        tick={{ fontSize: 12 }}
+                        width={80}
+                      />
+                      <Tooltip />
+                      <Bar dataKey="value" nameKey="name">
+                        {formattedCategoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  ) : (
+                    // Desktop view - Pie chart with legend
+                    <PieChart>
+                      <Pie
+                        data={formattedCategoryData}
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        nameKey="name"
+                        label={renderCustomizedLabel}
+                      >
+                        {formattedCategoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend layout="vertical" verticalAlign="middle" align="right" />
+                    </PieChart>
+                  )}
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-      {/* Page Visits and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity Feed */}
-        <Card className="shadow-md">
-          <CardContent>
-            <Typography variant="h6" className="mb-4">Recent Activity</Typography>
-            <div className="overflow-y-auto max-h-80">
-              {recentActivity?.length > 0 ? (
-                <ul className="divide-y divide-gray-200">
-                  {recentActivity.map((activity, index) => (
-                    <li key={index} className="py-3">
-                      <div className="flex items-start">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${getActivityTypeColor(activity.type)}`}>
-                          {getActivityTypeIcon(activity.type)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{activity.title}</p>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <span className="bg-gray-100 rounded px-2 py-0.5 mr-2">{activity.type}</span>
-                            <span>{formatDate(activity.date)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center py-6 text-gray-500">No recent activity found</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      {/* Recent Activity */}
+      <Card sx={{ boxShadow: '0px 2px 4px rgba(0,0,0,0.1)' }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            Recent Activity
+          </Typography>
+          {recentActivity?.length > 0 ? (
+            <List sx={{ 
+              maxHeight: isMobile ? '300px' : '400px', 
+              overflow: 'auto',
+              p: 0
+            }}>
+              {recentActivity.map((activity, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <Divider component="li" />}
+                  <ListItem alignItems="flex-start" sx={{ py: 2 }}>
+                    <ListItemIcon sx={{ minWidth: 44 }}>
+                      <Avatar
+                        sx={{ 
+                          width: 36, 
+                          height: 36,
+                          bgcolor: getActivityTypeColor(activity.type).bg,
+                          color: getActivityTypeColor(activity.type).color
+                        }}
+                      >
+                        {getActivityTypeIcon(activity.type)}
+                      </Avatar>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={activity.title}
+                      secondary={
+                        <Box sx={{ mt: 0.5 }}>
+                          <Chip 
+                            label={activity.type} 
+                            size="small" 
+                            sx={{ 
+                              mr: 1,
+                              bgcolor: 'grey.100',
+                              fontSize: '0.75rem'
+                            }} 
+                          />
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            {formatDate(activity.date)}
+                          </Typography>
+                        </Box>
+                      }
+                      primaryTypographyProps={{
+                        fontWeight: 500,
+                        variant: 'body1'
+                      }}
+                    />
+                  </ListItem>
+                </React.Fragment>
+              ))}
+            </List>
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              py: 4,
+              color: 'text.secondary'
+            }}>
+              <Typography>No recent activity found</Typography>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
 
 // Helper Components
 function MetricCard({ title, value, description, icon, color }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   return (
-    <Card className="shadow-md transition-all hover:shadow-lg">
-      <CardContent>
-        <div className="flex items-start justify-between">
-          <div>
-            <Typography variant="h6" className="font-bold">{title}</Typography>
-            <Typography variant="h3" className="mt-2 font-bold" style={{ color }}>
-              {value.toLocaleString()}
-            </Typography>
-            <Typography variant="body2" className="mt-1 text-gray-600">
-              {description}
-            </Typography>
-          </div>
-          <div 
-            className="p-3 rounded-full" 
-            style={{ backgroundColor: `${color}20` }}
+    <Card sx={{ 
+      height: '100%',
+      boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0px 4px 8px rgba(0,0,0,0.15)'
+      }
+    }}>
+      <CardContent sx={{ 
+        display: 'flex', 
+        alignItems: isMobile ? 'center' : 'flex-start',
+        justifyContent: 'space-between',
+        height: '100%'
+      }}>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+            {title}
+          </Typography>
+          <Typography 
+            variant={isMobile ? "h5" : "h4"} 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: color,
+              mb: 0.5
+            }}
           >
-            {icon}
-          </div>
-        </div>
+            {value.toLocaleString()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {description}
+          </Typography>
+        </Box>
+        <Box sx={{ 
+          p: 1.5,
+          borderRadius: '50%',
+          bgcolor: `${color}20`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: color
+        }}>
+          {React.cloneElement(icon, { sx: { fontSize: isMobile ? 24 : 28 } })}
+        </Box>
       </CardContent>
     </Card>
   );
@@ -327,30 +476,30 @@ function renderCustomizedLabel({ cx, cy, midAngle, innerRadius, outerRadius, per
 function getActivityTypeColor(type) {
   switch (type) {
     case 'User':
-      return 'bg-blue-100 text-blue-600';
+      return { bg: '#e6f2ff', color: '#1967d2' };
     case 'Event':
-      return 'bg-green-100 text-green-600';
+      return { bg: '#e6f4ea', color: '#1e8e3e' };
     case 'Publication':
-      return 'bg-purple-100 text-purple-600';
+      return { bg: '#f3e8fd', color: '#6200ee' };
     default:
-      return 'bg-gray-100 text-gray-600';
+      return { bg: '#f1f3f4', color: '#5f6368' };
   }
 }
 
 function getActivityTypeIcon(type) {
   switch (type) {
     case 'User':
-      return <UserIcon className="w-4 h-4" />;
+      return <Person fontSize="small" />;
     case 'Event':
-      return <CalendarIcon className="w-4 h-4" />;
+      return <CalendarToday fontSize="small" />;
     case 'Publication':
-      return <DocumentIcon className="w-4 h-4" />;
+      return <Description fontSize="small" />;
     default:
       return null;
   }
 }
 
-// Mock Data Function (used as fallback)
+// Mock data function for fallback (you'd need to implement this yourself)
 function getMockAnalyticsData() {
   // Mock counts
   const counts = {
@@ -390,6 +539,14 @@ function getMockAnalyticsData() {
     { type: 'User', title: 'Admin Role Assigned to Lisa Chen', date: 'May 3, 2023' }
   ];
 
+  const pageVisits = [
+    { page: '/home', visits: 1245 },
+    { page: '/schedule', visits: 987 },
+    { page: '/speakers', visits: 842 },
+    { page: '/registration', visits: 654 },
+    { page: '/about', visits: 432 }
+  ];
+
   return {
     counts,
     monthlyEvents,
@@ -397,37 +554,4 @@ function getMockAnalyticsData() {
     pageVisits,
     recentActivity
   };
-}
-
-// Icon Components
-function UserIcon({ className = "h-6 w-6" }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-  );
-}
-
-function CalendarIcon({ className = "h-6 w-6" }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
-  );
-}
-
-function DocumentIcon({ className = "h-6 w-6" }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  );
-}
-
-function RefreshIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-    </svg>
-  );
 }
