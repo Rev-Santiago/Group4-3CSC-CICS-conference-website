@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { 
-    IconButton, Menu, MenuItem, Dialog, DialogTitle, 
+import {
+    IconButton, Menu, MenuItem, Dialog, DialogTitle,
     DialogContent, DialogActions, Button, Snackbar, Alert,
     TextField, FormControl, InputLabel, Select, FormHelperText,
-    useTheme, useMediaQuery, Box, Card, CardContent, 
+    useTheme, useMediaQuery, Box, Card, CardContent,
     Typography, CircularProgress, Pagination, InputAdornment, Chip
 } from "@mui/material";
 import { MoreVert, Search, Person, Email, AdminPanelSettings, CalendarMonth } from "@mui/icons-material";
@@ -13,7 +13,7 @@ export default function AdminUserManagementPage() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-    
+
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalUsers, setTotalUsers] = useState(0);
@@ -36,7 +36,7 @@ export default function AdminUserManagementPage() {
         setAnchorEl(event.currentTarget);
         setSelectedUser(user);
     };
-    
+
     const handleMenuClose = () => setAnchorEl(null);
 
     // Load users on component mount
@@ -51,7 +51,7 @@ export default function AdminUserManagementPage() {
             const response = await axios.get(`${baseUrl}/api/users`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             setUsers(response.data.users || []);
             setTotalUsers(response.data.count || 0);
         } catch (error) {
@@ -65,11 +65,11 @@ export default function AdminUserManagementPage() {
     // Handle user actions
     const handleUserAction = async (action) => {
         if (!selectedUser) return;
-        
+
         try {
             const token = localStorage.getItem('authToken');
             let url, message;
-            
+
             if (action === 'promote') {
                 url = `${baseUrl}/api/users/${selectedUser.id}/promote`;
                 message = 'User promoted to Super Admin successfully';
@@ -84,7 +84,7 @@ export default function AdminUserManagementPage() {
                 setConfirmDialog({ ...confirmDialog, open: false });
                 return;
             }
-            
+
             await axios.post(url, {}, { headers: { 'Authorization': `Bearer ${token}` } });
             showNotification(message);
             fetchUsers();
@@ -103,7 +103,7 @@ export default function AdminUserManagementPage() {
             demote: { title: 'Demote User', message: `Are you sure you want to demote ${selectedUser?.name || selectedUser?.email} to regular Admin?` },
             remove: { title: 'Remove User', message: `Are you sure you want to remove ${selectedUser?.name || selectedUser?.email}? This action cannot be undone.` }
         };
-        
+
         setConfirmDialog({
             open: true,
             type,
@@ -129,12 +129,12 @@ export default function AdminUserManagementPage() {
         setSearch(e.target.value);
         setPage(1);
     };
-    
+
     const handlePageChange = (event, newPage) => setPage(newPage);
 
     // User dialog handlers
     const openAddUserDialog = () => setAddUserDialog(true);
-    
+
     const closeAddUserDialog = () => {
         setAddUserDialog(false);
         setNewUser({ email: '', password: '', confirmPassword: '', account_type: 'admin' });
@@ -149,25 +149,25 @@ export default function AdminUserManagementPage() {
 
     const validateForm = () => {
         const errors = {};
-        
+
         if (!newUser.email) errors.email = 'Email is required';
         else if (!/\S+@\S+\.\S+/.test(newUser.email)) errors.email = 'Email is invalid';
-        
+
         if (!newUser.password) errors.password = 'Password is required';
         else if (newUser.password.length < 6) errors.password = 'Password must be at least 6 characters';
-        
+
         if (!newUser.confirmPassword) errors.confirmPassword = 'Please confirm your password';
         else if (newUser.password !== newUser.confirmPassword) errors.confirmPassword = 'Passwords do not match';
-        
+
         if (!newUser.account_type) errors.account_type = 'Account type is required';
-        
+
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
     const handleSubmitNewUser = async () => {
         if (!validateForm()) return;
-        
+
         try {
             const token = localStorage.getItem('authToken');
             await axios.post(`${baseUrl}/api/users`, {
@@ -177,7 +177,7 @@ export default function AdminUserManagementPage() {
             }, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             showNotification('User created successfully');
             fetchUsers();
             closeAddUserDialog();
@@ -188,8 +188,8 @@ export default function AdminUserManagementPage() {
     };
 
     // Filter and paginate users
-    const filteredUsers = users.filter(user => 
-        user.email?.toLowerCase().includes(search.toLowerCase()) || 
+    const filteredUsers = users.filter(user =>
+        user.email?.toLowerCase().includes(search.toLowerCase()) ||
         (user.name && user.name.toLowerCase().includes(search.toLowerCase()))
     );
 
@@ -200,73 +200,131 @@ export default function AdminUserManagementPage() {
     }, [filteredUsers]);
 
     // Improved User card for mobile view
+    // Responsive User Card
     const UserCard = ({ user }) => (
-        <Card sx={{ mb: 2, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}>
-            <CardContent>
-                <Box>
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+        <Card sx={{
+            mb: 2,
+            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s ease'
+        }}>
+            <CardContent sx={{
+                p: isMobile ? 2 : 3,
+                '&:last-child': { pb: isMobile ? 2 : 3 }
+            }}>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: isTablet ? 'column' : 'row',
+                    justifyContent: 'space-between',
+                    alignItems: isTablet ? 'flex-start' : 'center',
+                    mb: 1
+                }}>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{
+                            fontWeight: 'bold',
+                            fontSize: isMobile ? '0.9rem' : '1rem',
+                            mb: isTablet ? 1 : 0
+                        }}
+                    >
                         {user.name || user.email.split('@')[0]}
                     </Typography>
-                    
-                    <Box sx={{ mt: 1, mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <Email fontSize="small" color="action" sx={{ mr: 1 }} />
-                            <Typography variant="body2" color="text.secondary">{user.email}</Typography>
-                        </Box>
-                        
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <AdminPanelSettings 
-                                fontSize="small" 
-                                color={user.account_type === 'super_admin' ? "success" : "primary"} 
-                                sx={{ mr: 1 }} 
-                            />
-                            <Chip 
-                                label={user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'} 
-                                size="small"
-                                color={user.account_type === 'super_admin' ? 'success' : 'primary'}
-                            />
-                        </Box>
-                        
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <CalendarMonth fontSize="small" color="action" sx={{ mr: 1 }} />
-                            <Typography variant="body2" color="text.secondary">
-                                Added: {formatDate(user.date_added)}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                        {user.account_type === 'admin' ? (
-                            <Button 
-                                size="small" 
-                                variant="outlined" 
-                                color="success" 
-                                onClick={() => openConfirmDialog('promote')}
-                                fullWidth
-                            >
-                                Promote
-                            </Button>
-                        ) : (
-                            <Button 
-                                size="small" 
-                                variant="outlined" 
-                                color="primary" 
-                                onClick={() => openConfirmDialog('demote')}
-                                fullWidth
-                            >
-                                Demote
-                            </Button>
-                        )}
-                        <Button 
-                            size="small" 
-                            variant="outlined" 
-                            color="error" 
-                            onClick={() => openConfirmDialog('remove')}
-                            fullWidth
+
+                    <Chip
+                        label={user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
+                        size="small"
+                        color={user.account_type === 'super_admin' ? 'success' : 'primary'}
+                        sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                    />
+                </Box>
+
+                <Box sx={{
+                    mt: 1,
+                    mb: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5
+                }}>
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        mb: 0.5,
+                        flexWrap: 'wrap'
+                    }}>
+                        <Email fontSize={isMobile ? "small" : "medium"} color="action" sx={{ mr: 1 }} />
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                fontSize: isMobile ? '0.75rem' : '0.875rem',
+                                wordBreak: 'break-word'
+                            }}
                         >
-                            Remove
-                        </Button>
+                            {user.email}
+                        </Typography>
                     </Box>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <CalendarMonth fontSize={isMobile ? "small" : "medium"} color="action" sx={{ mr: 1 }} />
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+                        >
+                            Added: {formatDate(user.date_added)}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* Responsive actions area */}
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: 1,
+                    mt: 2
+                }}>
+                    {user.account_type === 'admin' ? (
+                        <Button
+                            size={isMobile ? "small" : "medium"}
+                            variant="outlined"
+                            color="success"
+                            onClick={() => openConfirmDialog('promote')}
+                            fullWidth={isMobile}
+                            sx={{
+                                flex: isMobile ? '1' : '1 1 0',
+                                py: isMobile ? 0.5 : 1
+                            }}
+                        >
+                            {isMobile ? "Promote" : "Promote to Super Admin"}
+                        </Button>
+                    ) : (
+                        <Button
+                            size={isMobile ? "small" : "medium"}
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => openConfirmDialog('demote')}
+                            fullWidth={isMobile}
+                            sx={{
+                                flex: isMobile ? '1' : '1 1 0',
+                                py: isMobile ? 0.5 : 1
+                            }}
+                        >
+                            {isMobile ? "Demote" : "Demote to Admin"}
+                        </Button>
+                    )}
+                    <Button
+                        size={isMobile ? "small" : "medium"}
+                        variant="outlined"
+                        color="error"
+                        onClick={() => openConfirmDialog('remove')}
+                        fullWidth={isMobile}
+                        sx={{
+                            flex: isMobile ? '1' : '1 1 0',
+                            py: isMobile ? 0.5 : 1
+                        }}
+                    >
+                        Remove
+                    </Button>
                 </Box>
             </CardContent>
         </Card>
@@ -276,8 +334,8 @@ export default function AdminUserManagementPage() {
         <Box sx={{ py: 3, maxWidth: '1200px', mx: 'auto' }}>
             {/* Page Header */}
             <Card sx={{ p: 3, mb: 3, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                <Box sx={{ 
-                    display: 'flex', 
+                <Box sx={{
+                    display: 'flex',
                     flexDirection: isMobile ? 'column' : 'row',
                     alignItems: isMobile ? 'flex-start' : 'center',
                     justifyContent: 'space-between',
@@ -287,8 +345,8 @@ export default function AdminUserManagementPage() {
                         <Typography variant="h5" sx={{ fontWeight: 600 }}>User Management Overview</Typography>
                         <Typography variant="body2" color="text.secondary">View, edit, and manage all users.</Typography>
                     </Box>
-                    <Chip 
-                        label="Role: Super Admin" 
+                    <Chip
+                        label="Role: Super Admin"
                         size={isMobile ? "small" : "medium"}
                         sx={{ bgcolor: 'grey.100' }}
                     />
@@ -296,12 +354,12 @@ export default function AdminUserManagementPage() {
             </Card>
 
             {/* Main Table Card */}
-            <Card sx={{ p: 3, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}>
+            <Card sx={{ p: 2, boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }}>
                 {/* Header */}
-                <Box sx={{ 
-                    display: 'flex', 
+                <Box sx={{
+                    display: 'flex',
                     flexDirection: isMobile ? 'column' : 'row',
-                    alignItems: 'center', 
+                    alignItems: 'center',
                     justifyContent: 'space-between',
                     mb: 3,
                     gap: 2
@@ -309,31 +367,53 @@ export default function AdminUserManagementPage() {
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         All users <Typography component="span" color="text.secondary">({totalUsers})</Typography>
                     </Typography>
-                    <Box sx={{ 
-                        display: 'flex', 
+                    <Box sx={{
+                        display: 'flex',
                         flexDirection: isMobile ? 'column' : 'row',
                         width: isMobile ? '100%' : 'auto',
                         gap: 1
                     }}>
-                        <TextField
-                            placeholder="Search users..."
-                            size="small"
-                            value={search}
-                            onChange={handleSearchChange}
-                            sx={{ width: isMobile ? '100%' : '220px' }}
-                            InputProps={{
-                                startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
+                        <Box
+                            mb={isMobile ? 1 : 2}
+                            mt={isMobile ? 1 : 2}
+                            sx={{
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                justifyContent: 'space-between',
+                                gap: isMobile ? 1 : 2
                             }}
-                        />
-                        <Button 
-                            variant="contained"
-                            onClick={openAddUserDialog}
-                            startIcon={<Person />}
-                            fullWidth={isMobile}
-                            sx={{ bgcolor: '#B7152F', '&:hover': { bgcolor: '#871122' } }}
                         >
-                            Add user
-                        </Button>
+                            <TextField
+                                fullWidth={isMobile}
+                                variant="outlined"
+                                size={isMobile ? "small" : "medium"}
+                                placeholder="Search users..."
+                                value={search}
+                                onChange={handleSearchChange}
+                                sx={{ width: isMobile ? '100%' : '220px' }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search fontSize={isMobile ? "small" : "medium"} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <Button
+                                variant="contained"
+                                onClick={openAddUserDialog}
+                                startIcon={<Person />}
+                                size={isMobile ? "small" : "medium"}
+                                fullWidth={isMobile}
+                                sx={{
+                                    bgcolor: '#B7152F',
+                                    '&:hover': { bgcolor: '#871122' },
+                                    mt: isMobile ? 1 : 0
+                                }}
+                            >
+                                Add user
+                            </Button>
+                        </Box>
                     </Box>
                 </Box>
 
@@ -350,7 +430,7 @@ export default function AdminUserManagementPage() {
                     <>
                         {/* Mobile view for users */}
                         {isMobile ? (
-                            <Box>
+                            <Box >
                                 {paginatedUsers.map((user, idx) => (
                                     <UserCard key={user.id || idx} user={user} />
                                 ))}
@@ -358,8 +438,8 @@ export default function AdminUserManagementPage() {
                         ) : (
                             /* Desktop view - Responsive Table */
                             <Box sx={{ overflowX: 'auto' }}>
-                                <table style={{ 
-                                    width: '100%', 
+                                <table style={{
+                                    width: '100%',
                                     borderCollapse: 'collapse',
                                     fontSize: isTablet ? '0.875rem' : '1rem'
                                 }}>
@@ -379,7 +459,7 @@ export default function AdminUserManagementPage() {
                                     </thead>
                                     <tbody>
                                         {paginatedUsers.map((user, idx) => (
-                                            <tr key={user.id || idx} style={{ 
+                                            <tr key={user.id || idx} style={{
                                                 borderBottom: '1px solid #eee',
                                                 backgroundColor: idx % 2 === 0 ? '#f9f9f9' : 'white'
                                             }}>
@@ -392,20 +472,20 @@ export default function AdminUserManagementPage() {
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: isTablet ? '8px' : '12px 16px' }}>
-                                                    <Chip 
-                                                        label={user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'} 
+                                                    <Chip
+                                                        label={user.account_type === 'super_admin' ? 'Super Admin' : 'Admin'}
                                                         size="small"
                                                         color={user.account_type === 'super_admin' ? 'success' : 'primary'}
                                                     />
                                                 </td>
-                                                <td style={{ 
+                                                <td style={{
                                                     padding: isTablet ? '8px' : '12px 16px',
                                                     fontSize: isTablet ? '0.75rem' : '0.875rem',
                                                     color: '#666'
                                                 }}>
                                                     {formatDate(user.date_added)}
                                                 </td>
-                                                <td style={{ 
+                                                <td style={{
                                                     padding: isTablet ? '4px' : '8px',
                                                     textAlign: 'center'
                                                 }}>
@@ -454,8 +534,8 @@ export default function AdminUserManagementPage() {
             )}
 
             {/* Confirmation Dialog */}
-            <Dialog 
-                open={confirmDialog.open} 
+            <Dialog
+                open={confirmDialog.open}
                 onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
                 fullWidth
                 maxWidth="xs"
@@ -463,14 +543,14 @@ export default function AdminUserManagementPage() {
                 <DialogTitle sx={{ bgcolor: '#B7152F', color: 'white' }}>{confirmDialog.title}</DialogTitle>
                 <DialogContent sx={{ pt: 2, mt: 1 }}><Typography>{confirmDialog.message}</Typography></DialogContent>
                 <DialogActions sx={{ p: 2, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 1 }}>
-                    <Button 
+                    <Button
                         onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
                         variant="outlined"
                         fullWidth={isMobile}
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         variant="contained"
                         fullWidth={isMobile}
                         onClick={() => handleUserAction(confirmDialog.type)}
@@ -482,8 +562,8 @@ export default function AdminUserManagementPage() {
             </Dialog>
 
             {/* Add User Dialog */}
-            <Dialog 
-                open={addUserDialog} 
+            <Dialog
+                open={addUserDialog}
                 onClose={closeAddUserDialog}
                 fullWidth
                 maxWidth="sm"
@@ -553,9 +633,9 @@ export default function AdminUserManagementPage() {
                     <Button variant="outlined" onClick={closeAddUserDialog} fullWidth={isMobile}>
                         Cancel
                     </Button>
-                    <Button 
-                        variant="contained" 
-                        onClick={handleSubmitNewUser} 
+                    <Button
+                        variant="contained"
+                        onClick={handleSubmitNewUser}
                         fullWidth={isMobile}
                         sx={{ bgcolor: '#B7152F', '&:hover': { bgcolor: '#871122' } }}
                     >
@@ -565,14 +645,14 @@ export default function AdminUserManagementPage() {
             </Dialog>
 
             {/* Notification Snackbar */}
-            <Snackbar 
-                open={notification.open} 
-                autoHideDuration={6000} 
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
                 onClose={() => setNotification({ ...notification, open: false })}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert 
-                    onClose={() => setNotification({ ...notification, open: false })} 
+                <Alert
+                    onClose={() => setNotification({ ...notification, open: false })}
                     severity={notification.severity}
                 >
                     {notification.message}
