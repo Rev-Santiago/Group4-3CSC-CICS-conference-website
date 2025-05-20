@@ -180,7 +180,7 @@ const AdminAccountPage = () => {
                 <Typography variant="h5" sx={{ mb: 4, fontWeight: 600, textAlign: 'center' }}>
                     Account Settings
                 </Typography>
-            </Box>F
+            </Box>
             
             <Paper elevation={2} sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
                 <Typography variant="h6" sx={{ mb: 3, borderBottom: "1px solid #eee", pb: 1 }}>
