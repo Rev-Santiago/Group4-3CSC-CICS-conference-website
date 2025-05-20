@@ -10,6 +10,7 @@ const VenuePage = () => {
     const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
     const [selectedDateLabel, setSelectedDateLabel] = useState("Jump to Date");
+    const [isVisible, setIsVisible] = useState(false);
 
     const dateDropdownRef = useRef(null);
     const categoryDropdownRef = useRef(null);
@@ -94,6 +95,23 @@ const VenuePage = () => {
         fetchEvents();
         fetchCategories();
     }, [BACKEND_URL]); // ✅ dependency for environment changes
+
+     useEffect(() => {
+        const toggleVisibility = () => {
+            // Show button when page is scrolled down
+            if (window.scrollY > 100) {
+                setIsVisible(true);
+            } else {
+                setIsVisible(false);
+            }
+        };
+        
+        // Add event listener
+        window.addEventListener('scroll', toggleVisibility);
+        
+        // Clear event listener on component unmount
+        return () => window.removeEventListener('scroll', toggleVisibility);
+    }, []);
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };
@@ -376,28 +394,30 @@ const VenuePage = () => {
             )}
 
             {/* Back to top */}
-            <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="fixed bottom-6 right-6 bg-customRed text-white p-3 rounded-full shadow-lg hover:bg-customDarkRed transition-colors duration-200 z-20"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-5 w-5"
+            {isVisible && (
+                <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="fixed bottom-6 right-6 bg-customRed text-white p-3 rounded-full shadow-lg hover:bg-customDarkRed transition-colors duration-200 z-20"
                 >
-                    <path
-                        fillRule="evenodd"
-                        d="M12 21a.75.75 0 01-.75-.75V5.56l-4.72 4.72a.75.75 0 11-1.06-1.06l6-6a.75.75 0 011.06 0l6 6a.75.75 0 01-1.06 1.06L12.75 5.56v14.69c0 .41-.34.75-.75.75z"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </motion.button>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-5 w-5"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M12 21a.75.75 0 01-.75-.75V5.56l-4.72 4.72a.75.75 0 11-1.06-1.06l6-6a.75.75 0 011.06 0l6 6a.75.75 0 01-1.06 1.06L12.75 5.56v14.69c0 .41-.34.75-.75.75z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </motion.button>
+            )}
         </section>
     );
 };
