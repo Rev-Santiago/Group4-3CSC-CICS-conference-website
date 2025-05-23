@@ -15,7 +15,7 @@ import KeynoteSpeakersPage from "../pages/KeynoteSpeakersPage/KeynoteSpeakersPag
 import InvitedSpeakersPage from "../pages/InvitedSpeakersPage/InvitedSpeakersPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard/AdminDashboard";
-import AdminPages from "../pages/AdminPages/AdminPages";
+// import AdminPages from "../pages/AdminPages/AdminPages";
 import MiniDrawer from "../components/miniDrawer/MiniDrawer";
 import SearchResultPage from "../pages/SearchResultPage/SearchResultPage";
 import AdminEventsPage from "../pages/AdminEventsPage/AdminEventsPage";
@@ -77,10 +77,8 @@ const AdminLayout = () => {
                         { index: true, element: <AdminDashboard /> },
                         { path: "events", element: <AdminEventsPage /> },
                         { path: "publications", element: <AdminPublicationPage /> },
-                        { path: "pages", element: <AdminPages /> },
                         { path: "account", element: <AdminAccountPage /> },
-                        { path: "user-management", element: <AdminUserManagementPage /> },
-                        
+                        { path: "user-management", element: <AdminUserManagementPage /> },                       
                     ]}
                 ],
             },

@@ -37,7 +37,7 @@ const NAV_LINKS = [
   { label: "Schedule", path: "/schedule", hasDropdown: false },
   { label: "Venue", path: "/venue", hasDropdown: false },
   { label: "Speakers ▼", path: "", hasDropdown: true, menuType: MENU_TYPES.SPEAKERS },
-  { label: "Login", path: "/login", hasDropdown: false }
+  // { label: "Login", path: "/login", hasDropdown: false }
 ];
 
 // A11y Props for Tabs

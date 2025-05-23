@@ -2,42 +2,71 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 const PublicationPage = () => {
-    const [publications, setPublications] = useState([]);
+    const [allPublications, setAllPublications] = useState([]); // Store all publications
+    const [filteredPublications, setFilteredPublications] = useState([]); // Store filtered results
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Filter states
+    const [filters, setFilters] = useState({
+        year: '',
+        month: '',
+        search: ''
+    });
+    const [availableYears, setAvailableYears] = useState([]);
+    const [availableMonths, setAvailableMonths] = useState([]);
 
-    const fetchPublications = async (page = 1) => {
+    // Pagination settings
+    const itemsPerPage = 5;
+
+    // Month names for display
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Fetch all publications once
+    const fetchAllPublications = async () => {
         setLoading(true);
         try {
-            // Make sure to use the environment variable for the backend URL
             const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
             
-            // Using axios instead of fetch for consistency with admin component
+            // Fetch all publications (increase limit to get everything)
             const response = await axios.get(`${BACKEND_URL}/api/publications`, {
-                params: { page, limit: 5 }
+                params: { page: 1, limit: 1000 } // Large limit to get all publications
             });
 
             console.log("Raw API Response:", response.data);
             
-            // Format publications in the same way as AdminSeeAllPublications
-            // This ensures we're handling the same property structure
+            // Format publications
             const formattedPublications = response.data.data.map(pub => {
                 return {
                     id: pub.id,
                     date: pub.publication_date,
-                    // Use the exact same property name as in AdminSeeAllPublications
                     publication_description: pub.publication_description,
-                    // This matches the property name used in AdminSeeAllPublications
                     publication_link: pub.publication_link
                 };
             });
             
-            console.log("Formatted publications:", formattedPublications);
-            setPublications(formattedPublications);
-            setTotalPages(response.data.totalPages || 1);
-            setCurrentPage(response.data.currentPage || page);
+            console.log("All formatted publications:", formattedPublications);
+            setAllPublications(formattedPublications);
+            
+            // Extract unique years and months for filter options
+            const years = new Set();
+            const months = new Set();
+            
+            formattedPublications.forEach(pub => {
+                if (pub.date) {
+                    const date = new Date(pub.date);
+                    years.add(date.getFullYear());
+                    months.add(date.getMonth() + 1); // getMonth() returns 0-11, we want 1-12
+                }
+            });
+
+            setAvailableYears(Array.from(years).sort((a, b) => b - a)); // Sort descending
+            setAvailableMonths(Array.from(months).sort((a, b) => a - b)); // Sort ascending
+            
             setError(null);
         } catch (error) {
             console.error("Error fetching publications:", error);
@@ -47,16 +76,81 @@ const PublicationPage = () => {
         }
     };
 
+    // Apply filters to publications
+    const applyFilters = () => {
+        let filtered = [...allPublications];
+
+        // Apply year filter
+        if (filters.year) {
+            filtered = filtered.filter(pub => {
+                const pubDate = new Date(pub.date);
+                return pubDate.getFullYear() === parseInt(filters.year);
+            });
+        }
+
+        // Apply month filter
+        if (filters.month) {
+            filtered = filtered.filter(pub => {
+                const pubDate = new Date(pub.date);
+                return (pubDate.getMonth() + 1) === parseInt(filters.month);
+            });
+        }
+
+        // Apply search filter
+        if (filters.search && filters.search.trim() !== '') {
+            const searchTerm = filters.search.toLowerCase().trim();
+            filtered = filtered.filter(pub => {
+                return pub.publication_description && 
+                       pub.publication_description.toLowerCase().includes(searchTerm);
+            });
+        }
+
+        console.log("Applied filters:", filters);
+        console.log("Filtered publications:", filtered);
+        setFilteredPublications(filtered);
+        setCurrentPage(1); // Reset to first page when filters change
+    };
+
+    // Calculate pagination for filtered results
+    const getPaginatedPublications = () => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredPublications.slice(startIndex, endIndex);
+    };
+
+    const getTotalPages = () => {
+        return Math.ceil(filteredPublications.length / itemsPerPage);
+    };
+
+    // Load all publications on component mount
     useEffect(() => {
-        fetchPublications(currentPage);
-    }, [currentPage]);
+        fetchAllPublications();
+    }, []);
+
+    // Apply filters whenever filters change or publications are loaded
+    useEffect(() => {
+        applyFilters();
+    }, [filters, allPublications]);
 
     const handlePrevPage = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
     const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+        if (currentPage < getTotalPages()) setCurrentPage(currentPage + 1);
+    };
+
+    const handleFilterChange = (filterType, value) => {
+        console.log(`Changing ${filterType} to:`, value);
+        setFilters(prev => ({
+            ...prev,
+            [filterType]: value
+        }));
+    };
+
+    const clearFilters = () => {
+        console.log("Clearing all filters");
+        setFilters({ year: '', month: '', search: '' });
     };
 
     // Helper function to check if link exists and is valid
@@ -81,6 +175,9 @@ const PublicationPage = () => {
             console.warn("Attempted to open invalid URL:", url);
         }
     };
+
+    const paginatedPublications = getPaginatedPublications();
+    const totalPages = getTotalPages();
 
     return (
         <section className="container mx-auto pb-10">
@@ -111,6 +208,141 @@ const PublicationPage = () => {
 
             <h3 className="text-xl text-center mb-6 font-semibold">Previous Conference Publications</h3>
 
+            {/* Filter Controls */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                <h4 className="text-lg font-medium mb-3 text-gray-700">Filter Publications</h4>
+                <div className="flex flex-wrap gap-4 items-end justify-between">
+                    {/* Left side - Date filters */}
+                    <div className="flex flex-wrap gap-4 items-end">
+                        {/* Year Filter */}
+                        <div className="flex flex-col">
+                            <label htmlFor="year-filter" className="text-sm font-medium text-gray-600 mb-1">
+                                Year
+                            </label>
+                            <select
+                                id="year-filter"
+                                value={filters.year}
+                                onChange={(e) => handleFilterChange('year', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent"
+                            >
+                                <option value="">All Years</option>
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Month Filter */}
+                        <div className="flex flex-col">
+                            <label htmlFor="month-filter" className="text-sm font-medium text-gray-600 mb-1">
+                                Month
+                            </label>
+                            <select
+                                id="month-filter"
+                                value={filters.month}
+                                onChange={(e) => handleFilterChange('month', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent"
+                            >
+                                <option value="">All Months</option>
+                                {availableMonths.map(month => (
+                                    <option key={month} value={month}>
+                                        {monthNames[month - 1]}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Clear Filters Button */}
+                        <div className="flex flex-col">
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Right side - Search bar */}
+                    <div className="flex flex-col min-w-0 flex-1 ">
+                        <label htmlFor="search-filter" className="text-sm font-medium text-gray-600 mb-1">
+                            Search Publications
+                        </label>
+                        <div className="relative">
+                            <input
+                                id="search-filter"
+                                type="text"
+                                placeholder="Search by description..."
+                                value={filters.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-customRed focus:border-transparent"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Active Filters Display */}
+                {(filters.year || filters.month || filters.search) && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="text-sm text-gray-600">Active filters:</span>
+                        {filters.year && (
+                            <span className="inline-flex items-center px-2 py-1 bg-customRed text-white text-xs rounded-full">
+                                Year: {filters.year}
+                                <button
+                                    onClick={() => handleFilterChange('year', '')}
+                                    className="ml-1 text-white hover:text-gray-200"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        )}
+                        {filters.month && (
+                            <span className="inline-flex items-center px-2 py-1 bg-customRed text-white text-xs rounded-full">
+                                Month: {monthNames[filters.month - 1]}
+                                <button
+                                    onClick={() => handleFilterChange('month', '')}
+                                    className="ml-1 text-white hover:text-gray-200"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        )}
+                        {filters.search && (
+                            <span className="inline-flex items-center px-2 py-1 bg-customRed text-white text-xs rounded-full">
+                                Search: "{filters.search}"
+                                <button
+                                    onClick={() => handleFilterChange('search', '')}
+                                    className="ml-1 text-white hover:text-gray-200"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* Results Count */}
+                {!loading && (
+                    <div className="mt-2 text-sm text-gray-600">
+                        Showing {filteredPublications.length} of {allPublications.length} publications
+                        {(filters.year || filters.month || filters.search) && (
+                            <span className="ml-1">
+                                (filtered by {[
+                                    filters.year && `year ${filters.year}`,
+                                    filters.month && `month ${monthNames[filters.month - 1]}`,
+                                    filters.search && `search "${filters.search}"`
+                                ].filter(Boolean).join(', ')})
+                            </span>
+                        )}
+                    </div>
+                )}
+            </div>
+
             {loading ? (
                 <div className="text-center py-4">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-customRed border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
@@ -128,15 +360,14 @@ const PublicationPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {publications.length > 0 ? (
-                                publications.map((pub, index) => {
-                                    // Log each publication to debug
+                            {paginatedPublications.length > 0 ? (
+                                paginatedPublications.map((pub, index) => {
                                     console.log(`Publication ${index}:`, pub);
                                     console.log(`Has valid link: ${hasValidLink(pub)}, Link: ${pub.publication_link}`);
                                     
                                     return (
                                         <tr
-                                            key={index}
+                                            key={pub.id || index}
                                             className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                                         >
                                             <td className="py-4 px-4 border-2 border-black min-h-[50px]">
@@ -148,7 +379,6 @@ const PublicationPage = () => {
                                             </td>
                                             <td className="py-4 px-4 border-2 border-black min-h-[50px]">
                                                 {hasValidLink(pub) ? (
-                                                    // If there's a link, make the description clickable
                                                     <a 
                                                         href={pub.publication_link}
                                                         target="_blank"
@@ -162,7 +392,6 @@ const PublicationPage = () => {
                                                         </svg>
                                                     </a>
                                                 ) : (
-                                                    // Otherwise, just show the text
                                                     <span>{pub.publication_description}</span>
                                                 )}
                                             </td>
@@ -172,7 +401,10 @@ const PublicationPage = () => {
                             ) : (
                                 <tr>
                                     <td colSpan="2" className="py-4 px-4 border-2 border-black text-center min-h-[50px]">
-                                        No publications available.
+                                        {(filters.year || filters.month) ? 
+                                            "No publications found matching the selected filters." : 
+                                            "No publications available."
+                                        }
                                     </td>
                                 </tr>
                             )}
@@ -182,7 +414,7 @@ const PublicationPage = () => {
             )}
 
             {/* Pagination Controls */}
-            {!loading && publications.length > 0 && totalPages > 1 && (
+            {!loading && paginatedPublications.length > 0 && totalPages > 1 && (
                 <div className="mt-6 flex justify-center space-x-4">
                     <button
                         onClick={handlePrevPage}

@@ -40,10 +40,76 @@ export default function AdminAddEvent({ currentUser }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
     const [userInfo, setUserInfo] = useState(null);
+    const [timeError, setTimeError] = useState(""); // Added for time validation
 
     const [customCategories, setCustomCategories] = useState([]);
     const defaultCategories = ["Workshop", "Seminar", "Keynote", "Conference"];
     const categoryOptions = [...new Set([...defaultCategories, ...customCategories])];
+
+    // Time validation functions
+    const timeToMinutes = (timeString) => {
+        if (!timeString) return 0;
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const validateTimeRange = (startTime, endTime) => {
+        if (!startTime || !endTime) {
+            setTimeError("");
+            return true; // Allow empty times
+        }
+
+        // Convert time strings to minutes for easier calculation
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        
+        // Handle overnight events (end time next day)
+        let diffMinutes;
+        if (endMinutes < startMinutes) {
+            // Overnight event: add 24 hours to end time
+            diffMinutes = (endMinutes + 24 * 60) - startMinutes;
+        } else {
+            diffMinutes = endMinutes - startMinutes;
+        }
+        
+        const maxDurationMinutes = 5 * 60; // 5 hours = 300 minutes
+        
+        if (diffMinutes > maxDurationMinutes) {
+            setTimeError("Event duration cannot exceed 5 hours");
+            return false;
+        } else if (diffMinutes <= 0) {
+            setTimeError("End time must be after start time");
+            return false;
+        } else {
+            setTimeError("");
+            return true;
+        }
+    };
+
+    const getRemainingDuration = () => {
+        if (!eventData.startTime || !eventData.endTime || timeError) return null;
+        
+        const startMinutes = timeToMinutes(eventData.startTime);
+        const endMinutes = timeToMinutes(eventData.endTime);
+        
+        let diffMinutes;
+        if (endMinutes < startMinutes) {
+            diffMinutes = (endMinutes + 24 * 60) - startMinutes;
+        } else {
+            diffMinutes = endMinutes - startMinutes;
+        }
+        
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        const remainingMinutes = (5 * 60) - diffMinutes;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+        
+        return {
+            current: `${hours}h ${minutes}m`,
+            remaining: remainingMinutes > 0 ? `${remainingHours}h ${remainingMins}m remaining` : null
+        };
+    };
 
     // Fetch user info on component mount
     useEffect(() => {
@@ -94,9 +160,19 @@ export default function AdminAddEvent({ currentUser }) {
         setEventData({ ...eventData, venue: newValue });
     };
 
+    // Updated handleChange with time validation
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setEventData((prev) => ({ ...prev, [name]: value }));
+        const newEventData = { ...eventData, [name]: value };
+        setEventData(newEventData);
+        
+        // Validate time range when start or end time changes
+        if (name === 'startTime' || name === 'endTime') {
+            validateTimeRange(
+                name === 'startTime' ? value : eventData.startTime,
+                name === 'endTime' ? value : eventData.endTime
+            );
+        }
     };
 
     // Handle keynote speaker name change
@@ -158,14 +234,25 @@ export default function AdminAddEvent({ currentUser }) {
             category: "",
             zoomLink: "",
         });
+        setTimeError(""); // Clear time error when resetting
     };
 
     const getAuthToken = () => {
         return localStorage.getItem('authToken');
     };
 
-    // Updated handleSaveDraft function
+    // Updated handleSaveDraft function with time validation
     const handleSaveDraft = async () => {
+        // Add validation check before saving
+        if (!validateTimeRange(eventData.startTime, eventData.endTime)) {
+            setNotification({
+                open: true,
+                message: "Please fix the time range error before saving",
+                severity: "error"
+            });
+            return;
+        }
+
         const formData = new FormData();
         formData.append("title", eventData.title);
         formData.append("date", eventData.date);
@@ -229,9 +316,19 @@ export default function AdminAddEvent({ currentUser }) {
         }
     };
 
-    // Updated handlePublish function
+    // Updated handlePublish function with time validation
     const handlePublish = async () => {
         try {
+            // Add validation check before publishing
+            if (!validateTimeRange(eventData.startTime, eventData.endTime)) {
+                setNotification({
+                    open: true,
+                    message: "Please fix the time range error before publishing",
+                    severity: "error"
+                });
+                return;
+            }
+
             // Validate form data
             if (!eventData.title || eventData.title.trim() === "") {
                 setNotification({
@@ -367,6 +464,7 @@ export default function AdminAddEvent({ currentUser }) {
                         InputLabelProps={{ shrink: true }}
                         value={eventData.startTime}
                         onChange={handleChange}
+                        error={!!timeError}
                     />
                 </Grid>
                 <Grid item xs={6} sm={3}>
@@ -379,8 +477,28 @@ export default function AdminAddEvent({ currentUser }) {
                         InputLabelProps={{ shrink: true }}
                         value={eventData.endTime}
                         onChange={handleChange}
+                        error={!!timeError}
+                        helperText={timeError}
                     />
                 </Grid>
+
+                {/* Duration display */}
+                {eventData.startTime && eventData.endTime && !timeError && (
+                    <Grid item xs={12}>
+                        <Typography 
+                            variant="body2" 
+                            color="textSecondary" 
+                            sx={{ mt: 1 }}
+                        >
+                            Duration: {getRemainingDuration()?.current}
+                            {getRemainingDuration()?.remaining && (
+                                <span style={{ color: '#4caf50', marginLeft: '10px' }}>
+                                    ({getRemainingDuration()?.remaining})
+                                </span>
+                            )}
+                        </Typography>
+                    </Grid>
+                )}
 
                 <Grid item xs={12}>
                     <Autocomplete
@@ -523,17 +641,6 @@ export default function AdminAddEvent({ currentUser }) {
                     <Typography variant="subtitle1">Event Classification:</Typography>
                 </Grid>
 
-                {/* <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        size={isMobile ? "small" : "medium"}
-                        label="Theme"
-                        name="theme"
-                        value={eventData.theme}
-                        onChange={handleChange}
-                    />
-                </Grid> */}
-
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
@@ -568,6 +675,7 @@ export default function AdminAddEvent({ currentUser }) {
                         size={isMobile ? "small" : "medium"}
                         fullWidth={isMobile}
                         sx={{ mb: isMobile ? 1 : 0 }}
+                        disabled={!!timeError}
                     >
                         Save
                     </Button>
@@ -582,6 +690,7 @@ export default function AdminAddEvent({ currentUser }) {
                                 color: "white",
                                 "&:hover": { backgroundColor: "#930E24" },
                             }}
+                            disabled={!!timeError}
                         >
                             Publish
                         </Button>
@@ -600,9 +709,11 @@ export default function AdminAddEvent({ currentUser }) {
                     <Typography variant="body2"><strong>Title:</strong> {eventData.title}</Typography>
                     <Typography variant="body2"><strong>Date:</strong> {eventData.date}</Typography>
                     <Typography variant="body2"><strong>Time:</strong> {eventData.startTime} - {eventData.endTime}</Typography>
+                    {eventData.startTime && eventData.endTime && !timeError && (
+                        <Typography variant="body2"><strong>Duration:</strong> {getRemainingDuration()?.current}</Typography>
+                    )}
                     <Typography variant="body2"><strong>Venue:</strong> {eventData.venue}</Typography>
                     <Typography variant="body2"><strong>Zoom Link:</strong> {eventData.zoomLink}</Typography>
-                    {/* <Typography variant="body2"><strong>Theme:</strong> {eventData.theme}</Typography> */}
                     <Typography variant="body2"><strong>Category:</strong> {eventData.category}</Typography>
                     
                     <Typography variant="subtitle2" sx={{ mt: 2 }}><strong>Keynote Speakers:</strong></Typography>

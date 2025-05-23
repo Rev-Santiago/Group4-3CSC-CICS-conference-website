@@ -32,6 +32,72 @@ export default function AdminEditEvent() {
         message: "", 
         severity: "success" 
     });
+    const [timeError, setTimeError] = useState(""); // Added for time validation
+
+    // Time validation functions
+    const timeToMinutes = (timeString) => {
+        if (!timeString) return 0;
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const validateTimeRange = (startTime, endTime) => {
+        if (!startTime || !endTime) {
+            setTimeError("");
+            return true; // Allow empty times
+        }
+
+        // Convert time strings to minutes for easier calculation
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        
+        // Handle overnight events (end time next day)
+        let diffMinutes;
+        if (endMinutes < startMinutes) {
+            // Overnight event: add 24 hours to end time
+            diffMinutes = (endMinutes + 24 * 60) - startMinutes;
+        } else {
+            diffMinutes = endMinutes - startMinutes;
+        }
+        
+        const maxDurationMinutes = 5 * 60; // 5 hours = 300 minutes
+        
+        if (diffMinutes > maxDurationMinutes) {
+            setTimeError("Event duration cannot exceed 5 hours");
+            return false;
+        } else if (diffMinutes <= 0) {
+            setTimeError("End time must be after start time");
+            return false;
+        } else {
+            setTimeError("");
+            return true;
+        }
+    };
+
+    const getRemainingDuration = () => {
+        if (!eventData.startTime || !eventData.endTime || timeError) return null;
+        
+        const startMinutes = timeToMinutes(eventData.startTime);
+        const endMinutes = timeToMinutes(eventData.endTime);
+        
+        let diffMinutes;
+        if (endMinutes < startMinutes) {
+            diffMinutes = (endMinutes + 24 * 60) - startMinutes;
+        } else {
+            diffMinutes = endMinutes - startMinutes;
+        }
+        
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        const remainingMinutes = (5 * 60) - diffMinutes;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+        
+        return {
+            current: `${hours}h ${minutes}m`,
+            remaining: remainingMinutes > 0 ? `${remainingHours}h ${remainingMins}m remaining` : null
+        };
+    };
     
     // Fetch only drafts
     const fetchDrafts = async () => {
@@ -81,10 +147,19 @@ export default function AdminEditEvent() {
         setEventData({ ...eventData, venue: newValue || "" }); // Ensure empty string fallback
     };
 
-    // Handle field changes
+    // Updated handleChange with time validation
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setEventData((prev) => ({ ...prev, [name]: value }));
+        const newEventData = { ...eventData, [name]: value };
+        setEventData(newEventData);
+        
+        // Validate time range when start or end time changes
+        if (name === 'startTime' || name === 'endTime') {
+            validateTimeRange(
+                name === 'startTime' ? value : eventData.startTime,
+                name === 'endTime' ? value : eventData.endTime
+            );
+        }
     };
 
     // Handle keynote speaker name change
@@ -173,12 +248,15 @@ export default function AdminEditEvent() {
                 }
             }
 
+            const startTime = start ? convertTo24Hour(start) : "";
+            const endTime = end ? convertTo24Hour(end) : "";
+
             // Populate fields based on the selected draft
             setEventData({
                 title: selected.program || "",
                 date: selected.event_date ? selected.event_date.split("T")[0] : "",
-                startTime: start ? convertTo24Hour(start) : "",
-                endTime: end ? convertTo24Hour(end) : "",
+                startTime: startTime,
+                endTime: endTime,
                 venue: selected.venue || "",
                 keynoteSpeakers,
                 invitedSpeakers,
@@ -186,12 +264,27 @@ export default function AdminEditEvent() {
                 category: selected.category || "",
                 zoomLink: selected.online_room_link || ""
             });
+
+            // Validate time range after setting data
+            setTimeout(() => {
+                validateTimeRange(startTime, endTime);
+            }, 0);
         }
     };
 
     // Save/update as draft
     const handleSave = async () => {
         try {
+            // Add validation check before saving
+            if (!validateTimeRange(eventData.startTime, eventData.endTime)) {
+                setNotification({
+                    open: true,
+                    message: "Please fix the time range error before saving",
+                    severity: "error"
+                });
+                return;
+            }
+
             const token = localStorage.getItem("authToken");
             if (!token) {
                 setNotification({
@@ -257,6 +350,7 @@ export default function AdminEditEvent() {
                     category: "", 
                     zoomLink: ""
                 });
+                setTimeError(""); // Clear time error
             }
         } catch (err) {
             console.error("Error saving draft:", err.response?.data || err.message);
@@ -316,10 +410,11 @@ export default function AdminEditEvent() {
                 venue: "", 
                 keynoteSpeakers: [{ name: "" }],
                 invitedSpeakers: [{ name: "" }],
-                // theme: "", 
+                theme: "", 
                 category: "", 
                 zoomLink: ""
             });
+            setTimeError(""); // Clear time error
         } catch (err) {
             console.error("Error deleting draft:", err.response?.data || err.message);
             setNotification({
@@ -333,6 +428,16 @@ export default function AdminEditEvent() {
     // Publish final event
     const handlePublish = async () => {
         try {
+            // Add validation check before publishing
+            if (!validateTimeRange(eventData.startTime, eventData.endTime)) {
+                setNotification({
+                    open: true,
+                    message: "Please fix the time range error before publishing",
+                    severity: "error"
+                });
+                return;
+            }
+
             // Validate form data
             if (!eventData.title || eventData.title.trim() === "") {
                 setNotification({
@@ -419,6 +524,7 @@ export default function AdminEditEvent() {
                 category: "", 
                 zoomLink: ""
             });
+            setTimeError(""); // Clear time error
             
         } catch (err) {
             console.error("Error publishing event:", err);
@@ -504,6 +610,7 @@ export default function AdminEditEvent() {
                         InputLabelProps={{ shrink: true }}
                         value={eventData.startTime}
                         onChange={handleChange}
+                        error={!!timeError}
                     />
                 </Grid>
                 <Grid item xs={6} sm={3}>
@@ -516,8 +623,28 @@ export default function AdminEditEvent() {
                         InputLabelProps={{ shrink: true }}
                         value={eventData.endTime}
                         onChange={handleChange}
+                        error={!!timeError}
+                        helperText={timeError}
                     />
                 </Grid>
+
+                {/* Duration display */}
+                {eventData.startTime && eventData.endTime && !timeError && (
+                    <Grid item xs={12}>
+                        <Typography 
+                            variant="body2" 
+                            color="textSecondary" 
+                            sx={{ mt: 1 }}
+                        >
+                            Duration: {getRemainingDuration()?.current}
+                            {getRemainingDuration()?.remaining && (
+                                <span style={{ color: '#4caf50', marginLeft: '10px' }}>
+                                    ({getRemainingDuration()?.remaining})
+                                </span>
+                            )}
+                        </Typography>
+                    </Grid>
+                )}
 
                 <Grid item xs={12}>
                     <Autocomplete
@@ -662,18 +789,6 @@ export default function AdminEditEvent() {
                     <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: isMobile ? 1 : 2 }}>Event Classification:</Typography>
                 </Grid>
 
-                {/* <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        size={isMobile ? "small" : "medium"}
-                        label="Theme"
-                        name="theme"
-                        variant="outlined"
-                        value={eventData.theme}
-                        onChange={handleChange}
-                    />
-                </Grid> */}
-
                 <Grid item xs={12}>
                     <Autocomplete
                         freeSolo
@@ -705,6 +820,7 @@ export default function AdminEditEvent() {
                         size={isMobile ? "small" : "medium"}
                         fullWidth={isMobile}
                         sx={{ mb: isMobile ? 1 : 0 }}
+                        disabled={!!timeError}
                     >
                         Save Draft
                     </Button>
@@ -723,6 +839,7 @@ export default function AdminEditEvent() {
                                     color: "white",
                                     "&:hover": { backgroundColor: "#B7152F" },
                                 }}
+                                disabled={!!timeError}
                             >
                                 Publish
                             </Button>
