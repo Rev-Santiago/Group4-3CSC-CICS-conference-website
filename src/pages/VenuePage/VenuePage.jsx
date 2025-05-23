@@ -236,7 +236,7 @@ const VenuePage = () => {
                                     )}
                                     {event.category && (
                                         <span className="text-gray-600 mt-1">
-                                            <p className="font-medium"> Theme: {event.category}</p>
+                                            <p className="font-medium"> Category: {event.category}</p>
                                         </span>
                                     )}
                                 </div>

@@ -523,7 +523,7 @@ export default function AdminAddEvent({ currentUser }) {
                     <Typography variant="subtitle1">Event Classification:</Typography>
                 </Grid>
 
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                     <TextField
                         fullWidth
                         size={isMobile ? "small" : "medium"}
@@ -532,7 +532,7 @@ export default function AdminAddEvent({ currentUser }) {
                         value={eventData.theme}
                         onChange={handleChange}
                     />
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12}>
                     <Autocomplete
@@ -602,7 +602,7 @@ export default function AdminAddEvent({ currentUser }) {
                     <Typography variant="body2"><strong>Time:</strong> {eventData.startTime} - {eventData.endTime}</Typography>
                     <Typography variant="body2"><strong>Venue:</strong> {eventData.venue}</Typography>
                     <Typography variant="body2"><strong>Zoom Link:</strong> {eventData.zoomLink}</Typography>
-                    <Typography variant="body2"><strong>Theme:</strong> {eventData.theme}</Typography>
+                    {/* <Typography variant="body2"><strong>Theme:</strong> {eventData.theme}</Typography> */}
                     <Typography variant="body2"><strong>Category:</strong> {eventData.category}</Typography>
                     
                     <Typography variant="subtitle2" sx={{ mt: 2 }}><strong>Keynote Speakers:</strong></Typography>

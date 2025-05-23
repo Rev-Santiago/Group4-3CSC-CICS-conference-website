@@ -316,7 +316,7 @@ export default function AdminEditEvent() {
                 venue: "", 
                 keynoteSpeakers: [{ name: "" }],
                 invitedSpeakers: [{ name: "" }],
-                theme: "", 
+                // theme: "", 
                 category: "", 
                 zoomLink: ""
             });
@@ -662,7 +662,7 @@ export default function AdminEditEvent() {
                     <Typography variant={isMobile ? "subtitle1" : "h6"} sx={{ mt: isMobile ? 1 : 2 }}>Event Classification:</Typography>
                 </Grid>
 
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                     <TextField
                         fullWidth
                         size={isMobile ? "small" : "medium"}
@@ -672,7 +672,7 @@ export default function AdminEditEvent() {
                         value={eventData.theme}
                         onChange={handleChange}
                     />
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12}>
                     <Autocomplete

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import { Alert, Snackbar } from "@mui/material";
+import { Alert, Snackbar, IconButton } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function ResetPassword() {
     const [password, setPassword] = useState("");
@@ -12,22 +13,23 @@ export default function ResetPassword() {
     const [tokenChecked, setTokenChecked] = useState(false);
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
 
+    // ✅ Password visibility toggles
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const { token } = useParams();
     const navigate = useNavigate();
 
-    // Verify token when component mounts
+    const handleTogglePasswordVisibility = () => setShowPassword(prev => !prev);
+    const handleToggleConfirmPasswordVisibility = () => setShowConfirmPassword(prev => !prev);
+
     useEffect(() => {
         const verifyToken = async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/verify-reset-token/${token}`);
                 const data = await response.json();
-
-                if (response.ok) {
-                    setIsTokenValid(true);
-                } else {
-                    setError(data.error || "Invalid or expired reset token");
-                    setIsTokenValid(false);
-                }
+                setIsTokenValid(response.ok);
+                if (!response.ok) setError(data.error || "Invalid or expired reset token");
             } catch (err) {
                 console.error("Token verification error:", err);
                 setError("Failed to verify reset token");
@@ -37,9 +39,8 @@ export default function ResetPassword() {
             }
         };
 
-        if (token) {
-            verifyToken();
-        } else {
+        if (token) verifyToken();
+        else {
             setError("Reset token is missing");
             setIsTokenValid(false);
             setTokenChecked(true);
@@ -51,7 +52,6 @@ export default function ResetPassword() {
         setIsLoading(true);
         setError("");
 
-        // Validate password
         if (password.length < 8) {
             setError("Password must be at least 8 characters long");
             setIsLoading(false);
@@ -72,25 +72,18 @@ export default function ResetPassword() {
             });
 
             const data = await response.json();
-
             if (!response.ok) {
                 setError(data.error || "Failed to reset password");
-                setIsLoading(false);
                 return;
             }
 
-            // Show success notification
             setNotification({
                 open: true,
                 message: "Password reset successful! You can now login with your new password.",
                 severity: "success"
             });
-            
-            // Redirect to login after 3 seconds
-            setTimeout(() => {
-                navigate("/login");
-            }, 3000);
 
+            setTimeout(() => navigate("/login"), 3000);
         } catch (err) {
             console.error("Password reset error:", err);
             setError("Something went wrong. Please try again.");
@@ -99,15 +92,13 @@ export default function ResetPassword() {
         }
     };
 
-    const handleCloseNotification = () => {
-        setNotification(prev => ({ ...prev, open: false }));
-    };
+    const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
 
     if (!tokenChecked) {
         return (
             <div className="flex justify-center items-center min-h-[70vh]">
                 <div className="p-6 text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-customRed mx-auto"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-customRed mx-auto" />
                     <p className="mt-4">Verifying reset token...</p>
                 </div>
             </div>
@@ -118,7 +109,7 @@ export default function ResetPassword() {
         <div className="flex justify-center items-center min-h-[70vh]">
             <div className="bg-white p-6 border border-black w-96 mb-5">
                 <h2 className="text-xl text-customRed mb-4">Reset Your Password</h2>
-                
+
                 {!isTokenValid ? (
                     <div className="text-center">
                         <p className="text-red-500 mb-4">{error || "Invalid or expired reset link"}</p>
@@ -133,27 +124,48 @@ export default function ResetPassword() {
                 ) : (
                     <form onSubmit={handleSubmit}>
                         {error && <p className="text-red-500 mb-3">{error}</p>}
-                        
+
+                        {/* New Password */}
                         <label className="block text-sm font-medium">New Password</label>
-                        <input
-                            type="password"
-                            className="w-full p-2 border border-black mb-3"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            minLength={8}
-                        />
+                        <div className="relative mb-1">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className="w-full p-2 border border-black pr-10"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={8}
+                            />
+                            <IconButton
+                                onClick={handleTogglePasswordVisibility}
+                                className="!absolute right-2 top-1/2 transform -translate-y-1/2"
+                                size="small"
+                            >
+                                {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                            </IconButton>
+                        </div>
                         <p className="text-xs text-gray-500 mb-3">Password must be at least 8 characters long</p>
-                        
+
+                        {/* Confirm Password */}
                         <label className="block text-sm font-medium">Confirm New Password</label>
-                        <input
-                            type="password"
-                            className="w-full p-2 border border-black mb-4"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                        />
-                        
+                        <div className="relative mb-4">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                className="w-full p-2 border border-black pr-10"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                            <IconButton
+                                onClick={handleToggleConfirmPasswordVisibility}
+                                className="!absolute right-2 top-1/2 transform -translate-y-1/2"
+                                size="small"
+                            >
+                                {showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                            </IconButton>
+                        </div>
+
+                        {/* Submit */}
                         <div className="mt-4 flex justify-between items-center">
                             <Typography
                                 className="text-blue-700 cursor-pointer hover:underline"
@@ -174,7 +186,7 @@ export default function ResetPassword() {
                     </form>
                 )}
             </div>
-            
+
             <Snackbar 
                 open={notification.open} 
                 autoHideDuration={6000} 
