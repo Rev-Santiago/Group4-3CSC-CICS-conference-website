@@ -34,45 +34,61 @@ const SchedulePage = () => {
         };
     }, []);
 
-    // In the useEffect for fetching schedule data, ensure your data structure is processed correctly
-    useEffect(() => {
-        const fetchSchedule = async () => {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/schedule`);
-                const result = await response.json();
+    // ✅ FIXED: Removed date filtering to show all events including past ones
+    const fetchSchedule = async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/schedule`);
+            const result = await response.json();
 
-                if (result.data) {
-                    const today = new Date().toISOString().split("T")[0];
-                    const filteredData = result.data.filter(day => day.date >= today);
+            if (result.data) {
+                // ✅ No longer filtering by date - shows all events
+                setScheduleData(result.data);
 
-                    // Log the data to debug what we're receiving
-                    console.log("Filtered schedule data:", filteredData);
-
-                    setScheduleData(filteredData);
-
-                    // Extract categories from all events
-                    const allCategories = new Set();
-                    filteredData.forEach(day => {
-                        day.events.forEach(event => {
-                            if (event.category && typeof event.category === 'string' && event.category.trim() !== '') {
-                                allCategories.add(event.category.trim());
-                            }
-                        });
+                // Extract categories from all events
+                const allCategories = new Set();
+                result.data.forEach(day => {
+                    day.events.forEach(event => {
+                        if (event.category && typeof event.category === 'string' && event.category.trim() !== '') {
+                            allCategories.add(event.category.trim());
+                        }
                     });
-                    setCategories(Array.from(allCategories));
-                } else {
-                    setScheduleData([]);
-                }
-            } catch (error) {
-                console.error("Error fetching schedule:", error);
+                });
+                setCategories(Array.from(allCategories));
+            } else {
                 setScheduleData([]);
-            } finally {
-                setLoading(false);
+            }
+        } catch (error) {
+            console.error("Error fetching schedule:", error);
+            setScheduleData([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSchedule();
+    }, [BACKEND_URL]);
+
+    // Add periodic refresh every 30 seconds to catch new events
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchSchedule();
+        }, 30000); // Refresh every 30 seconds
+
+        return () => clearInterval(interval);
+    }, [BACKEND_URL]);
+
+    // Add event listener for storage changes (if events are added in another tab)
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'eventAdded') {
+                fetchSchedule();
             }
         };
 
-        fetchSchedule();
-    }, [BACKEND_URL]);
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const formatDate = (dateString) => {
         const options = { year: "numeric", month: "long", day: "numeric" };
@@ -107,7 +123,7 @@ const SchedulePage = () => {
 
     useEffect(() => {
         if (categories.length === 0) {
-            setCategories(['Test Category 1', 'Test Category 2']);
+            setCategories(['Conference', 'Workshop', 'Keynote', 'Innovation']);
         }
     }, [categories]);
 
@@ -391,7 +407,7 @@ const SchedulePage = () => {
                     className="text-center py-12 bg-gray-50 rounded-lg shadow-sm"
                 >
                     <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v12a2 2 0 002 2z" />
                     </svg>
                     <h3 className="mt-2 text-lg font-medium text-gray-900">No upcoming events</h3>
                     <p className="mt-1 text-sm text-gray-500">There are no events scheduled at this time.</p>
@@ -451,9 +467,9 @@ const SchedulePage = () => {
                                                         </p>
                                                     )}
                                                     {event.category && (
-                                                        <span className="text-gray-600 mt-1">
-                                                            <span className="font-medium">Theme: {event.category}</span>
-                                                        </span>
+                                                        <p className="text-gray-600 mt-1">
+                                                            <span className="font-medium">Category:</span> {event.category}
+                                                        </p>
                                                     )}
                                                 </div>
                                             </td>
@@ -480,7 +496,7 @@ const SchedulePage = () => {
                                                 </div>
                                             </td>
                                         </motion.tr>
-                                    ))}
+                                                    ))}
                                 </tbody>
                             </table>
                         </div>
